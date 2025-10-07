@@ -1,0 +1,80 @@
+{
+  "name": "better-stack",
+  "version": "0.0.1",
+  "description": "A composable, plugin-based library for building full-stack applications.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olliethedev/better-stack.git"
+  },
+  "keywords": [
+    "fullstack",
+    "react",
+    "nextjs"
+  ],
+  "author": "olliethedev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/olliethedev/better-stack/issues"
+  },
+  "homepage": "https://github.com/olliethedev/better-stack#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "unbuild --clean",
+    "stub": "unbuild --stub",
+    "test": "vitest",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ],
+      "types": [
+        "./dist/types/index.d.ts"
+      ]
+    }
+  },
+  "dependencies": {
+    "zod": "^4.1.5"
+  },
+  "peerDependenciesOptional": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.23",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "typescript": "catalog:",
+    "unbuild": "catalog:",
+    "vue": "^3.5.18"
+  },
+  "files": [
+    "dist"
+  ]
+}
