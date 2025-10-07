@@ -28,7 +28,7 @@ jobs:
       - run: pnpm install
 
       - name: Build packages
-        run: pnpm build --filter "better-stack" --force
+        run: pnpm build --filter "@olliethedev/better-stack" --force
 
       - name: Verify tag matches package version
         working-directory: packages/better-stack
