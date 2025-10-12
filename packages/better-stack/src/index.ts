@@ -1,3 +1,1 @@
-export function betterStack() {
-  return "better-stack";
-}
+export * from "./api";

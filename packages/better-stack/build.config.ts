@@ -3,6 +3,7 @@ import { defineBuildConfig } from "unbuild";
 export default defineBuildConfig({
 	rollup: {
 		emitCJS: true,
+		inlineDependencies: false,
 		esbuild: {
 			treeShaking: true,
 		},
@@ -12,7 +13,12 @@ export default defineBuildConfig({
 	clean: true,
 	failOnWarn: false,
 	externals: [
+		// peerDependencies
 		"react",
+		"react-dom",
+		"react/jsx-runtime",
+		"@tanstack/react-query",
+		// test/build-time deps kept external
 		"vitest",
 		"@vitest/runner",
 		"@vitest/utils",
@@ -24,6 +30,11 @@ export default defineBuildConfig({
 		"@babel/parser",
 	],
 	entries: [
-		"./src/index.ts"
+		"./src/index.ts",
+		"./src/api/index.ts",
+		"./src/client/index.ts",
+		"./src/context/index.tsx",
+		"./src/plugins/todos/api.ts",
+		"./src/plugins/todos/client.tsx",
 	],
 });
