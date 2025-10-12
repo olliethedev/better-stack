@@ -6,6 +6,8 @@ export default defineBuildConfig({
 		inlineDependencies: false,
 		esbuild: {
 			treeShaking: true,
+			jsx: "automatic",
+			jsxImportSource: "react",
 		},
 	},
 	declaration: true,

@@ -1,5 +1,5 @@
 import { createRouter } from "@olliethedev/yar";
-import type { ClientLibConfig, ClientLib } from "../types";
+import type { ClientLibConfig, ClientLib, ClientPlugin, MergeAllPluginRoutes } from "../types";
 export type { ClientPlugin } from "../types";
 
 /**
@@ -21,14 +21,14 @@ export type { ClientPlugin } from "../types";
  * const { useMessages } = lib.hooks.messages;
  * ```
  */
-export function createStackClient<TPlugins extends Record<string, any>>(
-	config: ClientLibConfig<TPlugins>,
-): ClientLib {
+export function createStackClient<
+	TPlugins extends Record<string, ClientPlugin>,
+>(config: ClientLibConfig<TPlugins>): ClientLib<MergeAllPluginRoutes<TPlugins> & Record<string, any>> {
 	const { plugins, baseURL, basePath } = config;
 
 	// Collect all routes from all plugins
-	const allRoutes: Record<string, any> = {};
-
+	const allRoutes: any = {};
+	
 	// Collect all hooks from all plugins
 	const allHooks: Record<string, Record<string, any>> = {};
 
@@ -43,13 +43,14 @@ export function createStackClient<TPlugins extends Record<string, any>>(
 		}
 	}
 
-	// Create the composed router
+	// Create the composed router - TypeScript will infer the router type
+	// The router's getRoute method will return the union of all route return types
 	const router = createRouter(allRoutes);
 
 	return {
 		router,
 		hooks: allHooks,
-	};
+	} as any;
 }
 
 export type { ClientLib, ClientLibConfig };

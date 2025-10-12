@@ -1,4 +1,4 @@
-import type { Route } from "@olliethedev/yar";
+import type { Route, createRouter } from "@olliethedev/yar";
 import type { Adapter, DatabaseDefinition, DbPlugin } from "@better-db/core";
 import type { Endpoint, Router } from "better-call";
 
@@ -126,15 +126,37 @@ export interface BackendLib {
 }
 
 /**
+ * Helper type to extract routes from a client plugin
+ */
+export type ExtractPluginRoutes<T> = T extends ClientPlugin<any>
+	? ReturnType<T["routes"]>
+	: never;
+
+/**
+ * Helper type to merge all routes from all plugins into a single record
+ */
+export type MergeAllPluginRoutes<TPlugins extends Record<string, ClientPlugin<any>>> =
+	UnionToIntersection<{
+		[K in keyof TPlugins]: ExtractPluginRoutes<TPlugins[K]>;
+	}[keyof TPlugins]> extends Record<string, Route>
+		? UnionToIntersection<{
+				[K in keyof TPlugins]: ExtractPluginRoutes<TPlugins[K]>;
+			}[keyof TPlugins]>
+		: Record<string, Route>;
+
+/**
+ * Utility type to convert union to intersection
+ */
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+	k: infer I,
+) => void
+	? I
+	: never;
+
+/**
  * Result of creating the client library
  */
-export interface ClientLib {
-	router: {
-		routes: Record<string, Route>;
-		getRoute: (
-			path: string,
-			queryParams?: Record<string, string | string[]>,
-		) => { params: Record<string, string> } | null;
-	}; // Yar router
+export interface ClientLib<TRoutes extends Record<string, Route> = Record<string, Route>> {
+	router: ReturnType<typeof createRouter<TRoutes, {}>>;
 	hooks: Record<string, Record<string, HookFunction>>; // Plugin hooks organized by plugin name
 }
