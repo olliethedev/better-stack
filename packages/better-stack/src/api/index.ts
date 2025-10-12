@@ -14,7 +14,7 @@ import { defineDb } from "@better-db/core";
  *   adapter: memoryAdapter
  * });
  *
- * // Use in Next.js API route:
+ * // Use in API route:
  * export const GET = api.handler;
  * export const POST = api.handler;
  * ```

@@ -1,5 +1,6 @@
 import type { Route } from "@olliethedev/yar";
 import type { Adapter, DatabaseDefinition, DbPlugin } from "@better-db/core";
+import type { Endpoint, Router } from "better-call";
 
 /**
  * Backend plugin definition
@@ -19,9 +20,15 @@ export interface BackendPlugin {
 	 * @param adapter - Better DB adapter instance with methods:
 	 *   create, update, updateMany, delete, deleteMany, findOne, findMany, count
 	 */
-	routes: (adapter: Adapter) => Record<string, any>; // Better-call endpoints
+	routes: (adapter: Adapter) => Record<string, Endpoint>;
 	dbPlugin: DbPlugin;
 }
+
+/**
+ * Hook function type
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type HookFunction = (...args: any[]) => any;
 
 /**
  * Frontend plugin definition
@@ -43,7 +50,7 @@ export interface ClientPlugin<TOverrides = Record<string, never>> {
 	 * Optional: Create React Query hooks for this plugin
 	 * These can be used directly in components without the loader
 	 */
-	hooks?: () => Record<string, (...args: any[]) => any>;
+	hooks?: () => Record<string, HookFunction>;
 
 	/**
 	 * Optional: Default implementations for overridable components/functions
@@ -58,7 +65,7 @@ export interface ClientPlugin<TOverrides = Record<string, never>> {
  *
  * @template TOverrides - The shape of overridable components/functions for the client plugin
  */
-export interface Plugin<TOverrides = any> {
+export interface Plugin<TOverrides = Record<string, never>> {
 	name: string;
 	backend: BackendPlugin;
 	client: ClientPlugin<TOverrides>;
@@ -77,9 +84,9 @@ export interface BackendLibConfig {
  * Configuration for creating the client library
  */
 export interface ClientLibConfig<
-	TPlugins extends Record<string, ClientPlugin<any>> = Record<
+	TPlugins extends Record<string, ClientPlugin<Record<string, never>>> = Record<
 		string,
-		ClientPlugin<any>
+		ClientPlugin<Record<string, never>>
 	>,
 > {
 	plugins: TPlugins;
@@ -92,7 +99,7 @@ export interface ClientLibConfig<
  * Maps plugin names to their override types
  */
 export type InferPluginOverrides<
-	TPlugins extends Record<string, ClientPlugin<any>>,
+	TPlugins extends Record<string, ClientPlugin<Record<string, never>>>,
 > = {
 	[K in keyof TPlugins]: TPlugins[K] extends ClientPlugin<infer TOverrides>
 		? TOverrides
@@ -104,7 +111,7 @@ export type InferPluginOverrides<
  * Allows partial overrides per plugin
  */
 export type PluginOverrides<
-	TPlugins extends Record<string, ClientPlugin<any>>,
+	TPlugins extends Record<string, ClientPlugin<Record<string, never>>>,
 > = {
 	[K in keyof TPlugins]?: Partial<InferPluginOverrides<TPlugins>[K]>;
 };
@@ -113,8 +120,8 @@ export type PluginOverrides<
  * Result of creating the backend library
  */
 export interface BackendLib {
-	handler: any; // Next.js route handler
-	router: any; // Better-call router
+	handler: (request: Request) => Promise<Response>; // API route handler
+	router: Router; // Better-call router
 	dbSchema: DatabaseDefinition; // Better-db schema
 }
 
@@ -122,6 +129,12 @@ export interface BackendLib {
  * Result of creating the client library
  */
 export interface ClientLib {
-	router: any; // Yar router
-	hooks: Record<string, Record<string, any>>; // Plugin hooks organized by plugin name
+	router: {
+		routes: Record<string, Route>;
+		getRoute: (
+			path: string,
+			queryParams?: Record<string, string | string[]>,
+		) => { params: Record<string, string> } | null;
+	}; // Yar router
+	hooks: Record<string, Record<string, HookFunction>>; // Plugin hooks organized by plugin name
 }

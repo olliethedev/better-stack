@@ -1,4 +1,5 @@
 import { createClient } from "better-call/client";
+import type { Router, Endpoint } from "better-call";
 
 interface CreateApiClientOptions {
 	baseURL?: string;
@@ -10,8 +11,11 @@ interface CreateApiClientOptions {
  * @param options - Configuration options
  * @param options.baseURL - The base URL (e.g., 'http://localhost:3000'). If not provided, uses relative URLs (same domain)
  * @param options.basePath - The API base path (defaults to '/api')
+ * @template TRouter - The router type (Router or Record<string, Endpoint>)
  */
-export function createApiClient(options?: CreateApiClientOptions) {
+export function createApiClient<
+	TRouter extends Router | Record<string, Endpoint> = Record<string, Endpoint>,
+>(options?: CreateApiClientOptions): ReturnType<typeof createClient<TRouter>> {
 	const { baseURL = "", basePath = "/api" } = options ?? {};
 
 	// Normalize baseURL - remove trailing slash if present
@@ -25,9 +29,7 @@ export function createApiClient(options?: CreateApiClientOptions) {
 	// If baseURL is not provided, apiPath is just the basePath (same domain, relative URL)
 	const apiPath = normalizedBaseURL + finalBasePath;
 
-	// Use 'any' for now to allow flexibility across plugins
-	// In production, this would be typed from the composed API routes
-	return createClient<any>({
+	return createClient<TRouter>({
 		baseURL: apiPath,
 	});
 }

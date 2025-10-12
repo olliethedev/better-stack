@@ -5,22 +5,20 @@ import type { ClientPlugin } from "../../types";
 import { TodosListPage, AddTodoPage } from "./components";
 import { useTodos, useCreateTodo, useToggleTodo, useDeleteTodo } from "./hooks";
 import type { TodosPluginOverrides } from "./overrides";
+import type { TodosApiRoutes } from "./api";
 
 // Loader for SSR prefetching
 async function todosLoader(queryClient: QueryClient) {
 	await queryClient.prefetchQuery({
 		queryKey: ["todos"],
 		queryFn: async () => {
-			const client = createApiClient({
+			const client = createApiClient<TodosApiRoutes>({
 				baseURL: getServerBaseURL(),
 			});
 
-			const response = await client(
-				"/todos" as any,
-				{
-					method: "GET",
-				} as any,
-			);
+			const response = await client("/todos", {
+				method: "GET",
+			});
 
 			return response.data;
 		},
@@ -34,7 +32,7 @@ async function todosLoader(queryClient: QueryClient) {
 export const todosClientPlugin: ClientPlugin<TodosPluginOverrides> = {
 	name: "todos",
 
-	// Default implementations for Next.js
+	// Default implementations
 	defaultOverrides: {
 		Link: (props) => <a {...props} />,
 		navigate: undefined, // No default navigation function
