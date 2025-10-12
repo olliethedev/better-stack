@@ -1,6 +1,6 @@
 {
   "name": "@olliethedev/better-stack",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A composable, plugin-based library for building full-stack applications.",
   "repository": {
     "type": "git",
