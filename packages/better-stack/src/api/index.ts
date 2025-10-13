@@ -1,5 +1,9 @@
 import { createRouter } from "better-call";
-import type { BackendLibConfig, BackendLib } from "../types";
+import type {
+	BackendLibConfig,
+	BackendLib,
+	PrefixedPluginRoutes,
+} from "../types";
 import { defineDb } from "@better-db/core";
 
 /**
@@ -18,12 +22,19 @@ import { defineDb } from "@better-db/core";
  * export const GET = api.handler;
  * export const POST = api.handler;
  * ```
+ *
+ * @template TPlugins - The exact plugins map (inferred from config)
+ * @template TRoutes - All routes with prefixed keys like "pluginName_routeName" (computed automatically)
  */
-export function betterStack(config: BackendLibConfig): BackendLib {
+export function betterStack<
+	TPlugins extends Record<string, any>,
+	TRoutes extends
+		PrefixedPluginRoutes<TPlugins> = PrefixedPluginRoutes<TPlugins>,
+>(config: BackendLibConfig<TPlugins>): BackendLib<TRoutes> {
 	const { plugins, adapter, dbSchema } = config;
 
-	// Collect all routes from all plugins
-	const allRoutes: Record<string, any> = {};
+	// Collect all routes from all plugins with type-safe prefixed keys
+	const allRoutes = {} as TRoutes;
 
 	let betterDbSchema = dbSchema ?? defineDb({});
 
@@ -38,8 +49,8 @@ export function betterStack(config: BackendLibConfig): BackendLib {
 
 		// Prefix route keys with plugin name to avoid collisions
 		for (const [routeKey, endpoint] of Object.entries(pluginRoutes)) {
-			const compositeKey = `${pluginKey}_${routeKey}`;
-			allRoutes[compositeKey] = endpoint;
+			const compositeKey = `${pluginKey}_${routeKey}` as keyof TRoutes;
+			(allRoutes as any)[compositeKey] = endpoint;
 		}
 	}
 
@@ -59,5 +70,4 @@ export type {
 	BackendPlugin,
 	BackendLibConfig,
 	BackendLib,
-	Plugin,
 } from "../types";

@@ -22,12 +22,7 @@ export default defineBuildConfig({
 					name: "preserve-use-client",
 					renderChunk(code, chunk) {
 						// Add "use client" to files that originally had it
-						if (
-							chunk.facadeModuleId?.includes("context/index") ||
-							chunk.facadeModuleId?.includes("plugins/todos/client") ||
-							chunk.facadeModuleId?.includes("plugins/todos/hooks") ||
-							chunk.facadeModuleId?.includes("plugins/todos/components")
-						) {
+						if (chunk.facadeModuleId?.includes("context/index")) {
 							return `"use client";\n${code}`;
 						}
 						return code;
@@ -58,7 +53,6 @@ export default defineBuildConfig({
 		"./src/api/index.ts",
 		"./src/client/index.ts",
 		"./src/context/index.tsx",
-		"./src/plugins/todos/api.ts",
-		"./src/plugins/todos/client.tsx",
+		"./src/plugins/index.ts",
 	],
 });
