@@ -4,7 +4,7 @@ import type {
 	BackendLib,
 	PrefixedPluginRoutes,
 } from "../types";
-import { defineDb } from "@better-db/core";
+import { defineDb } from "@btst/db";
 
 /**
  * Creates the backend library with plugin support

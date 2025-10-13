@@ -1,4 +1,4 @@
-import { createRouter } from "@olliethedev/yar";
+import { createRouter } from "@btst/yar";
 import type {
 	ClientLibConfig,
 	ClientLib,

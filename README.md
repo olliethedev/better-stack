@@ -4,7 +4,7 @@
 
 **A composable, plugin-based framework for building full-stack TypeScript applications**
 
-[![npm version](https://img.shields.io/npm/v/@olliethedev/better-stack.svg)](https://www.npmjs.com/package/@olliethedev/better-stack)
+[![npm version](https://img.shields.io/npm/v/@btst/stack.svg)](https://www.npmjs.com/package/@btst/stack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
@@ -23,11 +23,11 @@ Better Stack is a modern, type-safe framework for building full-stack applicatio
 ## Installation
 
 ```bash
-npm install @olliethedev/better-stack
+npm install @btst/stack
 # or
-pnpm add @olliethedev/better-stack
+pnpm add @btst/stack
 # or
-yarn add @olliethedev/better-stack
+yarn add @btst/stack
 ```
 
 ### Dependencies
@@ -35,7 +35,7 @@ yarn add @olliethedev/better-stack
 Better Stack works with your existing stack:
 
 ```bash
-npm install @better-db/core @better-db/adapter-memory better-call @olliethedev/yar zod
+npm install @btst/db @btst/adapter-memory better-call @btst/yar zod
 ```
 
 ## Quick Start
@@ -44,9 +44,9 @@ npm install @better-db/core @better-db/adapter-memory better-call @olliethedev/y
 
 ```typescript
 // app/api/route.ts
-import { betterStack } from "@olliethedev/better-stack/api";
+import { betterStack } from "@btst/stack/api";
 import { myPlugin } from "./plugins/my-plugin";
-import { createMemoryAdapter } from "@better-db/adapter-memory";
+import { createMemoryAdapter } from "@btst/adapter-memory";
 
 const api = betterStack({
   plugins: {
@@ -67,7 +67,7 @@ export const PATCH = api.handler;
 
 ```typescript
 // app/lib/client.ts
-import { createStackClient } from "@olliethedev/better-stack/client";
+import { createStackClient } from "@btst/stack/client";
 import { myPlugin } from "./plugins/my-plugin";
 
 export const client = createStackClient({
@@ -124,13 +124,13 @@ Each plugin type is completely independent:
 
 ```typescript
 // plugins/messages/backend.ts
-import { createDbPlugin } from "@better-db/core";
+import { createDbPlugin } from "@btst/db";
 import { createEndpoint } from "better-call";
 import { z } from "zod";
 import {
   defineBackendPlugin,
   type BetterAuthDBSchema,
-} from "@olliethedev/better-stack/plugins";
+} from "@btst/stack/plugins";
 
 // 1. Define your schema
 const messagesSchema: BetterAuthDBSchema = {
@@ -240,8 +240,8 @@ export const messagesBackendPlugin = defineBackendPlugin({
 
 ```typescript
 // plugins/messages/client.ts
-import { defineClientPlugin } from "@olliethedev/better-stack/plugins";
-import { createRoute } from "@olliethedev/yar";
+import { defineClientPlugin } from "@btst/stack/plugins";
+import { createRoute } from "@btst/yar";
 import { useQuery } from "@tanstack/react-query";
 
 // Components
@@ -294,9 +294,9 @@ Backend and client plugins are used independently in their respective contexts:
 
 ```typescript
 // app/api/route.ts (Backend only)
-import { betterStack } from "@olliethedev/better-stack/api";
+import { betterStack } from "@btst/stack/api";
 import { messagesBackendPlugin } from "./plugins/messages/backend";
-import { createMemoryAdapter } from "@better-db/adapter-memory";
+import { createMemoryAdapter } from "@btst/adapter-memory";
 
 const api = betterStack({
   plugins: {
@@ -313,7 +313,7 @@ export const POST = api.handler;
 
 ```typescript
 // app/lib/client.ts (Client only)
-import { createStackClient } from "@olliethedev/better-stack/client";
+import { createStackClient } from "@btst/stack/client";
 import { messagesClientPlugin } from "./plugins/messages/client";
 
 const client = createStackClient({
@@ -345,13 +345,13 @@ Adapters connect your plugins to different databases:
 
 ```typescript
 // Memory (for testing)
-import { createMemoryAdapter } from "@better-db/adapter-memory";
+import { createMemoryAdapter } from "@btst/adapter-memory";
 
 // PostgreSQL
-import { createPgAdapter } from "@better-db/adapter-pg";
+import { createPgAdapter } from "@btst/adapter-pg";
 
 // MongoDB
-import { createMongoAdapter } from "@better-db/adapter-mongo";
+import { createMongoAdapter } from "@btst/adapter-mongo";
 
 const api = betterStack({
   plugins: { /* ... */ },
@@ -410,7 +410,7 @@ Better Stack exports utilities for building plugins:
 import {
   defineBackendPlugin,
   defineClientPlugin,
-} from "@olliethedev/better-stack/plugins";
+} from "@btst/stack/plugins";
 
 // Type definitions for backend plugins
 import type {
@@ -419,19 +419,19 @@ import type {
   DatabaseDefinition,
   Endpoint,
   Router,
-} from "@olliethedev/better-stack/plugins";
+} from "@btst/stack/plugins";
 
 // Type definitions for client plugins
 import type {
   ClientPlugin,
   Route,
-} from "@olliethedev/better-stack/plugins";
+} from "@btst/stack/plugins";
 
 // Utilities (can be used in both)
 import {
   createApiClient,
   getServerBaseURL,
-} from "@olliethedev/better-stack/plugins";
+} from "@btst/stack/plugins";
 ```
 
 ### Type-Safe Plugin Helpers
@@ -494,7 +494,7 @@ export const myClientPlugin: ClientPlugin = { /* ... */ };
 Create a typed API client for server-side or client-side requests:
 
 ```typescript
-import { createApiClient } from "@olliethedev/better-stack/plugins";
+import { createApiClient } from "@btst/stack/plugins";
 
 // For server-side (SSR)
 const api = createApiClient({
@@ -515,8 +515,8 @@ Better Stack includes comprehensive testing utilities:
 ```typescript
 // __tests__/my-plugin.test.ts
 import { describe, it, expect } from "vitest";
-import { betterStack } from "@olliethedev/better-stack/api";
-import { createMemoryAdapter } from "@better-db/adapter-memory";
+import { betterStack } from "@btst/stack/api";
+import { createMemoryAdapter } from "@btst/adapter-memory";
 import { myBackendPlugin } from "../plugins/my-plugin/backend";
 
 describe("My Backend Plugin", () => {
@@ -560,7 +560,7 @@ describe("My Backend Plugin", () => {
 
 ```typescript
 // app/api/[...route]/route.ts
-import { betterStack } from "@olliethedev/better-stack/api";
+import { betterStack } from "@btst/stack/api";
 
 const api = betterStack({
   plugins: { /* ... */ },
@@ -578,7 +578,7 @@ export const PATCH = api.handler;
 
 ```typescript
 // pages/api/[...route].ts
-import { betterStack } from "@olliethedev/better-stack/api";
+import { betterStack } from "@btst/stack/api";
 
 const api = betterStack({
   plugins: { /* ... */ },
@@ -606,7 +606,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 ```typescript
 import express from "express";
-import { betterStack } from "@olliethedev/better-stack/api";
+import { betterStack } from "@btst/stack/api";
 
 const api = betterStack({
   plugins: { /* ... */ },
@@ -678,8 +678,8 @@ my-plugin-backend/
 {
   "name": "@yourorg/my-plugin-backend",
   "peerDependencies": {
-    "@olliethedev/better-stack": "^0.0.3",
-    "@better-db/core": "^1.3.37",
+    "@btst/stack": "^1.0.0",
+    "@btst/db": "^1.0.0",
     "better-call": "^1.0.19"
   }
 }
@@ -708,8 +708,8 @@ my-plugin-client/
 {
   "name": "@yourorg/my-plugin-client",
   "peerDependencies": {
-    "@olliethedev/better-stack": "^0.0.3",
-    "@olliethedev/yar": "^1.1.0",
+    "@btst/stack": "^1.0.0",
+    "@btst/yar": "^1.1.0",
     "react": "^18.0.0 || ^19.0.0"
   }
 }

@@ -1,5 +1,5 @@
-import type { Route, createRouter } from "@olliethedev/yar";
-import type { Adapter, DatabaseDefinition, DbPlugin } from "@better-db/core";
+import type { Route, createRouter } from "@btst/yar";
+import type { Adapter, DatabaseDefinition, DbPlugin } from "@btst/db";
 import type { Endpoint, Router } from "better-call";
 
 /**

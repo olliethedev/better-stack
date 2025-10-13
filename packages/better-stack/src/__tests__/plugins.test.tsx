@@ -7,12 +7,12 @@ import type {
 	BetterAuthDBSchema,
 	DatabaseDefinition,
 	Adapter,
-} from "@better-db/core";
-import { createDbPlugin } from "@better-db/core";
-import { createMemoryAdapter } from "@better-db/adapter-memory";
+} from "@btst/db";
+import { createDbPlugin } from "@btst/db";
+import { createMemoryAdapter } from "@btst/adapter-memory";
 import { createEndpoint as endpoint } from "better-call";
 import { z } from "zod";
-import { createRoute } from "@olliethedev/yar";
+import { createRoute } from "@btst/yar";
 
 /**
  * Adapter wrapper for testing

@@ -6,12 +6,11 @@
  *
  * Note: Backend and Client plugins are separate to prevent SSR issues
  * and enable better code splitting. Import them separately:
- * - Backend: import type { BackendPlugin } from "@olliethedev/better-stack/plugins"
- * - Client: import type { ClientPlugin } from "@olliethedev/better-stack/plugins"
+ * - Backend: import type { BackendPlugin } from "@btst/stack/plugins"
+ * - Client: import type { ClientPlugin } from "@btst/stack/plugins"
  */
 
 import type { BackendPlugin, ClientPlugin } from "../types";
-import type { Route } from "@olliethedev/yar";
 import type { Endpoint } from "better-call";
 
 // Export utility functions
@@ -26,13 +25,13 @@ export type {
 } from "../types";
 
 // Re-export Better DB types needed for plugins
-export type { Adapter, DatabaseDefinition, DbPlugin } from "@better-db/core";
+export type { Adapter, DatabaseDefinition, DbPlugin } from "@btst/db";
 
 // Re-export Better Call types needed for plugins
 export type { Endpoint, Router } from "better-call";
 
 // Re-export Yar types needed for plugins
-export type { Route } from "@olliethedev/yar";
+export type { Route } from "@btst/yar";
 
 /**
  * Helper to define a client plugin with full type inference
