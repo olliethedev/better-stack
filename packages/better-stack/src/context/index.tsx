@@ -162,7 +162,6 @@ export function usePluginOverride<TOverride = any>(
 	return override as TOverride;
 }
 
-
 export function useBasePath() {
 	const context = useBetterStack();
 	if (!context) {
@@ -173,4 +172,3 @@ export function useBasePath() {
 	}
 	return context.basePath;
 }
-

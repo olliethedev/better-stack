@@ -1,47 +1,47 @@
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests",
-  timeout: 90_000,
-  forbidOnly: !!process.env.CI,
-  outputDir: "../test-results",
-  reporter: process.env.CI
-    ? [["list"], ["html", { open: "never" }]]
-    : [["list"]],
-  expect: {
-    timeout: 10_000,
-  },
-  retries: process.env["CI"] ? 2 : 0,
-  use: {
-    trace: "retain-on-failure",
-    video: "retain-on-failure",
-    screenshot: "only-on-failure",
-    actionTimeout: 15_000,
-    navigationTimeout: 30_000,
-    baseURL: "http://localhost:3000",
-  },
-  webServer: [
-    // Next.js with memory provider and custom plugin
-    {
-      command: "pnpm -F examples/nextjs run start:e2e",
-      port: 3001,
-      reuseExistingServer: !process.env["CI"],
-      timeout: 120_000,
-      stdout: "pipe",
-      stderr: "pipe",
-      env: {
-        ...process.env,
-        PORT: "3001",
-        HOST: "127.0.0.1",
-        BETTER_BLOG_PROVIDER: "memory",
-      },
-    },
-  ],
-  projects: [
-    {
-      name: "nextjs:memory",
-      use: { baseURL: "http://localhost:3001" },
-      testMatch: ["**/*.spec.ts"],
-    }
-  ],
+	testDir: "./tests",
+	timeout: 90_000,
+	forbidOnly: !!process.env.CI,
+	outputDir: "../test-results",
+	reporter: process.env.CI
+		? [["list"], ["html", { open: "never" }]]
+		: [["list"]],
+	expect: {
+		timeout: 10_000,
+	},
+	retries: process.env["CI"] ? 2 : 0,
+	use: {
+		trace: "retain-on-failure",
+		video: "retain-on-failure",
+		screenshot: "only-on-failure",
+		actionTimeout: 15_000,
+		navigationTimeout: 30_000,
+		baseURL: "http://localhost:3000",
+	},
+	webServer: [
+		// Next.js with memory provider and custom plugin
+		{
+			command: "pnpm -F examples/nextjs run start:e2e",
+			port: 3001,
+			reuseExistingServer: !process.env["CI"],
+			timeout: 120_000,
+			stdout: "pipe",
+			stderr: "pipe",
+			env: {
+				...process.env,
+				PORT: "3001",
+				HOST: "127.0.0.1",
+				BETTER_BLOG_PROVIDER: "memory",
+			},
+		},
+	],
+	projects: [
+		{
+			name: "nextjs:memory",
+			use: { baseURL: "http://localhost:3001" },
+			testMatch: ["**/*.spec.ts"],
+		},
+	],
 });

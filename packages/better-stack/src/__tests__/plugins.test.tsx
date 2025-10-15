@@ -157,7 +157,7 @@ const messagesClientPlugin = defineClientPlugin({
 			PageComponent: MessageDetailComponent,
 			loader: () => messageDetailLoader({ params }),
 		})),
-	})
+	}),
 });
 
 describe("3rd Party Plugin Support", () => {

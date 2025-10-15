@@ -47,7 +47,6 @@ export interface ClientPlugin<
 	 * Returns yar routes that will be composed into the router
 	 */
 	routes: () => TRoutes;
-
 }
 
 /**
@@ -107,7 +106,6 @@ export type PluginOverrides<
 export type PluginRoutes<
 	TPlugins extends Record<string, ClientPlugin<any, any>>,
 > = MergeAllPluginRoutes<TPlugins>;
-
 
 /**
  * Prefix all backend plugin route keys with the plugin name
@@ -179,7 +177,7 @@ type UnionToIntersection<U> = (
  * Result of creating the client library
  */
 export interface ClientLib<
-	TRoutes extends Record<string, Route> = Record<string, Route>
+	TRoutes extends Record<string, Route> = Record<string, Route>,
 > {
 	router: ReturnType<typeof createRouter<TRoutes, {}>>;
 }
