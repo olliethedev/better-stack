@@ -27,6 +27,9 @@ jobs:
 
       - run: pnpm install
 
+      - name: Copy README to package
+        run: cp README.md packages/better-stack/README.md
+
       - name: Typecheck
         working-directory: packages/better-stack
         run: pnpm typecheck

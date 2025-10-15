@@ -32,7 +32,7 @@ jobs:
           path: |
             ${{ github.workspace }}/.cache/ms-playwright
             .turbo
-          key: ${{ runner.os }}-e2e-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
+          key: ${{ runner.os }}-e2e-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('.github/workflows/e2e.yml') }}
           restore-keys: |
             ${{ runner.os }}-e2e-
 
