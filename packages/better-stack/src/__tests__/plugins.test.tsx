@@ -3,11 +3,7 @@ import { betterStack } from "../api";
 import { createStackClient } from "../client";
 import { defineBackendPlugin, defineClientPlugin } from "../plugins";
 import type { BackendPlugin, ClientPlugin } from "../types";
-import type {
-	BetterAuthDBSchema,
-	DatabaseDefinition,
-	Adapter,
-} from "@btst/db";
+import type { BetterAuthDBSchema, DatabaseDefinition, Adapter } from "@btst/db";
 import { createDbPlugin } from "@btst/db";
 import { createMemoryAdapter } from "@btst/adapter-memory";
 import { createEndpoint as endpoint } from "better-call";
