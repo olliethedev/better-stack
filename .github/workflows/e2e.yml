@@ -47,8 +47,8 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
         
-      - name: Install Playwright browsers (Chromium only)
-        run: pnpm -F e2e exec playwright install --with-deps chromium
+      - name: Install Playwright browsers (Chromium + headless shell)
+        run: pnpm -F e2e exec playwright install --with-deps chromium chromium-headless-shell
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
 
