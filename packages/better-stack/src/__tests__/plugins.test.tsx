@@ -157,19 +157,14 @@ const messagesClientPlugin = defineClientPlugin({
 			PageComponent: MessageDetailComponent,
 			loader: () => messageDetailLoader({ params }),
 		})),
-	}),
-	hooks: () => ({
-		useMessages: () => {
-			// This would typically use react-query
-			return { messages: [], isLoading: false };
-		},
-	}),
+	})
 });
 
 describe("3rd Party Plugin Support", () => {
 	describe("Backend Plugin", () => {
 		it("should create backend with custom plugin", () => {
 			const backend = betterStack({
+				basePath: "/api",
 				plugins: {
 					messages: messagesBackendPlugin,
 				},
@@ -224,6 +219,7 @@ describe("3rd Party Plugin Support", () => {
 			});
 
 			const backend = betterStack({
+				basePath: "/api",
 				plugins: {
 					messages: messagesBackendPlugin,
 					notifications: notificationsPlugin,
@@ -237,6 +233,7 @@ describe("3rd Party Plugin Support", () => {
 
 		it("should generate routes for custom plugin", () => {
 			const backend = betterStack({
+				basePath: "/api",
 				plugins: {
 					messages: messagesBackendPlugin,
 				},
@@ -251,6 +248,7 @@ describe("3rd Party Plugin Support", () => {
 
 		it("should include plugin schema in database", () => {
 			const backend = betterStack({
+				basePath: "/api",
 				plugins: {
 					messages: messagesBackendPlugin,
 				},
@@ -274,10 +272,6 @@ describe("3rd Party Plugin Support", () => {
 
 			expect(client).toBeDefined();
 			expect(client.router).toBeDefined();
-			expect(client.hooks).toBeDefined();
-			if (client.hooks.messages) {
-				expect(client.hooks.messages).toBeDefined();
-			}
 		});
 
 		it("should have routes from custom plugin", () => {
@@ -379,18 +373,6 @@ describe("3rd Party Plugin Support", () => {
 			await loaderResult; // Ensure it resolves
 		});
 
-		it("should have hooks from custom plugin", () => {
-			const client = createStackClient({
-				plugins: {
-					messages: messagesClientPlugin,
-				},
-			});
-
-			// TypeScript now properly infers the hooks structure - no cast needed!
-			expect(client.hooks.messages.useMessages).toBeDefined();
-			expect(typeof client.hooks.messages.useMessages).toBe("function");
-		});
-
 		it("should support multiple client plugins", () => {
 			const NotificationsComponent: React.FC = () => {
 				return <div>Notifications</div>;
@@ -419,8 +401,6 @@ describe("3rd Party Plugin Support", () => {
 
 			// Verify the router is created with both plugins
 			expect(client.router).toBeDefined();
-			expect(client.hooks.messages).toBeDefined();
-			expect(client.hooks.notifications).toBeUndefined(); // notifications has no hooks
 
 			// Verify both plugin routes are accessible from their definitions - full type safety!
 			const messagesRoutes = messagesClientPlugin.routes();
@@ -441,6 +421,7 @@ describe("3rd Party Plugin Support", () => {
 			// Backend and client plugins are completely separate
 			// This prevents SSR issues and enables better code splitting
 			const backend = betterStack({
+				basePath: "/api",
 				plugins: {
 					messages: messagesBackendPlugin,
 				},
@@ -455,9 +436,6 @@ describe("3rd Party Plugin Support", () => {
 
 			expect(backend.router).toBeDefined();
 			expect(client.router).toBeDefined();
-			if (client.hooks.messages) {
-				expect(client.hooks.messages).toBeDefined();
-			}
 		});
 
 		it("should demonstrate proper route usage pattern", async () => {

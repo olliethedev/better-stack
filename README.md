@@ -709,7 +709,7 @@ my-plugin-client/
   "name": "@yourorg/my-plugin-client",
   "peerDependencies": {
     "@btst/stack": "^1.0.0",
-    "@btst/yar": "^1.1.0",
+    "@btst/yar": "^1.1.1",
     "react": "^18.0.0 || ^19.0.0"
   }
 }

@@ -31,7 +31,7 @@ export function betterStack<
 	TRoutes extends
 		PrefixedPluginRoutes<TPlugins> = PrefixedPluginRoutes<TPlugins>,
 >(config: BackendLibConfig<TPlugins>): BackendLib<TRoutes> {
-	const { plugins, adapter, dbSchema } = config;
+	const { plugins, adapter, dbSchema, basePath } = config;
 
 	// Collect all routes from all plugins with type-safe prefixed keys
 	const allRoutes = {} as TRoutes;
@@ -56,7 +56,7 @@ export function betterStack<
 
 	// Create the composed router
 	const router = createRouter(allRoutes, {
-		basePath: "/api",
+		basePath: basePath,
 	});
 
 	return {
@@ -71,3 +71,5 @@ export type {
 	BackendLibConfig,
 	BackendLib,
 } from "../types";
+
+export { createEndpoint } from "better-call";
