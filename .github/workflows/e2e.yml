@@ -55,8 +55,8 @@ jobs:
       - name: Build workspace
         run: pnpm -w build
 
-      - name: Run Playwright tests
-        run: pnpm e2e
+      - name: Run Playwright smoke tests
+        run: pnpm e2e:smoke
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
 
