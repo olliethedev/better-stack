@@ -7,20 +7,27 @@ import type { QueryClient } from "@tanstack/react-query"
 import type { TodosApiRouter } from "../api/backend"
 import { AddTodoPage, TodosListPage } from "./components"
 
+
+
+
 // Loader for SSR prefetching
-async function todosLoader(queryClient: QueryClient) {
+async function todosLoader(queryClient: QueryClient, baseURL: string) {
     await queryClient.prefetchQuery({
         queryKey: ["todos"],
         queryFn: async () => {
             const client = createApiClient<TodosApiRouter>({
-                baseURL: "/api"
+                baseURL: baseURL,
+                basePath: "/api"
             })
-
-            const response = await client("/todos", {
-                method: "GET"
-            })
-
-            return response.data
+            try {
+                const response = await client("/todos", {
+                    method: "GET"
+                })
+                    return response.data
+                } catch (error) {
+                    console.error("error", error)
+                }
+                return []
         }
     })
 }

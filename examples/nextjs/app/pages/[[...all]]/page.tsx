@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 import { makeQueryClient } from "@/lib/query-client"
 import { router } from "@/lib/better-stack-client"
 
+const baseURL = process.env.BASE_URL ?? "http://localhost:3000"
+
 export default async function ExamplePage({
     params
 }: {
@@ -23,7 +25,7 @@ export default async function ExamplePage({
     const queryClient = makeQueryClient()
 
     if (loader) {
-        await loader(queryClient)
+        await loader(queryClient, baseURL)
     }
     if (!PageComponent) {
         return notFound()

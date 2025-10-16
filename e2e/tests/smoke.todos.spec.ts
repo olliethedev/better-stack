@@ -8,4 +8,6 @@ test("page renders", async ({ page }) => {
 
 	await page.goto("/pages/todos", { waitUntil: "networkidle" });
 	await expect(page).toHaveTitle(/Create Next App/i);
+	// no console errors
+	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([])
 });

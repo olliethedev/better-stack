@@ -10,13 +10,13 @@ interface CreateApiClientOptions {
  * Creates a Better Call API client with proper URL handling for both server and client side
  * @param options - Configuration options
  * @param options.baseURL - The base URL (e.g., 'http://localhost:3000'). If not provided, uses relative URLs (same domain)
- * @param options.basePath - The API base path (defaults to '/api')
+ * @param options.basePath - The API base path (defaults to '/')
  * @template TRouter - The router type (Router or Record<string, Endpoint>)
  */
 export function createApiClient<
 	TRouter extends Router | Record<string, Endpoint> = Record<string, Endpoint>,
 >(options?: CreateApiClientOptions): ReturnType<typeof createClient<TRouter>> {
-	const { baseURL = "", basePath = "/api" } = options ?? {};
+	const { baseURL = "", basePath = "/" } = options ?? {};
 
 	// Normalize baseURL - remove trailing slash if present
 	const normalizedBaseURL = baseURL ? baseURL.replace(/\/$/, "") : "";
@@ -33,4 +33,3 @@ export function createApiClient<
 		baseURL: apiPath,
 	});
 }
-
