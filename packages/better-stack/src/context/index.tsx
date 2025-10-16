@@ -10,6 +10,7 @@ interface BetterStackContextValue<
 	TPluginOverrides extends Record<string, any>,
 > {
 	overrides: TPluginOverrides;
+	basePath: string;
 }
 
 const BetterStackContext = createContext<BetterStackContextValue<any> | null>(
@@ -50,12 +51,15 @@ export function BetterStackProvider<
 >({
 	children,
 	overrides,
+	basePath,
 }: {
-	children: ReactNode;
+	children?: ReactNode;
 	overrides: TPluginOverrides;
+	basePath: string;
 }) {
 	const value: BetterStackContextValue<TPluginOverrides> = {
 		overrides,
+		basePath,
 	};
 
 	return (
@@ -156,4 +160,15 @@ export function usePluginOverride<TOverride = any>(
 	}
 
 	return override as TOverride;
+}
+
+export function useBasePath() {
+	const context = useBetterStack();
+	if (!context) {
+		throw new Error(
+			"useBasePath must be used within BetterStackProvider. " +
+				"Wrap your app with <BetterStackProvider> in your layout file.",
+		);
+	}
+	return context.basePath;
 }

@@ -1,3 +1,0 @@
-# BETTER STACK
-
-WIP

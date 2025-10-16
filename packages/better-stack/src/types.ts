@@ -29,12 +29,6 @@ export interface BackendPlugin<
 }
 
 /**
- * Hook function type
- * Generic function type for React hooks returned by plugins
- */
-export type HookFunction = (...args: unknown[]) => unknown;
-
-/**
  * Frontend plugin definition
  * Defines pages, components, loaders, and React Query hooks for a feature
  *
@@ -53,18 +47,6 @@ export interface ClientPlugin<
 	 * Returns yar routes that will be composed into the router
 	 */
 	routes: () => TRoutes;
-
-	/**
-	 * Optional: Create React Query hooks for this plugin
-	 * These can be used directly in components without the loader
-	 */
-	hooks?: () => Record<string, HookFunction>;
-
-	/**
-	 * Optional: Default implementations for overridable components/functions
-	 * These will be used if no override is provided in BetterStackContext
-	 */
-	defaultOverrides?: Partial<TOverrides>;
 }
 
 /**
@@ -76,6 +58,7 @@ export interface BackendLibConfig<
 		BackendPlugin<any>
 	>,
 > {
+	basePath: string;
 	dbSchema?: DatabaseDefinition;
 	plugins: TPlugins;
 	adapter: (db: DatabaseDefinition) => Adapter;
@@ -123,16 +106,6 @@ export type PluginOverrides<
 export type PluginRoutes<
 	TPlugins extends Record<string, ClientPlugin<any, any>>,
 > = MergeAllPluginRoutes<TPlugins>;
-
-/**
- * Extract all hooks from all client plugins, organized by plugin name
- * For plugins without hooks, the type will be an empty object
- */
-export type PluginHooks<
-	TPlugins extends Record<string, ClientPlugin<any, any>>,
-> = {
-	[K in keyof TPlugins]: TPlugins[K]["hooks"] extends () => infer H ? H : {};
-};
 
 /**
  * Prefix all backend plugin route keys with the plugin name
@@ -205,8 +178,6 @@ type UnionToIntersection<U> = (
  */
 export interface ClientLib<
 	TRoutes extends Record<string, Route> = Record<string, Route>,
-	THooks extends Record<string, any> = Record<string, any>,
 > {
 	router: ReturnType<typeof createRouter<TRoutes, {}>>;
-	hooks: THooks; // Plugin hooks organized by plugin name
 }

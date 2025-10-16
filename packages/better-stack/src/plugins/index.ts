@@ -14,7 +14,7 @@ import type { BackendPlugin, ClientPlugin } from "../types";
 import type { Endpoint } from "better-call";
 
 // Export utility functions
-export { createApiClient, getServerBaseURL } from "./utils";
+export { createApiClient } from "./utils";
 
 // Export all plugin-related types
 export type {

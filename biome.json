@@ -67,7 +67,8 @@
       "!**/dev/cloudflare/drizzle",
       "!**/playwright-report",
       "!**/.output",
-      "!**/.tmp"
+      "!**/.tmp",
+      "!**/examples/**"
     ]
   }
 }

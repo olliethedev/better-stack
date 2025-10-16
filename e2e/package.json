@@ -1,0 +1,15 @@
+{
+  "name": "e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "End-to-end tests(Playwright)",
+  "scripts": {
+    "e2e:install": "playwright install --with-deps",
+    "e2e:smoke": "playwright test",
+    "e2e:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "tsx": "^4.20.3"
+  }
+}
