@@ -430,7 +430,6 @@ import type {
 // Utilities (can be used in both)
 import {
   createApiClient,
-  getServerBaseURL,
 } from "@btst/stack/plugins";
 ```
 

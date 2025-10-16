@@ -34,15 +34,3 @@ export function createApiClient<
 	});
 }
 
-/**
- * Helper to get the server-side baseURL
- * On the server, we need an absolute URL. On the client, we can use relative URLs.
- */
-export function getServerBaseURL(): string | undefined {
-	if (typeof window === "undefined") {
-		// Server-side: use environment variable or default to localhost
-		return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-	}
-	// Client-side: return undefined to use relative URLs
-	return undefined;
-}

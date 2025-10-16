@@ -56,4 +56,4 @@ export type { ClientLib, ClientLibConfig };
 
 export { createRoute } from "@btst/yar";
 
-export { createApiClient, getServerBaseURL } from "../plugins/utils";
+export { createApiClient } from "../plugins/utils";

@@ -1,7 +1,6 @@
 "use client"
 import {
     createApiClient,
-    getServerBaseURL
 } from "@btst/stack/client"
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import type { Todo } from "../types"
@@ -11,7 +10,7 @@ import type { TodosApiRouter } from "../api/backend"
 
 export function useTodos() {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: getServerBaseURL()
+        baseURL: "/api"
     })
 
     return useSuspenseQuery({
@@ -30,7 +29,7 @@ export function useTodos() {
 
 export function useCreateTodo() {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: getServerBaseURL()
+        baseURL: "/api"
     })
     const queryClient = useQueryClient()
 
@@ -51,7 +50,7 @@ export function useCreateTodo() {
 
 export function useToggleTodo({ onSuccess, onError }: { onSuccess?: () => void, onError?: () => void } = {}) {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: getServerBaseURL()
+        baseURL: "/api"
     })
     const queryClient = useQueryClient()
 
@@ -100,7 +99,7 @@ export function useToggleTodo({ onSuccess, onError }: { onSuccess?: () => void, 
 
 export function useDeleteTodo({ onSuccess, onError }: { onSuccess?: () => void, onError?: () => void } = {}) {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: getServerBaseURL()
+        baseURL: "/api"
     })
     const queryClient = useQueryClient()
 

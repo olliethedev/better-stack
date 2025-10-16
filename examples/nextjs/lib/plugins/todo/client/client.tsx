@@ -1,6 +1,5 @@
 import {
-    createApiClient,
-    getServerBaseURL
+    createApiClient
 } from "@btst/stack/client"
 import { defineClientPlugin } from "@btst/stack/plugins"
 import { createRoute } from "@btst/yar"
@@ -14,7 +13,7 @@ async function todosLoader(queryClient: QueryClient) {
         queryKey: ["todos"],
         queryFn: async () => {
             const client = createApiClient<TodosApiRouter>({
-                baseURL: getServerBaseURL()
+                baseURL: "/api"
             })
 
             const response = await client("/todos", {

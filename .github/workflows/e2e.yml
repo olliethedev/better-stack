@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: read
     env:
-      PLAYWRIGHT_BROWSERS_PATH: $HOME/.cache/ms-playwright
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
       DOCKER_BUILDKIT: 1
 
     steps:
@@ -25,14 +25,16 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
 
       - name: Restore Playwright and Turbo caches
         uses: actions/cache@v4
         with:
           path: |
-            $HOME/.cache/ms-playwright
+            ${{ github.workspace }}/.cache/ms-playwright
             .turbo
-          key: ${{ runner.os }}-e2e-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('.github/workflows/e2e.yml') }}
+          key: ${{ runner.os }}-e2e-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
           restore-keys: |
             ${{ runner.os }}-e2e-
 
@@ -43,22 +45,22 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install -r --frozen-lockfile
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
-        
-      - name: Install Playwright browsers (Chromium + headless shell)
-        run: pnpm -F e2e exec playwright install --with-deps chromium chromium-headless-shell
+
+      - name: Install Playwright browsers (Chromium only)
+        run: pnpm -F e2e exec playwright install --with-deps chromium
         env:
-          PLAYWRIGHT_BROWSERS_PATH: $HOME/.cache/ms-playwright
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
 
       - name: Build workspace
         run: pnpm -w build
 
-      - name: Run Playwright smoke tests
+      - name: Run Playwright tests
         run: pnpm e2e:smoke
         env:
-          PLAYWRIGHT_BROWSERS_PATH: $HOME/.cache/ms-playwright
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
 
       - name: Upload Playwright report
         if: always()
@@ -75,6 +77,3 @@ jobs:
           name: traces
           path: test-results/**/*.zip
           if-no-files-found: ignore
-
-
-
