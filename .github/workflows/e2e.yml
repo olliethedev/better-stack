@@ -44,11 +44,17 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install -r --frozen-lockfile
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
       - name: Install Playwright browsers (Chromium only)
-        run: pnpm -F e2e exec playwright install --with-deps chromium
+        run: pnpm -F e2e exec playwright install chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+
+      - name: Verify browser installation
+        run: |
+          echo "PLAYWRIGHT_BROWSERS_PATH: $PLAYWRIGHT_BROWSERS_PATH"
+          ls -la ${{ github.workspace }}/.cache/ms-playwright/
+          find ${{ github.workspace }}/.cache/ms-playwright/ -name "headless_shell" -type f
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
 
