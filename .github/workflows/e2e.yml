@@ -15,9 +15,6 @@ jobs:
       cancel-in-progress: true
     permissions:
       contents: read
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
-      DOCKER_BUILDKIT: 1
 
     steps:
       - name: Checkout
@@ -26,15 +23,6 @@ jobs:
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
 
-      - name: Restore Playwright and Turbo caches
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.workspace }}/.cache/ms-playwright
-            .turbo
-          key: ${{ runner.os }}-e2e-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
-          restore-keys: |
-            ${{ runner.os }}-e2e-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -43,28 +31,16 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install -r --frozen-lockfile
+        run: pnpm install
 
-      - name: Install Playwright browsers (Chromium only)
-        run: pnpm -F e2e exec playwright install chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
-
-      - name: Verify browser installation
-        run: |
-          echo "PLAYWRIGHT_BROWSERS_PATH: $PLAYWRIGHT_BROWSERS_PATH"
-          ls -la ${{ github.workspace }}/.cache/ms-playwright/
-          find ${{ github.workspace }}/.cache/ms-playwright/ -name "headless_shell" -type f
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+      - name: Install Playwright browsers
+        run: cd e2e && pnpm exec playwright install --with-deps
 
       - name: Build workspace
         run: pnpm -w build
 
-      - name: Run Playwright tests
+      - name: Run Playwright smoke tests
         run: pnpm e2e:smoke
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
 
       - name: Upload Playwright report
         if: always()
