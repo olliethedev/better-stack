@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, useContext, type ReactNode } from "react";
 
 /**
@@ -9,7 +7,13 @@ import { createContext, useContext, type ReactNode } from "react";
 interface BetterStackContextValue<
 	TPluginOverrides extends Record<string, any>,
 > {
+	/**
+	 * The overrides for the plugin.
+	 */
 	overrides: TPluginOverrides;
+	/**
+	 * The base path where the client router is mounted.
+	 */
 	basePath: string;
 }
 

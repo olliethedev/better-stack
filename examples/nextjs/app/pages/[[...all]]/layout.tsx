@@ -3,13 +3,16 @@ import { BetterStackProvider } from "@btst/stack/context"
 import { QueryClientProvider } from "@tanstack/react-query"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 import type { TodosPluginOverrides } from "@/lib/plugins/todo/client/overrides"
 import { makeQueryClient } from "@/lib/query-client"
+import { BlogPluginOverrides } from "@btst/stack/plugins/blog/client"
+
+const queryClient = makeQueryClient()
 
 // Define the shape of all plugin overrides
 type PluginOverrides = {
     todos: TodosPluginOverrides
+    blog: BlogPluginOverrides,
 }
 
 export default function ExampleLayout({
@@ -17,8 +20,6 @@ export default function ExampleLayout({
 }: {
     children: React.ReactNode
 }) {
-    // Create a stable QueryClient instance for the client-side
-    const [queryClient] = useState(() => makeQueryClient())
     const router = useRouter()
 
     return (
@@ -29,6 +30,16 @@ export default function ExampleLayout({
                     todos: {
                         Link: LinkComponent,
                         navigate: (path) => router.push(path)
+                    },
+                    blog: {
+                        navigate: (path) => router.push(path),
+                        uploadImage: async (file) => {
+                            console.log("uploadImage", file)
+                            return "https://placehold.co/400/png"
+                        },
+                        Image: (props) => {
+                            return <img {...props} />
+                        }
                     }
                 }}
             >

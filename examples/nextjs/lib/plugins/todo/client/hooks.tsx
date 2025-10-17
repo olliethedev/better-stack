@@ -1,7 +1,7 @@
 "use client"
 import {
     createApiClient,
-} from "@btst/stack/client"
+} from "@btst/stack/plugins"
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import type { Todo } from "../types"
 import type { TodosApiRouter } from "../api/backend"
@@ -17,7 +17,7 @@ export function useTodos() {
         queryKey: ["todos"],
         queryFn: async () => {
             //fake delay
-            await new Promise(resolve => setTimeout(resolve, 5000))
+            // await new Promise(resolve => setTimeout(resolve, 5000))
 
             const response = await client("/todos", {
                 method: "GET"
