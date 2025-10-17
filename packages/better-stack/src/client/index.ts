@@ -55,5 +55,3 @@ export function createStackClient<
 export type { ClientLib, ClientLibConfig };
 
 export { createRoute } from "@btst/yar";
-
-export { createApiClient } from "../plugins/utils";
