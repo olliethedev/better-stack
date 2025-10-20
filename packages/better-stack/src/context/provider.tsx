@@ -131,41 +131,6 @@ export function usePluginOverrides<TOverrides = any>(
 	return overrides as TOverrides;
 }
 
-/**
- * Hook to access a specific override from a plugin
- * Provides fine-grained access with full type safety
- *
- * @example
- * ```tsx
- * function TodosList() {
- *   const Link = usePluginOverride<typeof NextLink>("todos", "Link");
- *
- *   return <Link href="/todos/add">Add Todo</Link>;
- * }
- * ```
- */
-export function usePluginOverride<TOverride = any>(
-	pluginName: string,
-	overrideKey: string,
-): TOverride {
-	const overrides = usePluginOverrides<Record<string, any>>(pluginName);
-
-	const override = overrides[overrideKey];
-
-	if (override === undefined) {
-		const availableKeys =
-			overrides && typeof overrides === "object"
-				? Object.keys(overrides as object).join(", ")
-				: "none";
-		throw new Error(
-			`Override "${overrideKey}" not found for plugin "${pluginName}". ` +
-				`Available overrides: ${availableKeys}`,
-		);
-	}
-
-	return override as TOverride;
-}
-
 export function useBasePath() {
 	const context = useBetterStack();
 	if (!context) {

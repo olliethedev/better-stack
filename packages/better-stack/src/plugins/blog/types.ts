@@ -13,3 +13,10 @@ export type Post = {
 	createdAt: Date;
 	updatedAt: Date;
 };
+
+export interface SerializedPost
+	extends Omit<Post, "createdAt" | "updatedAt" | "publishedAt"> {
+	publishedAt?: string;
+	createdAt: string;
+	updatedAt: string;
+}

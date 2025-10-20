@@ -6,7 +6,7 @@ import { stripHtml, stripMarkdown } from "../../../utils";
 import { HighlightText } from "./highlight-text";
 import { SearchModal, type SearchResult } from "./search-modal";
 import type { BlogPluginOverrides } from "../../overrides";
-import { useBasePath, usePluginOverride } from "@btst/stack/context";
+import { useBasePath, usePluginOverrides } from "@btst/stack/context";
 
 // Simplified blog post search result interface
 interface BlogPostSearchResult extends SearchResult {
@@ -14,6 +14,7 @@ interface BlogPostSearchResult extends SearchResult {
 	publishedAt?: Date | null;
 	authorName?: string;
 	processedContent: string;
+	processedExcerpt?: string;
 }
 
 interface SearchInputProps {
@@ -28,34 +29,62 @@ const renderBlogResult = (
 	item: BlogPostSearchResult,
 	index: number,
 	query: string,
-) => (
-	<button
-		type="button"
-		key={item.id}
-		className="flex w-full cursor-pointer flex-col gap-2 rounded-sm border-border border-b px-4 py-3 text-left transition-colors hover:bg-accent"
-		onClick={() => item.onClick?.()}
-	>
-		<div className="flex items-start justify-between gap-2">
-			<HighlightText
-				text={item.title}
-				searchQuery={query}
-				className="flex-1 font-medium text-sm leading-5"
-			/>
-			{item.publishedAt && (
-				<span className="whitespace-nowrap text-muted-foreground text-xs">
-					{new Date(item.publishedAt).toLocaleDateString()}
-				</span>
-			)}
-		</div>
+): React.ReactNode => {
+	const q = (query || "").toLowerCase();
+	const excerptMatches = item.processedExcerpt
+		? item.processedExcerpt.toLowerCase().includes(q)
+		: false;
+	const contentMatches = item.processedContent
+		? item.processedContent.toLowerCase().includes(q)
+		: false;
 
-		<HighlightText
-			text={item.processedContent}
-			searchQuery={query}
-			className="text-muted-foreground text-xs leading-4"
-			maxLength={120}
-		/>
-	</button>
-);
+	return (
+		<button
+			type="button"
+			key={item.id}
+			className="flex w-full cursor-pointer flex-col gap-2 rounded-sm border-border border-b px-4 py-3 text-left transition-colors hover:bg-accent"
+			onClick={() => item.onClick?.()}
+		>
+			<div className="flex items-start justify-between gap-2">
+				<HighlightText
+					text={item.title}
+					searchQuery={query}
+					className="flex-1 font-medium text-sm leading-5"
+				/>
+				{item.publishedAt && (
+					<span className="whitespace-nowrap text-muted-foreground text-xs">
+						{new Date(item.publishedAt).toLocaleDateString()}
+					</span>
+				)}
+			</div>
+
+			{excerptMatches && (
+				<HighlightText
+					text={item.processedExcerpt || ""}
+					searchQuery={query}
+					className="text-muted-foreground text-xs leading-4"
+					maxLength={120}
+				/>
+			)}
+			{contentMatches && (
+				<HighlightText
+					text={item.processedContent}
+					searchQuery={query}
+					className="text-muted-foreground text-xs leading-4"
+					maxLength={120}
+				/>
+			)}
+			{!excerptMatches && !contentMatches && (
+				<HighlightText
+					text={item.processedExcerpt || item.processedContent}
+					searchQuery={query}
+					className="text-muted-foreground text-xs leading-4"
+					maxLength={120}
+				/>
+			)}
+		</button>
+	);
+};
 
 export function SearchInput({
 	className,
@@ -64,10 +93,7 @@ export function SearchInput({
 	buttonText,
 	emptyMessage,
 }: SearchInputProps) {
-	const { navigate } = usePluginOverride<BlogPluginOverrides>(
-		"blog",
-		"navigate",
-	);
+	const { navigate } = usePluginOverrides<BlogPluginOverrides>("blog");
 	const basePath = useBasePath();
 	const [currentQuery, setCurrentQuery] = React.useState("");
 
@@ -85,7 +111,8 @@ export function SearchInput({
 			publishedAt: post.publishedAt,
 			authorName: "",
 			processedContent: stripMarkdown(stripHtml(post.content || "")),
-			onClick: () => navigate(`${basePath}/${post.slug}`),
+			processedExcerpt: stripMarkdown(stripHtml(post.excerpt || "")),
+			onClick: () => navigate(`${basePath}/blog/${post.slug}`),
 		}));
 	}, [searchResults, navigate, basePath]);
 

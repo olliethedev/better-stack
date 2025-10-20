@@ -10,13 +10,13 @@ import {
 	CardTitle,
 } from "../ui/card";
 import { useBasePath, usePluginOverrides } from "@btst/stack/context";
-
-import type { Post } from "../../../types";
+import { formatDate } from "date-fns";
+import type { SerializedPost } from "../../../types";
 import { CalendarIcon, ImageIcon } from "lucide-react";
 import { ArrowRightIcon } from "lucide-react";
 import type { BlogPluginOverrides } from "../../overrides";
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post }: { post: SerializedPost }) {
 	const { Link, Image } = usePluginOverrides<BlogPluginOverrides>("blog");
 	const LinkComponent = Link || DefaultLink;
 	const ImageComponent = Image || DefaultImage;
@@ -27,10 +27,11 @@ export function PostCard({ post }: { post: Post }) {
 		},
 	};
 	const basePath = useBasePath();
-	const blogPath = `${basePath}/${post.slug}`;
-	const publishedDate = post.publishedAt || post.createdAt;
-
-	console.log("post", { post });
+	const blogPath = `${basePath}/blog/${post.slug}`;
+	const postDate = formatDate(
+		post.publishedAt || post.createdAt,
+		"MMMM d, yyyy",
+	);
 
 	return (
 		<Card className="group relative flex h-full flex-col gap-2 pt-0 pb-4 transition-shadow duration-200 hover:shadow-lg">
@@ -63,12 +64,7 @@ export function PostCard({ post }: { post: Post }) {
 			<CardHeader className="flex-1">
 				<div className="mb-2 flex items-center gap-2 text-muted-foreground text-xs">
 					<CalendarIcon className="h-3 w-3" />
-					{/* <time dateTime={publishedDate?.toISOString()}>
-                        {formatDate(
-                            publishedDate || new Date(),
-                            "MMMM d, yyyy"
-                        )}
-                    </time> */}
+					<time dateTime={postDate}>{postDate}</time>
 				</div>
 
 				<CardTitle className="line-clamp-2 text-lg leading-tight transition-colors">

@@ -7,13 +7,31 @@ import {
 	useQuery,
 	useQueryClient,
 	useSuspenseInfiniteQuery,
+	useSuspenseQuery,
+	type InfiniteData,
 } from "@tanstack/react-query";
-import type { Post } from "../../types";
+import type { Post, SerializedPost } from "../../types";
 import type { BlogApiRouter } from "../../api/plugin";
 import { useDebounce } from "./use-debounce";
 import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { createPostSchema, updatePostSchema } from "../../schemas";
+import { createBlogQueryKeys } from "../../query-keys";
+import { usePluginOverrides } from "@btst/stack/context";
+import type { BlogPluginOverrides } from "../overrides";
+
+/**
+ * Shared React Query configuration for all blog queries
+ * Prevents automatic refetching to avoid hydration mismatches in SSR
+ */
+const SHARED_QUERY_CONFIG = {
+	retry: false,
+	refetchOnWindowFocus: false,
+	refetchOnMount: false,
+	refetchOnReconnect: false,
+	staleTime: 1000 * 60 * 5, // 5 minutes
+	gcTime: 1000 * 60 * 10, // 10 minutes
+} as const;
 
 export interface UsePostsOptions {
 	tag?: string;
@@ -52,7 +70,7 @@ export interface UsePostSearchResult {
 }
 
 export interface UsePostResult {
-	post: Post | null;
+	post: SerializedPost | null;
 	isLoading: boolean;
 	error: Error | null;
 	refetch: () => void;
@@ -66,56 +84,50 @@ export type PostUpdateInput = z.infer<typeof updatePostSchema>;
  */
 export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
 	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
-	const limit = options.limit ?? 10;
+	const { tag, limit = 10, enabled = true, query, published } = options;
+	const queries = createBlogQueryKeys(client);
 
-	const query = useInfiniteQuery<Post[], Error>({
-		queryKey: [
-			"blog",
-			"posts",
-			{
-				slug: options.slug,
-				query: options.query,
-				published: options.published,
-				limit,
-			},
-		],
-		enabled: options.enabled ?? true,
+	const queryParams = {
+		tag,
+		limit,
+		query,
+		published,
+	};
+
+	const basePosts = queries.posts.list(queryParams);
+
+	const {
+		data,
+		isLoading,
+		error,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		refetch,
+	} = useInfiniteQuery({
+		...basePosts,
+		...SHARED_QUERY_CONFIG,
 		initialPageParam: 0,
-		queryFn: async ({ pageParam }) => {
-			const response = await client("/posts", {
-				method: "GET",
-				query: {
-					offset: Number(pageParam) || 0,
-					limit,
-					slug: options.slug,
-					query: options.query,
-					published: options.published,
-				},
-			});
-			return response.data ?? [];
+		getNextPageParam: (lastPage, allPages) => {
+			const posts = lastPage as Post[];
+			if (posts.length < limit) return undefined;
+			return allPages.length * limit;
 		},
-		getNextPageParam: (lastPage, allPages, lastPageParam) => {
-			const nextOffset = (Number(lastPageParam) || 0) + limit;
-			return lastPage.length < limit ? undefined : nextOffset;
-		},
+		enabled: enabled && !!client,
 	});
 
-	const pages = (query.data?.pages as Post[][] | undefined) ?? [];
-
-	const posts = pages.flat();
+	const posts = ((
+		data as InfiniteData<Post[], number> | undefined
+	)?.pages?.flat() ?? []) as Post[];
 
 	return {
 		posts,
-		isLoading: query.isLoading,
-		error: query.error ?? null,
-		loadMore: () => {
-			void query.fetchNextPage();
-		},
-		hasMore: query.hasNextPage ?? false,
-		isLoadingMore: query.isFetchingNextPage,
-		refetch: () => {
-			void query.refetch();
-		},
+		isLoading,
+		error,
+		loadMore: fetchNextPage,
+		hasMore: !!hasNextPage,
+		isLoadingMore: isFetchingNextPage,
+		refetch,
 	};
 }
 
@@ -128,114 +140,116 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
 	refetch: () => Promise<unknown>;
 } {
 	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
-	const limit = options.limit ?? 10;
+	const { tag, limit = 10, enabled = true, query, published } = options;
+	const queries = createBlogQueryKeys(client);
 
-	const queryKey = [
-		"blog",
-		"posts",
-		{
-			slug: options.slug,
-			query: options.query,
-			published: options.published,
-			limit,
-		},
-	] as const;
+	const queryParams = { tag, limit, query, published };
+	const basePosts = queries.posts.list(queryParams);
 
-	console.log("[Client] useSuspensePosts queryKey:", JSON.stringify(queryKey));
+	const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+		useSuspenseInfiniteQuery({
+			...basePosts,
+			...SHARED_QUERY_CONFIG,
+			initialPageParam: 0,
+			getNextPageParam: (lastPage, allPages) => {
+				const posts = lastPage as Post[];
+				if (posts.length < limit) return undefined;
+				return allPages.length * limit;
+			},
+		});
 
-	const query = useSuspenseInfiniteQuery<Post[], Error>({
-		queryKey,
-		initialPageParam: 0,
-		queryFn: async ({ pageParam }) => {
-			console.log("[Client] Fetching blog posts, pageParam:", pageParam);
-			const response = await client("/posts", {
-				method: "GET",
-				query: {
-					offset: Number(pageParam) || 0,
-					limit,
-					slug: options.slug,
-					query: options.query,
-					published: options.published,
-				},
-			});
-			console.log(
-				"[Client] Fetched blog posts:",
-				response.data?.length ?? 0,
-				"posts",
-			);
-			return response.data ?? [];
-		},
-		getNextPageParam: (lastPage, _allPages, lastPageParam) => {
-			const nextOffset = (Number(lastPageParam) || 0) + limit;
-			return lastPage.length < limit ? undefined : nextOffset;
-		},
-	});
-
-	const pages = (query.data.pages as Post[][] | undefined) ?? [];
-	const posts = pages.flat();
+	const posts = (data.pages?.flat() ?? []) as Post[];
 
 	return {
 		posts,
-		loadMore: query.fetchNextPage,
-		hasMore: query.hasNextPage ?? false,
-		isLoadingMore: query.isFetchingNextPage,
-		refetch: query.refetch,
+		loadMore: fetchNextPage,
+		hasMore: !!hasNextPage,
+		isLoadingMore: isFetchingNextPage,
+		refetch,
 	};
 }
 
-/** Fetch a single post by slug */
+/**
+ * Hook for fetching a single post by slug
+ */
 export function usePost(slug?: string): UsePostResult {
 	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const queries = createBlogQueryKeys(client);
 
-	const baseKey = ["blog", "post", { slug: slug ?? "" }] as const;
-
-	const query = useQuery<Post | null, Error, Post | null, typeof baseKey>({
-		queryKey: baseKey,
-		enabled: !!slug,
-		retry: false,
-		refetchOnWindowFocus: false,
-		staleTime: 1000 * 60 * 5,
-		gcTime: 1000 * 60 * 10,
-		queryFn: async () => {
-			if (!slug) return null;
-			const response = await client("/posts", {
-				method: "GET",
-				query: { slug, limit: 1 },
-			});
-			const list = (response.data ?? []) as Post[];
-			return list[0] ?? null;
-		},
+	const basePost = queries.posts.detail(slug ?? "");
+	const { data, isLoading, error, refetch } = useQuery<
+		SerializedPost | null,
+		Error,
+		SerializedPost | null,
+		typeof basePost.queryKey
+	>({
+		...basePost,
+		...SHARED_QUERY_CONFIG,
+		enabled: !!client && !!slug,
 	});
 
 	return {
-		post: query.data ?? null,
-		isLoading: query.isLoading,
-		error: query.error ?? null,
-		refetch: () => {
-			void query.refetch();
-		},
+		post: data || null,
+		isLoading,
+		error,
+		refetch,
 	};
+}
+
+/** Suspense variant of usePost */
+export function useSuspensePost(slug: string): {
+	post: SerializedPost | null;
+	refetch: () => Promise<unknown>;
+} {
+	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const queries = createBlogQueryKeys(client);
+	const basePost = queries.posts.detail(slug);
+	const { data, refetch } = useSuspenseQuery<
+		SerializedPost | null,
+		Error,
+		SerializedPost | null,
+		typeof basePost.queryKey
+	>({
+		...basePost,
+		...SHARED_QUERY_CONFIG,
+	});
+	return { post: data || null, refetch };
 }
 
 /** Create a new post */
 export function useCreatePost() {
 	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
 	const queryClient = useQueryClient();
+	const queries = createBlogQueryKeys(client);
+	const { refresh } = usePluginOverrides<BlogPluginOverrides>("blog");
 
-	return useMutation({
+	return useMutation<SerializedPost | null, Error, PostCreateInput>({
+		mutationKey: [...queries.posts._def, "create"],
 		mutationFn: async (postData: PostCreateInput) => {
 			const response = await client("@post/posts", {
 				method: "POST",
 				body: postData,
 			});
-			return response.data as Post;
+			return response.data as SerializedPost | null;
 		},
-		onSuccess: (created) => {
-			void queryClient.invalidateQueries({ queryKey: ["blog", "posts"] });
+		onSuccess: async (created) => {
+			// Update detail cache if available
 			if (created?.slug) {
-				void queryClient.invalidateQueries({
-					queryKey: ["blog", "post", { slug: created.slug }],
-				});
+				queryClient.setQueryData(
+					queries.posts.detail(created.slug).queryKey,
+					created,
+				);
+			}
+			// Invalidate lists scoped to posts and drafts - wait for completion
+			await queryClient.invalidateQueries({
+				queryKey: queries.posts.list._def,
+			});
+			await queryClient.invalidateQueries({
+				queryKey: queries.drafts.list._def,
+			});
+			// Refresh server-side cache (Next.js router cache)
+			if (refresh) {
+				await refresh();
 			}
 		},
 	});
@@ -245,22 +259,41 @@ export function useCreatePost() {
 export function useUpdatePost() {
 	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
 	const queryClient = useQueryClient();
+	const queries = createBlogQueryKeys(client);
+	const { refresh } = usePluginOverrides<BlogPluginOverrides>("blog");
 
-	return useMutation({
+	return useMutation<
+		SerializedPost | null,
+		Error,
+		{ id: string; data: PostUpdateInput }
+	>({
+		mutationKey: [...queries.posts._def, "update"],
 		mutationFn: async ({ id, data }: { id: string; data: PostUpdateInput }) => {
 			const response = await client(`@put/posts/:id`, {
 				method: "PUT",
 				params: { id },
 				body: data,
 			});
-			return response.data as Post;
+			return response.data as SerializedPost | null;
 		},
-		onSuccess: (updated) => {
-			void queryClient.invalidateQueries({ queryKey: ["blog", "posts"] });
+		onSuccess: async (updated) => {
+			// Update detail cache if available
 			if (updated?.slug) {
-				void queryClient.invalidateQueries({
-					queryKey: ["blog", "post", { slug: updated.slug }],
-				});
+				queryClient.setQueryData(
+					queries.posts.detail(updated.slug).queryKey,
+					updated,
+				);
+			}
+			// Invalidate lists scoped to posts and drafts - wait for completion
+			await queryClient.invalidateQueries({
+				queryKey: queries.posts.list._def,
+			});
+			await queryClient.invalidateQueries({
+				queryKey: queries.drafts.list._def,
+			});
+			// Refresh server-side cache (Next.js router cache)
+			if (refresh) {
+				await refresh();
 			}
 		},
 	});

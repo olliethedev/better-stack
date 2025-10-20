@@ -20,6 +20,7 @@ async function todosLoader(queryClient: QueryClient, baseURL: string) {
           const response = await client("/todos", {
             method: "GET",
           });
+          console.log("SSR todos", response.data);
           return response.data;
         } catch (error) {
           console.error("error", error);

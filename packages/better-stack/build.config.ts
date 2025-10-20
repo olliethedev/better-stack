@@ -23,6 +23,8 @@ function createUseClientBanner() {
 		// - plugins/*/client/hooks/**
 		// - plugins/*/client/** (excluding the top-level client/index.* entry)
 		// Also add to shared chunks that include modules from plugins/*/client/**
+		// Also add to top-level client/components/** (outside of plugins)
+		// Also add to shared chunks that include top-level client/components/**
 		const isPluginClientComponentOrHook =
 			chunk.fileName.includes("plugins/") &&
 			(chunk.fileName.includes("/client/components/") ||
@@ -39,10 +41,24 @@ function createUseClientBanner() {
 				(id: string) => id.includes("plugins/") && id.includes("/client/"),
 			);
 
+		const isTopLevelClientComponents =
+			(chunk.fileName.includes("/client/components/") ||
+				chunk.fileName.startsWith("client/components/")) &&
+			!chunk.fileName.includes("plugins/");
+
+		const isSharedChunkUsingTopLevelClientComponents =
+			chunk.fileName.includes("shared/") &&
+			chunk.moduleIds?.some(
+				(id: string) =>
+					id.includes("/client/components/") && !id.includes("plugins/"),
+			);
+
 		if (
 			isPluginClientComponentOrHook ||
 			isOtherClientChunkExcludingIndex ||
-			isSharedChunkUsingAnyPluginClient
+			isSharedChunkUsingAnyPluginClient ||
+			isTopLevelClientComponents ||
+			isSharedChunkUsingTopLevelClientComponents
 		) {
 			return '"use client";';
 		}
@@ -87,11 +103,13 @@ export default defineBuildConfig({
 		"./src/client/index.ts",
 		"./src/context/index.ts",
 		"./src/plugins/index.ts",
+		"./src/client/components/index.tsx",
 		// blog plugin entries
 		"./src/plugins/blog/api/index.ts",
 		"./src/plugins/blog/client/index.ts",
 		"./src/plugins/blog/client/components/index.tsx",
 		"./src/plugins/blog/client/hooks/index.tsx",
+		"./src/plugins/blog/query-keys.ts",
 	],
 	hooks: {
 		"rollup:options"(_ctx, options) {

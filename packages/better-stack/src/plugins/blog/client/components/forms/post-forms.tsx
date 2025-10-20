@@ -226,7 +226,7 @@ const CustomPostUpdateSchema = PostUpdateSchema.omit({
 
 type AddPostFormProps = {
 	onClose: () => void;
-	onSuccess: () => void;
+	onSuccess: (post: { published: boolean }) => void;
 };
 
 const addPostFormPropsAreEqual = (
@@ -256,7 +256,8 @@ const AddPostFormComponent = ({ onClose, onSuccess }: AddPostFormProps) => {
 		// Auto-generate slug from title if not provided
 		const slug = data.slug || slugify(data.title);
 
-		await createPost({
+		// Wait for mutation to complete, including refresh
+		const createdPost = await createPost({
 			title: data.title,
 			content: data.content,
 			excerpt: data.excerpt ?? "",
@@ -265,8 +266,11 @@ const AddPostFormComponent = ({ onClose, onSuccess }: AddPostFormProps) => {
 			publishedAt: data.published ? new Date() : undefined,
 			image: data.image,
 		});
+
 		toast.success("Post created successfully");
-		onSuccess();
+
+		// Navigate only after mutation completes
+		onSuccess({ published: createdPost?.published ?? false });
 	};
 
 	// For compatibility with resolver types that require certain required fields,
@@ -301,7 +305,7 @@ export const AddPostForm = memo(AddPostFormComponent, addPostFormPropsAreEqual);
 type EditPostFormProps = {
 	postSlug: string;
 	onClose: () => void;
-	onSuccess: () => void;
+	onSuccess: (post: { published: boolean }) => void;
 };
 
 const editPostFormPropsAreEqual = (
@@ -346,21 +350,30 @@ const EditPostFormComponent = ({
 
 	type EditPostFormValues = z.input<typeof schema>;
 	const onSubmit = async (data: EditPostFormValues) => {
-		await updatePost({
+		// Wait for mutation to complete, including refresh
+		const updatedPost = await updatePost({
 			id: post!.id,
 			data: {
+				id: post!.id,
 				title: data.title,
 				content: data.content,
 				excerpt: data.excerpt ?? "",
 				slug: data.slug,
-				published: data.published,
+				published: data.published ?? false,
 				publishedAt:
-					data.published && !post?.published ? new Date() : post?.publishedAt,
+					data.published && !post?.published
+						? new Date()
+						: post?.publishedAt
+							? new Date(post.publishedAt)
+							: undefined,
 				image: data.image,
 			},
 		});
+
 		toast.success("Post updated successfully");
-		onSuccess();
+
+		// Navigate only after mutation completes
+		onSuccess({ published: updatedPost?.published ?? false });
 	};
 
 	// Don't render the form until post data is loaded

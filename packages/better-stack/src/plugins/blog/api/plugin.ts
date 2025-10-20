@@ -44,6 +44,19 @@ export const blogBackendPlugin = defineBackendPlugin({
 										field: "title",
 										value: query.query,
 										operator: "contains" as const,
+										connector: "OR" as const,
+									},
+									{
+										field: "content",
+										value: query.query,
+										operator: "contains" as const,
+										connector: "OR" as const,
+									},
+									{
+										field: "excerpt",
+										value: query.query,
+										operator: "contains" as const,
+										connector: "OR" as const,
 									},
 								]
 							: []),

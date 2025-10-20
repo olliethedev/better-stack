@@ -15,12 +15,39 @@ export type { ClientPlugin } from "../types";
  * // For Next.js with SSR:
  * const lib = createStackClient({
  *   plugins: {
- *     messages: messagesPlugin.client
+ *     blog: blogPlugin.client
  *   }
  * });
  *
- * // Access router for page routing
- * const route = lib.router.getRoute('/messages');
+ * // SPA usage - just render the route
+ * function Page() {
+ *   return lib.resolveRoute('/blog');
+ * }
+ *
+ * // SSR usage - prefetch data with loader, then render
+ * async function Page({ params }) {
+ *   const path = '/blog';
+ *
+ *   // Load data server-side if loader exists
+ *   const loader = lib.getLoader(path);
+ *   if (loader) await loader(queryClient, baseURL, basePath);
+ *
+ *   // Render with built-in Suspense + Error Boundary
+ *   return lib.resolveRoute(path);
+ * }
+ *
+ * // Next.js with notFound() function
+ * import { notFound } from 'next/navigation';
+ *
+ * async function Page({ params }) {
+ *   const path = '/blog';
+ *   const loader = lib.getLoader(path);
+ *   if (loader) await loader(queryClient, baseURL);
+ *
+ *   return lib.resolveRoute(path, {
+ *     onNotFound: notFound // Calls Next.js notFound() instead of rendering
+ *   });
+ * }
  *
  * ```
  *

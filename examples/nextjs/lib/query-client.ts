@@ -1,12 +1,32 @@
-import { QueryClient } from "@tanstack/react-query"
+import {
+    QueryClient,
+    defaultShouldDehydrateQuery,
+    isServer
+} from "@tanstack/react-query"
 
-// Create a new QueryClient for each server-side request
-export const makeQueryClient = () => {
+function makeQueryClient() {
     return new QueryClient({
         defaultOptions: {
             queries: {
-                staleTime: 60 * 1000 // 1 minute
+                staleTime: 0,
+                refetchOnMount: false,
+                refetchOnWindowFocus: false,
+                refetchOnReconnect: false,
+                retry: false
+            },
+            dehydrate: {
+                // include pending queries in dehydration
+                shouldDehydrateQuery: (query) =>
+                    defaultShouldDehydrateQuery(query) ||
+                    query.state.status === "pending"
             }
         }
     })
 }
+
+export function getOrCreateQueryClient() {
+    // Always return a new QueryClient. This avoids carrying client cache
+    // across navigations, which can cause hydration mismatches when SSR data
+    // differs from previously cached client data.
+    return makeQueryClient()
+} 

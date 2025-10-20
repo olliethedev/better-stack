@@ -1,10 +1,17 @@
 
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
+import type { DehydratedState } from "@tanstack/react-query"
 import { notFound } from "next/navigation"
-import { makeQueryClient } from "@/lib/query-client"
+import { getOrCreateQueryClient } from "@/lib/query-client"
 import { router } from "@/lib/better-stack-client"
+import { ClientRouteResolver } from "@/lib/route-resolver"
 
 const baseURL = process.env.BASE_URL ?? "http://localhost:3000"
+
+const queryClient = getOrCreateQueryClient()
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function ExamplePage({
     params
@@ -14,35 +21,25 @@ export default async function ExamplePage({
     const pathParams = await params
     const path = pathParams?.all ? `/${pathParams.all.join("/")}` : "/"
 
-
     const route = router.getRoute(path)
 
-    if (!route) {
-        return notFound()
-    }
-
-    const { PageComponent, loader } = route
-    const queryClient = makeQueryClient()
-
-    if (!PageComponent) {
-        return notFound()
-    }
-
-    if (loader) {
-        await loader(queryClient, baseURL)
+    // Load data server-side if loader exists
+    if (route?.loader) {
+        await route.loader(queryClient, baseURL)
     }
     
-    const dehydratedState = dehydrate(queryClient)
+    const dehydratedState: DehydratedState = dehydrate(queryClient)
     console.log("[SSR] Dehydrated queries:", Object.keys(dehydratedState.queries || {}).length, "queries")
     if (dehydratedState.queries && dehydratedState.queries.length > 0) {
-        dehydratedState.queries.forEach((q: any) => {
+        dehydratedState.queries.forEach((q) => {
             console.log("[SSR] - Query:", JSON.stringify(q.queryKey), "state:", q.state.status)
         })
     }
 
+    // Pass path to client resolver which has access to router via closure
     return (
         <HydrationBoundary state={dehydratedState}>
-            <PageComponent />
+            {route ? <ClientRouteResolver path={path} /> : notFound()}
         </HydrationBoundary>
     )
 
@@ -61,11 +58,13 @@ export async function generateMetadata({ params }: { params: Promise<{ all: stri
             title: "No meta for this route"
         }
     }
-    const queryClient = makeQueryClient()
-    const loader = route.loader
-    if(loader) {
-        await loader(queryClient, baseURL)
+    const queryClient = getOrCreateQueryClient()
+    
+    // Load data for metadata if loader exists
+    if (route?.loader) {
+        await route.loader(queryClient, baseURL)
     }
+    
     const fullUrl = `${baseURL}/pages${path}`
     return metaElementsToObject(route.meta(
         { url: fullUrl, todos: queryClient.getQueryData(["todos"]) ?? [] }

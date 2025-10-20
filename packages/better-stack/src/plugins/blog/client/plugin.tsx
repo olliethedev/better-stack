@@ -4,6 +4,9 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { BlogApiRouter } from "../api/plugin";
 import { HomePageComponent } from "./components/pages/home-page";
 import { NewPostPageComponent } from "./components/pages/new-post-page";
+import { PostsLoading, FormLoading } from "./components/loading";
+import { DefaultError } from "./components/shared/default-error";
+import { createBlogQueryKeys } from "../query-keys";
 
 // Loader for SSR prefetching
 async function postsLoader(
@@ -13,73 +16,26 @@ async function postsLoader(
 ) {
 	if (typeof window === "undefined") {
 		const limit = 10;
-		// Construct query key exactly as useSuspensePosts does
-		const queryKey = [
-			"blog",
-			"posts",
-			{
-				slug: undefined,
-				query: undefined,
-				published: true,
-				limit,
-			},
-		] as const;
 
-		console.log("[SSR] Prefetching with queryKey:", JSON.stringify(queryKey));
+		const client = createApiClient<BlogApiRouter>({
+			baseURL: baseURL,
+			basePath: basePath,
+		});
+
+		// note: for a module not to be bundled with client, and to be shared by client and server we need to add it to build.config.ts as an entry
+		const queries = createBlogQueryKeys(client);
+		const listQuery = queries.posts.list({
+			query: undefined,
+			limit,
+			published: true,
+		});
 
 		await queryClient.prefetchInfiniteQuery({
-			queryKey,
-			queryFn: async () => {
-				try {
-					const client = createApiClient<BlogApiRouter>({
-						baseURL: baseURL,
-						basePath: basePath,
-					});
-					const response = await client("/posts", {
-						method: "GET",
-						query: {
-							offset: 0,
-							limit,
-							published: true,
-						},
-					});
-					console.log(
-						"[SSR] Prefetched blog posts:",
-						response.data?.length ?? 0,
-						"posts",
-					);
-					return response.data ?? [];
-				} catch (error) {
-					console.error("[SSR] Error prefetching blog posts:", error);
-					// Return empty array so the query still has initial data
-					// This allows the page to render and the client-side query will retry
-					return [];
-				}
-			},
+			...listQuery,
 			initialPageParam: 0,
 		});
 	}
 }
-
-// // Lazy-load the component to avoid SSR issues
-// let PostListPageComponent: ComponentType<unknown> | null = null;
-// function getPostListPage() {
-//   if (!PostListPageComponent) {
-//     // Use require to avoid bundler issues
-//     PostListPageComponent = require("./components").PostListPage;
-//   }
-//   return PostListPageComponent;
-// }
-
-// // lazy-load the new post page component
-// let NewPostPageComponent: ComponentType<unknown> | null = null;
-// function getNewPostPage() {
-//   if (!NewPostPageComponent) {
-//     // Use require to avoid bundler issues
-//     NewPostPageComponent = require("./components").NewPostPage;
-//   }
-//   return NewPostPageComponent;
-// }
 
 /**
  * Blog client plugin
@@ -89,8 +45,10 @@ export const blogClientPlugin = defineClientPlugin({
 	name: "blog",
 
 	routes: () => ({
-		posts: createRoute("/", () => ({
+		posts: createRoute("/blog", () => ({
 			PageComponent: HomePageComponent,
+			ErrorComponent: DefaultError,
+			LoadingComponent: PostsLoading,
 			loader: postsLoader,
 			meta: (config: { url: string }) => [
 				{ name: "title", content: `Blog Posts` },
@@ -100,8 +58,10 @@ export const blogClientPlugin = defineClientPlugin({
 				},
 			],
 		})),
-		newPost: createRoute("/new", () => ({
+		newPost: createRoute("/blog/new", () => ({
 			PageComponent: NewPostPageComponent,
+			ErrorComponent: DefaultError,
+			LoadingComponent: FormLoading,
 			meta: (config: { url: string }) => [
 				{ name: "title", content: `New Post` },
 				{

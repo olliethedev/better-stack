@@ -34,6 +34,7 @@ function Content() {
 	const { posts, loadMore, hasMore, isLoadingMore } = useSuspensePosts({
 		published: true,
 	});
+	console.log("[HomePageComponent] posts", posts);
 	return (
 		<PostsList
 			posts={posts}

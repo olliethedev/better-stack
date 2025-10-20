@@ -21,6 +21,10 @@ export interface BlogPluginOverrides {
 	 */
 	navigate: (path: string) => void | Promise<void>;
 	/**
+	 * Refresh function to invalidate server-side cache (e.g., Next.js router.refresh())
+	 */
+	refresh?: () => void | Promise<void>;
+	/**
 	 * Image component for displaying images
 	 */
 	Image?: ComponentType<{
