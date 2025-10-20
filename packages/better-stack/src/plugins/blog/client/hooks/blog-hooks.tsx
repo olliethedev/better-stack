@@ -10,7 +10,7 @@ import {
 	useSuspenseQuery,
 	type InfiniteData,
 } from "@tanstack/react-query";
-import type { Post, SerializedPost } from "../../types";
+import type { SerializedPost } from "../../types";
 import type { BlogApiRouter } from "../../api/plugin";
 import { useDebounce } from "./use-debounce";
 import { useEffect, useRef } from "react";
@@ -43,7 +43,7 @@ export interface UsePostsOptions {
 }
 
 export interface UsePostsResult {
-	posts: Post[];
+	posts: SerializedPost[];
 	isLoading: boolean;
 	error: Error | null;
 	loadMore: () => void;
@@ -60,8 +60,8 @@ export interface UsePostSearchOptions {
 }
 
 export interface UsePostSearchResult {
-	posts: Post[];
-	data: Post[];
+	posts: SerializedPost[];
+	data: SerializedPost[];
 	isLoading: boolean;
 	error: Error | null;
 	refetch: () => void;
@@ -109,7 +109,7 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
 		...SHARED_QUERY_CONFIG,
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages) => {
-			const posts = lastPage as Post[];
+			const posts = lastPage as SerializedPost[];
 			if (posts.length < limit) return undefined;
 			return allPages.length * limit;
 		},
@@ -117,8 +117,8 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
 	});
 
 	const posts = ((
-		data as InfiniteData<Post[], number> | undefined
-	)?.pages?.flat() ?? []) as Post[];
+		data as InfiniteData<SerializedPost[], number> | undefined
+	)?.pages?.flat() ?? []) as SerializedPost[];
 
 	return {
 		posts,
@@ -133,7 +133,7 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
 
 /** Suspense variant of usePosts */
 export function useSuspensePosts(options: UsePostsOptions = {}): {
-	posts: Post[];
+	posts: SerializedPost[];
 	loadMore: () => Promise<unknown>;
 	hasMore: boolean;
 	isLoadingMore: boolean;
@@ -152,13 +152,13 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
 			...SHARED_QUERY_CONFIG,
 			initialPageParam: 0,
 			getNextPageParam: (lastPage, allPages) => {
-				const posts = lastPage as Post[];
+				const posts = lastPage as SerializedPost[];
 				if (posts.length < limit) return undefined;
 				return allPages.length * limit;
 			},
 		});
 
-	const posts = (data.pages?.flat() ?? []) as Post[];
+	const posts = (data.pages?.flat() ?? []) as SerializedPost[];
 
 	return {
 		posts,
@@ -312,7 +312,7 @@ export function usePostSearch({
 	const debouncedQuery = useDebounce(query, debounceMs);
 	const shouldSearch = enabled && (query?.trim().length ?? 0) > 0;
 
-	const lastResultsRef = useRef<Post[]>([]);
+	const lastResultsRef = useRef<SerializedPost[]>([]);
 
 	// Only enable the query when there is an actual search term
 	// This prevents empty searches from using the base posts query

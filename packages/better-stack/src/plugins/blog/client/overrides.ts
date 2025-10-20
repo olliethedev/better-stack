@@ -1,4 +1,4 @@
-import type { Post } from "../types";
+import type { SerializedPost } from "../types";
 import type { ComponentType, ReactNode } from "react";
 
 /**
@@ -14,7 +14,7 @@ export interface BlogPluginOverrides {
 		className?: string;
 	}>;
 	PostCard?: ComponentType<{
-		post: Post;
+		post: SerializedPost;
 	}>;
 	/**
 	 * Navigation function for programmatic navigation

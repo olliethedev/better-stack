@@ -11,7 +11,7 @@ import { useBasePath, usePluginOverrides } from "@btst/stack/context";
 // Simplified blog post search result interface
 interface BlogPostSearchResult extends SearchResult {
 	slug: string;
-	publishedAt?: Date | null;
+	publishedAt?: string | null;
 	authorName?: string;
 	processedContent: string;
 	processedExcerpt?: string;

@@ -1,5 +1,5 @@
 import { usePluginOverrides } from "@btst/stack/context";
-import type { Post } from "../../../types";
+import type { SerializedPost } from "../../../types";
 import { Button } from "../ui/button";
 import { EmptyList } from "./empty-list";
 import SearchInput from "./search-input";
@@ -7,7 +7,7 @@ import type { BlogPluginOverrides } from "../../overrides";
 import { PostCard as DefaultPostCard } from "./post-card";
 
 interface PostsListProps {
-	posts: Post[];
+	posts: SerializedPost[];
 	onLoadMore?: () => void;
 	hasMore?: boolean;
 	isLoadingMore?: boolean;
