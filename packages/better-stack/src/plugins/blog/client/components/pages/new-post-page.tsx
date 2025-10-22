@@ -5,14 +5,15 @@ import { AddPostForm } from "../forms/post-forms";
 import { PageHeader } from "../shared/page-header";
 import { PageWrapper } from "../shared/page-wrapper";
 import type { BlogPluginOverrides } from "../../overrides";
+import { BLOG_LOCALIZATION } from "../../localization";
 
 export function NewPostPageComponent() {
-	const { localization } = {
-		localization: {
-			BLOG_POST_ADD_TITLE: "Add Post",
-			BLOG_POST_ADD_DESCRIPTION: "Add Post Description",
-		},
-	};
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 	const { navigate } = usePluginOverrides<BlogPluginOverrides>("blog");
 	const basePath = useBasePath();
 

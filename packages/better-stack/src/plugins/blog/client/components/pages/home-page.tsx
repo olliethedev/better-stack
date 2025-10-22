@@ -5,15 +5,17 @@ import { PageWrapper } from "../shared/page-wrapper";
 import { PostsList } from "../shared/posts-list";
 
 import { useSuspensePosts } from "../../hooks/blog-hooks";
-import { Suspense } from "react";
+import { BLOG_LOCALIZATION } from "../../localization";
+import { usePluginOverrides } from "@btst/stack/context";
+import type { BlogPluginOverrides } from "../../overrides";
 
 export function HomePageComponent() {
-	const { localization } = {
-		localization: {
-			BLOG_LIST_TITLE: "Blog List",
-			BLOG_LIST_DESCRIPTION: "Blog List Description",
-		},
-	};
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 
 	return (
 		<PageWrapper testId="home-page">
@@ -23,9 +25,7 @@ export function HomePageComponent() {
 					description={localization.BLOG_LIST_DESCRIPTION}
 				/>
 			</div>
-			<Suspense fallback={<div>Loading...</div>}>
-				<Content />
-			</Suspense>
+			<Content />
 		</PageWrapper>
 	);
 }
@@ -34,7 +34,6 @@ function Content() {
 	const { posts, loadMore, hasMore, isLoadingMore } = useSuspensePosts({
 		published: true,
 	});
-	console.log("[HomePageComponent] posts", posts);
 	return (
 		<PostsList
 			posts={posts}

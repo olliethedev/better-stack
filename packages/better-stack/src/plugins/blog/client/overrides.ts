@@ -1,5 +1,6 @@
 import type { SerializedPost } from "../types";
 import type { ComponentType, ReactNode } from "react";
+import type { BlogLocalization } from "./localization";
 
 /**
  * Overridable components and functions for the Todos plugin
@@ -31,9 +32,15 @@ export interface BlogPluginOverrides {
 		src: string;
 		alt: string;
 		className?: string;
+		width?: number | string;
+		height?: number | string;
 	}>;
 	/**
 	 * Function used to upload an image and return its URL.
 	 */
 	uploadImage: (file: File) => Promise<string>;
+	/**
+	 * Localization object for the blog plugin
+	 */
+	localization?: BlogLocalization;
 }

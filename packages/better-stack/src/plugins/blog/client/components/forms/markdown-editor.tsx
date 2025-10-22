@@ -10,6 +10,7 @@ import { Selection } from "@milkdown/kit/prose/state";
 import { useLayoutEffect, useRef, useState } from "react";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
+import { BLOG_LOCALIZATION } from "../../localization";
 
 export function MarkdownEditor({
 	value,
@@ -20,7 +21,12 @@ export function MarkdownEditor({
 	onChange?: (markdown: string) => void;
 	className?: string;
 }) {
-	const { uploadImage } = usePluginOverrides<BlogPluginOverrides>("blog");
+	const { uploadImage, localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const crepeRef = useRef<Crepe | null>(null);
 	const isReadyRef = useRef(false);
@@ -45,7 +51,7 @@ export function MarkdownEditor({
 			defaultValue: initialValueRef.current,
 			featureConfigs: {
 				[CrepeFeature.Placeholder]: {
-					text: "Write something...",
+					text: localization.BLOG_FORMS_EDITOR_PLACEHOLDER,
 				},
 				[CrepeFeature.ImageBlock]: {
 					onUpload: async (file) => {

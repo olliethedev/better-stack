@@ -5,6 +5,7 @@ import { EmptyList } from "./empty-list";
 import SearchInput from "./search-input";
 import type { BlogPluginOverrides } from "../../overrides";
 import { PostCard as DefaultPostCard } from "./post-card";
+import { BLOG_LOCALIZATION } from "../../localization";
 
 interface PostsListProps {
 	posts: SerializedPost[];
@@ -19,16 +20,12 @@ export function PostsList({
 	hasMore,
 	isLoadingMore,
 }: PostsListProps) {
-	const { localization } = {
-		localization: {
-			BLOG_LIST_EMPTY: "No posts found",
-			BLOG_LIST_SEARCH_PLACEHOLDER: "Search for a post",
-			BLOG_LIST_SEARCH_BUTTON: "Search",
-			BLOG_LIST_SEARCH_EMPTY: "No posts found",
-			BLOG_LIST_LOADING_MORE: "Loading more...",
-			BLOG_LIST_LOAD_MORE: "Load more",
-		},
-	};
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 	const { PostCard } = usePluginOverrides<BlogPluginOverrides>("blog");
 
 	const PostCardComponent = PostCard || DefaultPostCard;

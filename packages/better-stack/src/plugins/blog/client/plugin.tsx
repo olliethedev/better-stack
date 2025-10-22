@@ -7,6 +7,8 @@ import { NewPostPageComponent } from "./components/pages/new-post-page";
 import { PostsLoading, FormLoading } from "./components/loading";
 import { DefaultError } from "./components/shared/default-error";
 import { createBlogQueryKeys } from "../query-keys";
+import { EditPostPageComponent } from "./components/pages/edit-post-page";
+import { PostPageComponent } from "./components/pages/post-page";
 
 // Loader for SSR prefetching
 async function postsLoader(
@@ -35,6 +37,24 @@ async function postsLoader(
 			initialPageParam: 0,
 		});
 	}
+}
+
+function createPostLoader(slug: string) {
+	return async (
+		queryClient: QueryClient,
+		baseURL: string,
+		basePath: string = "/api",
+	) => {
+		if (typeof window === "undefined") {
+			const client = createApiClient<BlogApiRouter>({
+				baseURL: baseURL,
+				basePath: basePath,
+			});
+			const queries = createBlogQueryKeys(client);
+			const postQuery = queries.posts.detail(slug);
+			await queryClient.prefetchQuery(postQuery);
+		}
+	};
 }
 
 /**
@@ -69,6 +89,22 @@ export const blogClientPlugin = defineClientPlugin({
 					content: `Create a new blog post.`,
 				},
 			],
+		})),
+		editPost: createRoute("/blog/:slug/edit", ({ params: { slug } }) => ({
+			PageComponent: () => <EditPostPageComponent slug={slug} />,
+			loader: createPostLoader(slug),
+			ErrorComponent: DefaultError,
+			LoadingComponent: FormLoading,
+			meta: (config: { url: string }) => [
+				{ name: "title", content: `Edit Post` },
+			],
+		})),
+		post: createRoute("/blog/:slug", ({ params: { slug } }) => ({
+			PageComponent: () => <PostPageComponent slug={slug} />,
+			loader: createPostLoader(slug),
+			ErrorComponent: DefaultError,
+			LoadingComponent: FormLoading,
+			meta: (config: { url: string }) => [{ name: "title", content: `Post` }],
 		})),
 	}),
 });

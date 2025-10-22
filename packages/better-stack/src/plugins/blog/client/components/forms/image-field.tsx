@@ -12,6 +12,7 @@ import { Loader2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { BlogPluginOverrides } from "../../overrides";
+import { BLOG_LOCALIZATION } from "../../localization";
 
 export function FeaturedImageField({
 	isRequired,
@@ -27,8 +28,10 @@ export function FeaturedImageField({
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [isUploading, setIsUploading] = useState(false);
 
-	const { uploadImage, Image } =
-		usePluginOverrides<BlogPluginOverrides>("blog");
+	const { uploadImage, Image, localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", { localization: BLOG_LOCALIZATION });
 
 	const ImageComponent = Image ? Image : DefaultImage;
 
@@ -39,12 +42,12 @@ export function FeaturedImageField({
 		if (!file) return;
 
 		if (!file.type.startsWith("image/")) {
-			toast.error("Please select an image file");
+			toast.error(localization.BLOG_FORMS_FEATURED_IMAGE_ERROR_NOT_IMAGE);
 			return;
 		}
 
 		if (file.size > 4 * 1024 * 1024) {
-			toast.error("Image size must be less than 4MB");
+			toast.error(localization.BLOG_FORMS_FEATURED_IMAGE_ERROR_TOO_LARGE);
 			return;
 		}
 
@@ -53,11 +56,11 @@ export function FeaturedImageField({
 			setFeaturedImageUploading(true);
 			const url = await uploadImage(file);
 			onChange(url);
-			toast.success("Image uploaded successfully");
+			toast.success(localization.BLOG_FORMS_FEATURED_IMAGE_TOAST_SUCCESS);
 		} catch (error) {
-			toast.error("Failed to upload image");
+			toast.error(localization.BLOG_FORMS_FEATURED_IMAGE_TOAST_FAILURE);
 			console.error("Failed to upload image:", error);
-			toast.error("Failed to upload image");
+			toast.error(localization.BLOG_FORMS_FEATURED_IMAGE_TOAST_FAILURE);
 		} finally {
 			setIsUploading(false);
 			setFeaturedImageUploading(false);
@@ -67,14 +70,21 @@ export function FeaturedImageField({
 	return (
 		<FormItem className="flex flex-col">
 			<FormLabel>
-				Featured Image
-				{isRequired && <span className="text-destructive"> *</span>}
+				{localization.BLOG_FORMS_FEATURED_IMAGE_LABEL}
+				{isRequired && (
+					<span className="text-destructive">
+						{" "}
+						{localization.BLOG_FORMS_FEATURED_IMAGE_REQUIRED_ASTERISK}
+					</span>
+				)}
 			</FormLabel>
 			<FormControl>
 				<div className="space-y-2">
 					<div className="flex gap-2">
 						<Input
-							placeholder="Image URL or upload below..."
+							placeholder={
+								localization.BLOG_FORMS_FEATURED_IMAGE_INPUT_PLACEHOLDER
+							}
 							value={value || ""}
 							onChange={(e) => onChange(e.target.value)}
 							disabled={isUploading}
@@ -88,12 +98,12 @@ export function FeaturedImageField({
 							{isUploading ? (
 								<>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Uploading...
+									{localization.BLOG_FORMS_FEATURED_IMAGE_UPLOADING_BUTTON}
 								</>
 							) : (
 								<>
 									<Upload className="mr-2 h-4 w-4" />
-									Upload
+									{localization.BLOG_FORMS_FEATURED_IMAGE_UPLOAD_BUTTON}
 								</>
 							)}
 						</Button>
@@ -108,14 +118,14 @@ export function FeaturedImageField({
 					{isUploading && (
 						<div className="flex items-center gap-2 text-muted-foreground text-sm">
 							<Loader2 className="h-4 w-4 animate-spin" />
-							Uploading image...
+							{localization.BLOG_FORMS_FEATURED_IMAGE_UPLOADING_TEXT}
 						</div>
 					)}
 					{value && !isUploading && (
 						<div className="relative">
 							<ImageComponent
 								src={value}
-								alt="Featured image preview"
+								alt={localization.BLOG_FORMS_FEATURED_IMAGE_PREVIEW_ALT}
 								className="h-auto w-full max-w-xs rounded-md border"
 								width={400}
 								height={400}

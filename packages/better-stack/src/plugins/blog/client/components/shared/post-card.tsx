@@ -15,17 +15,23 @@ import type { SerializedPost } from "../../../types";
 import { CalendarIcon, ImageIcon } from "lucide-react";
 import { ArrowRightIcon } from "lucide-react";
 import type { BlogPluginOverrides } from "../../overrides";
+import { BLOG_LOCALIZATION } from "../../localization";
+import { DefaultLink, DefaultImage } from "./defaults";
 
 export function PostCard({ post }: { post: SerializedPost }) {
-	const { Link, Image } = usePluginOverrides<BlogPluginOverrides>("blog");
-	const LinkComponent = Link || DefaultLink;
-	const ImageComponent = Image || DefaultImage;
-	const { localization } = {
-		localization: {
-			BLOG_CARD_DRAFT_BADGE: "Draft",
-			BLOG_CARD_READ_MORE: "Read more",
-		},
-	};
+	const { Link, Image } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		Link: DefaultLink,
+		Image: DefaultImage,
+	});
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 	const basePath = useBasePath();
 	const blogPath = `${basePath}/blog/${post.slug}`;
 	const postDate = formatDate(
@@ -36,12 +42,12 @@ export function PostCard({ post }: { post: SerializedPost }) {
 	return (
 		<Card className="group relative flex h-full flex-col gap-2 pt-0 pb-4 transition-shadow duration-200 hover:shadow-lg">
 			{/* Featured Image or Placeholder */}
-			<LinkComponent
+			<Link
 				href={blogPath}
 				className="relative block h-48 w-full overflow-hidden rounded-t-xl bg-muted"
 			>
 				{post.image ? (
-					<ImageComponent
+					<Image
 						src={post.image}
 						alt={post.title}
 						className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
@@ -53,7 +59,7 @@ export function PostCard({ post }: { post: SerializedPost }) {
 						<ImageIcon className="size-18" />
 					</div>
 				)}
-			</LinkComponent>
+			</Link>
 
 			{!post.published && (
 				<Badge variant="destructive" className="absolute top-2 left-2 text-xs">
@@ -68,9 +74,9 @@ export function PostCard({ post }: { post: SerializedPost }) {
 				</div>
 
 				<CardTitle className="line-clamp-2 text-lg leading-tight transition-colors">
-					<LinkComponent href={blogPath} className="hover:underline">
+					<Link href={blogPath} className="hover:underline">
 						{post.title}
-					</LinkComponent>
+					</Link>
 				</CardTitle>
 			</CardHeader>
 
@@ -85,21 +91,13 @@ export function PostCard({ post }: { post: SerializedPost }) {
 			<CardFooter>
 				<div className="flex w-full items-center justify-between">
 					<Button asChild variant="link" className="px-0 has-[>svg]:px-0">
-						<LinkComponent href={blogPath}>
+						<Link href={blogPath}>
 							{localization.BLOG_CARD_READ_MORE}
 							<ArrowRightIcon className="ml-1 h-3 w-3" />
-						</LinkComponent>
+						</Link>
 					</Button>
 				</div>
 			</CardFooter>
 		</Card>
 	);
 }
-
-const DefaultLink = (props: React.ComponentProps<"a">) => {
-	return <a {...props} />;
-};
-
-const DefaultImage = (props: React.ComponentProps<"img">) => {
-	return <img {...props} />;
-};

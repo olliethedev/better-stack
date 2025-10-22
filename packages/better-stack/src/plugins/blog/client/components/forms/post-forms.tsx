@@ -36,6 +36,9 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { FeaturedImageField } from "./image-field";
 import { MarkdownEditor } from "./markdown-editor";
+import { BLOG_LOCALIZATION } from "../../localization";
+import { usePluginOverrides } from "@btst/stack/context";
+import type { BlogPluginOverrides } from "../../overrides";
 
 type CommonPostFormValues = {
 	title: string;
@@ -63,6 +66,12 @@ function PostFormBody<T extends CommonPostFormValues>({
 	errorMessage?: string;
 	setFeaturedImageUploading: (uploading: boolean) => void;
 }) {
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 	const nameTitle = "title" as FieldPath<T>;
 	const nameSlug = "slug" as FieldPath<T>;
 	const nameExcerpt = "excerpt" as FieldPath<T>;
@@ -84,12 +93,15 @@ function PostFormBody<T extends CommonPostFormValues>({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								Title
-								<span className="text-destructive"> *</span>
+								{localization.BLOG_FORMS_TITLE_LABEL}
+								<span className="text-destructive">
+									{" "}
+									{localization.BLOG_FORMS_TITLE_REQUIRED_ASTERISK}
+								</span>
 							</FormLabel>
 							<FormControl>
 								<Input
-									placeholder="Enter your post title..."
+									placeholder={localization.BLOG_FORMS_TITLE_PLACEHOLDER}
 									{...field}
 									value={String(field.value ?? "")}
 								/>
@@ -104,10 +116,10 @@ function PostFormBody<T extends CommonPostFormValues>({
 					name={nameSlug}
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Slug</FormLabel>
+							<FormLabel>{localization.BLOG_FORMS_SLUG_LABEL}</FormLabel>
 							<FormControl>
 								<Input
-									placeholder="url-friendly-slug"
+									placeholder={localization.BLOG_FORMS_SLUG_PLACEHOLDER}
 									{...field}
 									value={String(field.value ?? "")}
 								/>
@@ -122,10 +134,10 @@ function PostFormBody<T extends CommonPostFormValues>({
 					name={nameExcerpt}
 					render={({ field }) => (
 						<FormItem className="flex flex-col">
-							<FormLabel>Excerpt</FormLabel>
+							<FormLabel>{localization.BLOG_FORMS_EXCERPT_LABEL}</FormLabel>
 							<FormControl>
 								<Textarea
-									placeholder="Brief summary of your post..."
+									placeholder={localization.BLOG_FORMS_EXCERPT_PLACEHOLDER}
 									className="min-h-20"
 									value={String(field.value ?? "")}
 									onChange={field.onChange}
@@ -156,8 +168,11 @@ function PostFormBody<T extends CommonPostFormValues>({
 					render={({ field }) => (
 						<FormItem className="flex flex-col">
 							<FormLabel>
-								Content
-								<span className="text-destructive"> *</span>
+								{localization.BLOG_FORMS_CONTENT_LABEL}
+								<span className="text-destructive">
+									{" "}
+									{localization.BLOG_FORMS_CONTENT_REQUIRED_ASTERISK}
+								</span>
 							</FormLabel>
 							<FormControl>
 								<MarkdownEditor
@@ -180,8 +195,10 @@ function PostFormBody<T extends CommonPostFormValues>({
 					render={({ field }) => (
 						<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
 							<div className="space-y-0.5">
-								<FormLabel>Published</FormLabel>
-								<FormDescription>Toggle to publish immediately</FormDescription>
+								<FormLabel>{localization.BLOG_FORMS_PUBLISHED_LABEL}</FormLabel>
+								<FormDescription>
+									{localization.BLOG_FORMS_PUBLISHED_DESCRIPTION}
+								</FormDescription>
 							</div>
 							<FormControl>
 								<Switch
@@ -203,7 +220,7 @@ function PostFormBody<T extends CommonPostFormValues>({
 						disabled={disabled}
 						type="button"
 					>
-						Cancel
+						{localization.BLOG_FORMS_CANCEL_BUTTON}
 					</Button>
 				</div>
 			</form>
@@ -240,6 +257,12 @@ const addPostFormPropsAreEqual = (
 
 const AddPostFormComponent = ({ onClose, onSuccess }: AddPostFormProps) => {
 	const [featuredImageUploading, setFeaturedImageUploading] = useState(false);
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 
 	// const { uploadImage } = useBlogContext()
 
@@ -267,7 +290,7 @@ const AddPostFormComponent = ({ onClose, onSuccess }: AddPostFormProps) => {
 			image: data.image,
 		});
 
-		toast.success("Post created successfully");
+		toast.success(localization.BLOG_FORMS_TOAST_CREATE_SUCCESS);
 
 		// Navigate only after mutation completes
 		onSuccess({ published: createdPost?.published ?? false });
@@ -291,7 +314,11 @@ const AddPostFormComponent = ({ onClose, onSuccess }: AddPostFormProps) => {
 		<PostFormBody
 			form={form}
 			onSubmit={onSubmit}
-			submitLabel={isCreatingPost ? "Creating..." : "Create Post"}
+			submitLabel={
+				isCreatingPost
+					? localization.BLOG_FORMS_SUBMIT_CREATE_PENDING
+					: localization.BLOG_FORMS_SUBMIT_CREATE_IDLE
+			}
 			onCancel={onClose}
 			disabled={isCreatingPost || featuredImageUploading}
 			errorMessage={createPostError?.message}
@@ -305,7 +332,7 @@ export const AddPostForm = memo(AddPostFormComponent, addPostFormPropsAreEqual);
 type EditPostFormProps = {
 	postSlug: string;
 	onClose: () => void;
-	onSuccess: (post: { published: boolean }) => void;
+	onSuccess: (post: { slug: string; published: boolean }) => void;
 };
 
 const editPostFormPropsAreEqual = (
@@ -324,6 +351,12 @@ const EditPostFormComponent = ({
 	onSuccess,
 }: EditPostFormProps) => {
 	const [featuredImageUploading, setFeaturedImageUploading] = useState(false);
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
 	// const { uploadImage } = useBlogContext()
 
 	const { post } = usePost(postSlug);
@@ -370,10 +403,13 @@ const EditPostFormComponent = ({
 			},
 		});
 
-		toast.success("Post updated successfully");
+		toast.success(localization.BLOG_FORMS_TOAST_UPDATE_SUCCESS);
 
 		// Navigate only after mutation completes
-		onSuccess({ published: updatedPost?.published ?? false });
+		onSuccess({
+			slug: updatedPost?.slug ?? "",
+			published: updatedPost?.published ?? false,
+		});
 	};
 
 	// Don't render the form until post data is loaded
@@ -381,7 +417,7 @@ const EditPostFormComponent = ({
 		return (
 			<div className="flex items-center justify-center p-8">
 				<Loader2 className="h-6 w-6 animate-spin" />
-				<span className="ml-2">Loading post...</span>
+				<span className="ml-2">{localization.BLOG_FORMS_LOADING_POST}</span>
 			</div>
 		);
 	}
@@ -403,7 +439,11 @@ const EditPostFormComponent = ({
 		<PostFormBody
 			form={form}
 			onSubmit={onSubmit}
-			submitLabel={isUpdatingPost ? "Updating..." : "Update Post"}
+			submitLabel={
+				isUpdatingPost
+					? localization.BLOG_FORMS_SUBMIT_UPDATE_PENDING
+					: localization.BLOG_FORMS_SUBMIT_UPDATE_IDLE
+			}
 			onCancel={onClose}
 			disabled={isUpdatingPost || featuredImageUploading}
 			errorMessage={updatePostError?.message}

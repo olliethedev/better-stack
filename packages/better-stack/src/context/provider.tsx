@@ -1,3 +1,4 @@
+"use client";
 import { createContext, useContext, type ReactNode } from "react";
 
 /**
@@ -94,41 +95,54 @@ export function useBetterStack<
 	return context;
 }
 
+// Helper type: merge TOverrides with TDefaults, making defaulted properties required
+type OverridesResult<TOverrides, TDefaults> = undefined extends TDefaults
+	? TOverrides
+	: TOverrides & Required<Pick<TDefaults & {}, keyof TDefaults>>;
+
 /**
  * Hook to access overrides for a specific plugin
  * This is type-safe and will only expose the overrides defined by that plugin
  *
+ * When default values are provided, properties with defaults are guaranteed to be non-null.
+ *
  * @example
  * ```tsx
- * // In a todos plugin component
+ * // Without defaults - trusts plugin is configured
  * function TodosList() {
- *   const { Link, navigate } = usePluginOverrides<TodosPluginOverrides>("todos");
+ *   const { navigate } = usePluginOverrides<TodosPluginOverrides>("todos");
+ *   // navigate is (path: string) => void (required fields are non-nullable)
+ *   navigate("/todos/add");
+ * }
  *
- *   return (
- *     <Link href="/todos/add">
- *       <button onClick={() => navigate("/todos")}>
- *         Add Todo
- *       </button>
- *     </Link>
- *   );
+ * // With defaults - optional fields with defaults become required
+ * function TodosList() {
+ *   const { localization } = usePluginOverrides<TodosPluginOverrides, Partial<TodosPluginOverrides>>("todos", {
+ *     localization: DEFAULT_LOCALIZATION
+ *   });
+ *   // localization is Localization (guaranteed to exist because we provided a default)
+ *   console.log(localization.SOME_KEY);
  * }
  * ```
  */
-export function usePluginOverrides<TOverrides = any>(
+export function usePluginOverrides<
+	TOverrides = any,
+	TDefaults extends Partial<TOverrides> | undefined = undefined,
+>(
 	pluginName: string,
-): TOverrides {
+	defaultValues?: TDefaults,
+): OverridesResult<TOverrides, TDefaults> {
 	const context = useBetterStack();
 
-	const overrides = context.overrides[pluginName];
+	const pluginOverrides = context.overrides[pluginName];
 
-	if (!overrides) {
-		throw new Error(
-			`Plugin "${pluginName}" not found in BetterStackProvider. ` +
-				`Available plugins: ${Object.keys(context.overrides).join(", ")}`,
-		);
-	}
+	// If defaults are provided, merge them with plugin overrides
+	// This ensures default properties exist even if plugin is partially configured
+	const overrides = defaultValues
+		? { ...defaultValues, ...pluginOverrides }
+		: pluginOverrides;
 
-	return overrides as TOverrides;
+	return overrides as OverridesResult<TOverrides, TDefaults>;
 }
 
 export function useBasePath() {

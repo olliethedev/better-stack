@@ -221,7 +221,7 @@ export function useCreatePost() {
 	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
 	const queryClient = useQueryClient();
 	const queries = createBlogQueryKeys(client);
-	const { refresh } = usePluginOverrides<BlogPluginOverrides>("blog");
+	const { refresh } = usePluginOverrides<BlogPluginOverrides>("blog") ?? {};
 
 	return useMutation<SerializedPost | null, Error, PostCreateInput>({
 		mutationKey: [...queries.posts._def, "create"],

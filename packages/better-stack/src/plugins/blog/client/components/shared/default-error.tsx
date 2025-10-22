@@ -2,16 +2,19 @@
 
 import type { FallbackProps } from "react-error-boundary";
 import { ErrorPlaceholder } from "./error-placeholder";
+import { usePluginOverrides } from "@btst/stack/context";
+import { BLOG_LOCALIZATION } from "../../localization";
+import type { BlogPluginOverrides } from "../../overrides";
 
 // Default error component for blog plugin routes
 export function DefaultError({ error }: FallbackProps) {
-	const { localization } = {
-		localization: {
-			BLOG_LIST_ERROR_TITLE: "Error",
-			BLOG_LIST_ERROR: "An error occurred while loading the page",
-		},
-	};
-	const title = localization.BLOG_LIST_ERROR_TITLE;
-	const message = error?.message ?? localization.BLOG_LIST_ERROR;
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
+	const title = localization.BLOG_GENERIC_ERROR_TITLE;
+	const message = error?.message ?? localization.BLOG_GENERIC_ERROR_MESSAGE;
 	return <ErrorPlaceholder title={title} message={message} />;
 }
