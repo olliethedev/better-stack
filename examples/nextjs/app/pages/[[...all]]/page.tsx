@@ -25,7 +25,8 @@ export default async function ExamplePage({
 
     // Load data server-side if loader exists
     if (route?.loader) {
-        await route.loader(queryClient, baseURL)
+        // ✅ No parameters needed! Everything configured at plugin initialization
+        await route.loader()
     }
     
     const dehydratedState: DehydratedState = dehydrate(queryClient)
@@ -62,7 +63,7 @@ export async function generateMetadata({ params }: { params: Promise<{ all: stri
     
     // Load data for metadata if loader exists
     if (route?.loader) {
-        await route.loader(queryClient, baseURL)
+        await route.loader()
     }
     
     const fullUrl = `${baseURL}/pages${path}`

@@ -6,42 +6,62 @@ import type { TodosApiRouter } from "../api/backend";
 import { AddTodoPage, TodosListPage } from "./components";
 import { Todo } from "../types";
 
-// Loader for SSR prefetching
-async function todosLoader(queryClient: QueryClient, baseURL: string) {
-  if (typeof window === "undefined") {
-    await queryClient.prefetchQuery({
-      queryKey: ["todos"],
-      queryFn: async () => {
-        const client = createApiClient<TodosApiRouter>({
-          baseURL: baseURL,
-          basePath: "/api",
-        });
-        try {
-          const response = await client("/todos", {
-            method: "GET",
+/**
+ * Configuration for todos client plugin
+ */
+export interface TodosClientConfig {
+  // Required configuration
+  queryClient: QueryClient;
+  baseURL: string;
+  basePath?: string;
+  
+  // Optional context to pass to loaders (for SSR)
+  context?: Record<string, any>;
+}
+
+// Loader for SSR prefetching - configured once
+function todosLoader(config: TodosClientConfig) {
+  return async () => {
+    if (typeof window === "undefined") {
+      const { queryClient, baseURL, basePath = "/api" } = config;
+      
+      await queryClient.prefetchQuery({
+        queryKey: ["todos"],
+        queryFn: async () => {
+          const client = createApiClient<TodosApiRouter>({
+            baseURL: baseURL,
+            basePath: basePath,
           });
-          console.log("SSR todos", response.data);
-          return response.data;
-        } catch (error) {
-          console.error("error", error);
-        }
-        return [];
-      },
-    });
-  }
+          try {
+            const response = await client("/todos", {
+              method: "GET",
+            });
+            console.log("SSR todos", response.data);
+            return response.data;
+          } catch (error) {
+            console.error("error", error);
+          }
+          return [];
+        },
+      });
+    }
+  };
 }
 
 /**
  * Todos client plugin
  * Provides routes, components, and React Query hooks for todos
+ * 
+ * @param config - Configuration including queryClient and baseURL
  */
-export const todosClientPlugin = defineClientPlugin({
-  name: "todos",
+export const todosClientPlugin = (config: TodosClientConfig) =>
+  defineClientPlugin({
+    name: "todos",
 
-  routes: () => ({
-    todos: createRoute("/todos", () => ({
-      PageComponent: TodosListPage,
-      loader: todosLoader,
+    routes: () => ({
+      todos: createRoute("/todos", () => ({
+        PageComponent: TodosListPage,
+        loader: todosLoader(config),
       meta: (config: { url: string; todos: Todo[] }) => [
         { name: "title", content: `${config.todos.length} Todos` },
         {
