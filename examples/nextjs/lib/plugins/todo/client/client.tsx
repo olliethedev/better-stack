@@ -48,6 +48,62 @@ function todosLoader(config: TodosClientConfig) {
   };
 }
 
+// Meta generator - configured once, accesses data via closure
+function createTodosMeta(config: TodosClientConfig, path: string) {
+  return () => {
+    const { queryClient, baseURL } = config;
+    const todos = queryClient.getQueryData<Todo[]>(["todos"]) ?? [];
+    const fullUrl = `${baseURL}${path}`;
+    
+    return [
+      { name: "title", content: `${todos.length} Todos` },
+      {
+        name: "description",
+        content: `Track ${todos.length} todos. Add, toggle and delete.`,
+      },
+      { name: "keywords", content: "todos, tasks, productivity" },
+      // Open Graph
+      { property: "og:title", content: `${todos.length} Todos` },
+      {
+        property: "og:description",
+        content: `Track ${todos.length} todos. Add, toggle and delete.`,
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: fullUrl },
+      // Twitter
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: `${todos.length} Todos` },
+      {
+        name: "twitter:description",
+        content: `Track ${todos.length} todos. Add, toggle and delete.`,
+      },
+    ];
+  };
+}
+
+// Meta generator for add todo page
+function createAddTodoMeta(config: TodosClientConfig, path: string) {
+  return () => {
+    const { baseURL } = config;
+    const fullUrl = `${baseURL}${path}`;
+    
+    return [
+      { name: "title", content: "Add Todo" },
+      { name: "description", content: "Create a new todo item." },
+      { name: "keywords", content: "add todo, create task" },
+      // Open Graph
+      { property: "og:title", content: "Add Todo" },
+      { property: "og:description", content: "Create a new todo item." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: fullUrl },
+      // Twitter
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Add Todo" },
+      { name: "twitter:description", content: "Create a new todo item." },
+    ];
+  };
+}
+
 /**
  * Todos client plugin
  * Provides routes, components, and React Query hooks for todos
@@ -62,46 +118,11 @@ export const todosClientPlugin = (config: TodosClientConfig) =>
       todos: createRoute("/todos", () => ({
         PageComponent: TodosListPage,
         loader: todosLoader(config),
-      meta: (config: { url: string; todos: Todo[] }) => [
-        { name: "title", content: `${config.todos.length} Todos` },
-        {
-          name: "description",
-          content: `Track ${config.todos.length} todos. Add, toggle and delete.`,
-        },
-        { name: "keywords", content: "todos, tasks, productivity" },
-        // Open Graph
-        { property: "og:title", content: `${config.todos.length} Todos` },
-        {
-          property: "og:description",
-          content: `Track ${config.todos.length} todos. Add, toggle and delete.`,
-        },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: config.url },
-        // Twitter
-        { name: "twitter:card", content: "summary" },
-        { name: "twitter:title", content: `${config.todos.length} Todos` },
-        {
-          name: "twitter:description",
-          content: `Track ${config.todos.length} todos. Add, toggle and delete.`,
-        },
-      ],
-    })),
-    addTodo: createRoute("/todos/add", () => ({
-      PageComponent: AddTodoPage,
-      meta: (config: { url: string }) => [
-        { name: "title", content: "Add Todo" },
-        { name: "description", content: "Create a new todo item." },
-        { name: "keywords", content: "add todo, create task" },
-        // Open Graph
-        { property: "og:title", content: "Add Todo" },
-        { property: "og:description", content: "Create a new todo item." },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: config.url },
-        // Twitter
-        { name: "twitter:card", content: "summary" },
-        { name: "twitter:title", content: "Add Todo" },
-        { name: "twitter:description", content: "Create a new todo item." },
-      ],
-    })),
-  }),
-});
+        meta: createTodosMeta(config, "/todos"),
+      })),
+      addTodo: createRoute("/todos/add", () => ({
+        PageComponent: AddTodoPage,
+        meta: createAddTodoMeta(config, "/todos/add"),
+      })),
+    }),
+  });

@@ -43,6 +43,15 @@ export interface BlogClientConfig {
 	baseURL: string;
 	basePath?: string;
 
+	// Optional SEO/meta configuration
+	seo?: {
+		siteName?: string;
+		author?: string;
+		twitterHandle?: string;
+		locale?: string;
+		defaultImage?: string;
+	};
+
 	// Optional context to pass to loaders (for SSR)
 	context?: Record<string, any>;
 
@@ -238,6 +247,206 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 	};
 }
 
+// Meta generators with SEO optimization
+function createPostsListMeta(config: BlogClientConfig, published: boolean) {
+	return () => {
+		const { baseURL, seo } = config;
+		const path = published ? "/blog" : "/blog/drafts";
+		const fullUrl = `${baseURL}${path}`;
+		const title = published ? "Blog" : "Draft Posts";
+		const description = published
+			? "Read our latest articles, insights, and updates on web development, technology, and more."
+			: "View and manage your draft blog posts.";
+
+		return [
+			// Primary meta tags
+			{ name: "title", content: title },
+			{ name: "description", content: description },
+			{
+				name: "keywords",
+				content: "blog, articles, technology, web development, insights",
+			},
+			...(seo?.author ? [{ name: "author", content: seo.author }] : []),
+			{
+				name: "robots",
+				content: published ? "index, follow" : "noindex, nofollow",
+			},
+
+			// Open Graph / Facebook
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: title },
+			{ property: "og:description", content: description },
+			{ property: "og:url", content: fullUrl },
+			...(seo?.siteName
+				? [{ property: "og:site_name", content: seo.siteName }]
+				: []),
+			...(seo?.locale ? [{ property: "og:locale", content: seo.locale }] : []),
+			...(seo?.defaultImage
+				? [{ property: "og:image", content: seo.defaultImage }]
+				: []),
+
+			// Twitter Card
+			{ name: "twitter:card", content: "summary_large_image" },
+			{ name: "twitter:title", content: title },
+			{ name: "twitter:description", content: description },
+			...(seo?.twitterHandle
+				? [{ name: "twitter:site", content: seo.twitterHandle }]
+				: []),
+		];
+	};
+}
+
+function createPostMeta(config: BlogClientConfig, slug: string) {
+	return () => {
+		const { queryClient, baseURL, seo } = config;
+		const queries = createBlogQueryKeys(
+			createApiClient<BlogApiRouter>({ baseURL, basePath: "/api" }),
+		);
+		const post = queryClient.getQueryData<Post>(
+			queries.posts.detail(slug).queryKey,
+		);
+
+		if (!post) {
+			// Fallback if post not loaded
+			return [
+				{ name: "title", content: "Blog Post" },
+				{ name: "robots", content: "noindex" },
+			];
+		}
+
+		const fullUrl = `${baseURL}/blog/${post.slug}`;
+		const title = post.title;
+		const description = post.excerpt || post.content.substring(0, 160);
+		const publishedTime = post.publishedAt
+			? new Date(post.publishedAt).toISOString()
+			: new Date(post.createdAt).toISOString();
+		const modifiedTime = new Date(post.updatedAt).toISOString();
+		const image = post.image || seo?.defaultImage;
+
+		return [
+			// Primary meta tags
+			{ name: "title", content: title },
+			{ name: "description", content: description },
+			...(post.authorId || seo?.author
+				? [{ name: "author", content: post.authorId || seo?.author }]
+				: []),
+			{
+				name: "robots",
+				content: post.published ? "index, follow" : "noindex, nofollow",
+			},
+			{
+				name: "keywords",
+				content: `blog, article, ${post.slug.replace(/-/g, ", ")}`,
+			},
+
+			// Open Graph / Facebook
+			{ property: "og:type", content: "article" },
+			{ property: "og:title", content: title },
+			{ property: "og:description", content: description },
+			{ property: "og:url", content: fullUrl },
+			...(seo?.siteName
+				? [{ property: "og:site_name", content: seo.siteName }]
+				: []),
+			...(seo?.locale ? [{ property: "og:locale", content: seo.locale }] : []),
+			...(image ? [{ property: "og:image", content: image }] : []),
+			...(image
+				? [
+						{ property: "og:image:width", content: "1200" },
+						{ property: "og:image:height", content: "630" },
+						{ property: "og:image:alt", content: title },
+					]
+				: []),
+
+			// Article-specific Open Graph tags
+			{ property: "article:published_time", content: publishedTime },
+			{ property: "article:modified_time", content: modifiedTime },
+			...(post.authorId
+				? [{ property: "article:author", content: post.authorId }]
+				: []),
+
+			// Twitter Card
+			{
+				name: "twitter:card",
+				content: image ? "summary_large_image" : "summary",
+			},
+			{ name: "twitter:title", content: title },
+			{ name: "twitter:description", content: description },
+			...(seo?.twitterHandle
+				? [{ name: "twitter:site", content: seo.twitterHandle }]
+				: []),
+			...(post.authorId || seo?.twitterHandle
+				? [
+						{
+							name: "twitter:creator",
+							content: post.authorId || seo?.twitterHandle,
+						},
+					]
+				: []),
+			...(image ? [{ name: "twitter:image", content: image }] : []),
+			...(image ? [{ name: "twitter:image:alt", content: title }] : []),
+
+			// Additional SEO tags
+			{ name: "publish_date", content: publishedTime },
+		];
+	};
+}
+
+function createNewPostMeta(config: BlogClientConfig) {
+	return () => {
+		const { baseURL } = config;
+		const fullUrl = `${baseURL}/blog/new`;
+
+		return [
+			{ name: "title", content: "Create New Post" },
+			{ name: "description", content: "Write and publish a new blog post." },
+			{ name: "robots", content: "noindex, nofollow" },
+
+			// Open Graph
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: "Create New Post" },
+			{
+				property: "og:description",
+				content: "Write and publish a new blog post.",
+			},
+			{ property: "og:url", content: fullUrl },
+
+			// Twitter
+			{ name: "twitter:card", content: "summary" },
+			{ name: "twitter:title", content: "Create New Post" },
+		];
+	};
+}
+
+function createEditPostMeta(config: BlogClientConfig, slug: string) {
+	return () => {
+		const { queryClient, baseURL } = config;
+		const queries = createBlogQueryKeys(
+			createApiClient<BlogApiRouter>({ baseURL, basePath: "/api" }),
+		);
+		const post = queryClient.getQueryData<Post>(
+			queries.posts.detail(slug).queryKey,
+		);
+		const fullUrl = `${baseURL}/blog/${slug}/edit`;
+
+		const title = post ? `Edit: ${post.title}` : "Edit Post";
+
+		return [
+			{ name: "title", content: title },
+			{ name: "description", content: "Edit your blog post." },
+			{ name: "robots", content: "noindex, nofollow" },
+
+			// Open Graph
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: title },
+			{ property: "og:url", content: fullUrl },
+
+			// Twitter
+			{ name: "twitter:card", content: "summary" },
+			{ name: "twitter:title", content: title },
+		];
+	};
+}
+
 /**
  * Blog client plugin
  * Provides routes, components, and React Query hooks for blog posts
@@ -254,56 +463,34 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				ErrorComponent: DefaultError,
 				LoadingComponent: PostsLoading,
 				loader: createPostsLoader(true, config),
-				meta: (routeConfig: { url: string }) => [
-					{ name: "title", content: `Blog Posts` },
-					{
-						name: "description",
-						content: `Read our latest blog posts.`,
-					},
-				],
+				meta: createPostsListMeta(config, true),
 			})),
 			drafts: createRoute("/blog/drafts", () => ({
 				PageComponent: () => <HomePageComponent published={false} />,
 				ErrorComponent: DefaultError,
 				LoadingComponent: PostsLoading,
 				loader: createPostsLoader(false, config),
-				meta: (routeConfig: { url: string }) => [
-					{ name: "title", content: `Blog Posts` },
-					{
-						name: "description",
-						content: `Read our latest blog posts.`,
-					},
-				],
+				meta: createPostsListMeta(config, false),
 			})),
 			newPost: createRoute("/blog/new", () => ({
 				PageComponent: NewPostPageComponent,
 				ErrorComponent: DefaultError,
 				LoadingComponent: FormLoading,
-				meta: (routeConfig: { url: string }) => [
-					{ name: "title", content: `New Post` },
-					{
-						name: "description",
-						content: `Create a new blog post.`,
-					},
-				],
+				meta: createNewPostMeta(config),
 			})),
 			editPost: createRoute("/blog/:slug/edit", ({ params: { slug } }) => ({
 				PageComponent: () => <EditPostPageComponent slug={slug} />,
 				loader: createPostLoader(slug, config),
 				ErrorComponent: DefaultError,
 				LoadingComponent: FormLoading,
-				meta: (routeConfig: { url: string }) => [
-					{ name: "title", content: `Edit Post` },
-				],
+				meta: createEditPostMeta(config, slug),
 			})),
 			post: createRoute("/blog/:slug", ({ params: { slug } }) => ({
 				PageComponent: () => <PostPageComponent slug={slug} />,
 				loader: createPostLoader(slug, config),
 				ErrorComponent: DefaultError,
 				LoadingComponent: FormLoading,
-				meta: (routeConfig: { url: string }) => [
-					{ name: "title", content: `Post` },
-				],
+				meta: createPostMeta(config, slug),
 			})),
 		}),
 	});

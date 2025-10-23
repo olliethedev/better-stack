@@ -66,10 +66,8 @@ export async function generateMetadata({ params }: { params: Promise<{ all: stri
         await route.loader()
     }
     
-    const fullUrl = `${baseURL}/pages${path}`
-    return metaElementsToObject(route.meta(
-        { url: fullUrl, todos: queryClient.getQueryData(["todos"]) ?? [] }
-    ))
+    // ✅ Meta function has access to everything via closure - no parameters needed!
+    return metaElementsToObject(route.meta())
 }
 
 function metaElementsToObject(

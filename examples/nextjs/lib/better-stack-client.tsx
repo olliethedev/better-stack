@@ -20,6 +20,15 @@ const lib = createStackClient({
             baseURL,
             basePath: "/api",
             
+            // Optional: SEO configuration
+            seo: {
+                siteName: "Better Stack Blog",
+                author: "Better Stack Team",
+                twitterHandle: "@olliethedev",
+                locale: "en_US",
+                defaultImage: `${baseURL}/og-image.png`,
+            },
+            
             // Optional: context to pass to loaders (for SSR)
             // This can be set per-request in page.tsx if needed
             context: {
