@@ -43,7 +43,7 @@ function createPostsQueries(
 						query: params?.query,
 						offset: pageParam ?? 0,
 						limit: params?.limit ?? 10,
-						published: params?.published ?? true,
+						published: params?.published ? "true" : "false",
 					},
 				});
 				return (response.data ?? []) as unknown as SerializedPost[];
@@ -83,7 +83,7 @@ function createDraftsQueries(
 						query: params?.query,
 						offset: pageParam ?? 0,
 						limit: params?.limit ?? 10,
-						published: false,
+						published: "false",
 					},
 				});
 				return (response.data ?? []) as unknown as SerializedPost[];
