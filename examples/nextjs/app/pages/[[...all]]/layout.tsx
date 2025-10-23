@@ -3,6 +3,7 @@ import { BetterStackProvider } from "@btst/stack/context"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import type { TodosPluginOverrides } from "@/lib/plugins/todo/client/overrides"
@@ -31,7 +32,9 @@ export default function ExampleLayout({
                 basePath="/pages"
                 overrides={{
                     todos: {
-                        Link: LinkComponent,
+                        Link: (props: React.ComponentProps<typeof Link>) => {
+                            return <Link data-testid="link" {...props} />
+                        },
                         navigate: (path) => router.push(path)
                     },
                     blog: {
@@ -42,8 +45,15 @@ export default function ExampleLayout({
                             return "https://placehold.co/400/png"
                         },
                         Image: (props) => {
-                            const { alt = "", ...rest } = props as React.ImgHTMLAttributes<HTMLImageElement>
-                            return <img alt={alt} {...rest} />
+                            const { alt = "", src = "" } = props as React.ImgHTMLAttributes<HTMLImageElement>
+                            return (
+                                <Image
+                                    alt={alt}
+                                    src={typeof src === "string" ? src : ""}
+                                    width={400}
+                                    height={300}
+                                />
+                            )
                         }
                     }
                 }}
@@ -54,6 +64,3 @@ export default function ExampleLayout({
     )
 }
 
-const LinkComponent = (props: React.ComponentProps<typeof Link>) => {
-    return <Link data-testid="link" {...props} />
-}

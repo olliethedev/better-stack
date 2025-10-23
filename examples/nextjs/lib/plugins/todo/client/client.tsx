@@ -16,7 +16,7 @@ export interface TodosClientConfig {
   basePath?: string;
   
   // Optional context to pass to loaders (for SSR)
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 // Loader for SSR prefetching - configured once
