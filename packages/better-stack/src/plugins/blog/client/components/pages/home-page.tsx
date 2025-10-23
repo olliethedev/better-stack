@@ -9,7 +9,11 @@ import { BLOG_LOCALIZATION } from "../../localization";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
 
-export function HomePageComponent() {
+export function HomePageComponent({
+	published = true,
+}: {
+	published?: boolean;
+}) {
 	const { localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
@@ -25,14 +29,14 @@ export function HomePageComponent() {
 					description={localization.BLOG_LIST_DESCRIPTION}
 				/>
 			</div>
-			<Content />
+			<Content published={published} />
 		</PageWrapper>
 	);
 }
 
-function Content() {
+function Content({ published }: { published: boolean }) {
 	const { posts, loadMore, hasMore, isLoadingMore } = useSuspensePosts({
-		published: true,
+		published: published,
 	});
 	return (
 		<PostsList

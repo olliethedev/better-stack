@@ -26,7 +26,7 @@ export function NewPostPageComponent() {
 		if (post.published) {
 			navigate(`${basePath}/blog`);
 		} else {
-			navigate(`${basePath}/drafts`);
+			navigate(`${basePath}/blog/drafts`);
 		}
 	};
 

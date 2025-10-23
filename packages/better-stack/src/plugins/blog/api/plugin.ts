@@ -12,7 +12,15 @@ export const PostListQuerySchema = z.object({
 	offset: z.coerce.number().int().min(0).optional(),
 	limit: z.coerce.number().int().min(1).max(100).optional(),
 	query: z.string().optional(),
-	published: z.coerce.boolean().optional(),
+	published: z
+		.string()
+		.optional()
+		.transform((val) => {
+			if (val === undefined) return undefined;
+			if (val === "true") return true;
+			if (val === "false") return false;
+			return undefined;
+		}),
 });
 
 /**

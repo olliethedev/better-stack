@@ -11,32 +11,34 @@ import { EditPostPageComponent } from "./components/pages/edit-post-page";
 import { PostPageComponent } from "./components/pages/post-page";
 
 // Loader for SSR prefetching
-async function postsLoader(
-	queryClient: QueryClient,
-	baseURL: string,
-	basePath: string = "/api",
-) {
-	if (typeof window === "undefined") {
-		const limit = 10;
+function createPostsLoader(published: boolean) {
+	return async (
+		queryClient: QueryClient,
+		baseURL: string,
+		basePath: string = "/api",
+	) => {
+		if (typeof window === "undefined") {
+			const limit = 10;
 
-		const client = createApiClient<BlogApiRouter>({
-			baseURL: baseURL,
-			basePath: basePath,
-		});
+			const client = createApiClient<BlogApiRouter>({
+				baseURL: baseURL,
+				basePath: basePath,
+			});
 
-		// note: for a module not to be bundled with client, and to be shared by client and server we need to add it to build.config.ts as an entry
-		const queries = createBlogQueryKeys(client);
-		const listQuery = queries.posts.list({
-			query: undefined,
-			limit,
-			published: true,
-		});
+			// note: for a module not to be bundled with client, and to be shared by client and server we need to add it to build.config.ts as an entry
+			const queries = createBlogQueryKeys(client);
+			const listQuery = queries.posts.list({
+				query: undefined,
+				limit,
+				published: published,
+			});
 
-		await queryClient.prefetchInfiniteQuery({
-			...listQuery,
-			initialPageParam: 0,
-		});
-	}
+			await queryClient.prefetchInfiniteQuery({
+				...listQuery,
+				initialPageParam: 0,
+			});
+		}
+	};
 }
 
 function createPostLoader(slug: string) {
@@ -66,10 +68,23 @@ export const blogClientPlugin = defineClientPlugin({
 
 	routes: () => ({
 		posts: createRoute("/blog", () => ({
-			PageComponent: HomePageComponent,
+			PageComponent: () => <HomePageComponent published={true} />,
 			ErrorComponent: DefaultError,
 			LoadingComponent: PostsLoading,
-			loader: postsLoader,
+			loader: createPostsLoader(true),
+			meta: (config: { url: string }) => [
+				{ name: "title", content: `Blog Posts` },
+				{
+					name: "description",
+					content: `Read our latest blog posts.`,
+				},
+			],
+		})),
+		drafts: createRoute("/blog/drafts", () => ({
+			PageComponent: () => <HomePageComponent published={false} />,
+			ErrorComponent: DefaultError,
+			LoadingComponent: PostsLoading,
+			loader: createPostsLoader(false),
 			meta: (config: { url: string }) => [
 				{ name: "title", content: `Blog Posts` },
 				{
