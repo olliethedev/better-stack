@@ -1,6 +1,7 @@
 import {
     QueryClient,
-    defaultShouldDehydrateQuery
+    defaultShouldDehydrateQuery,
+    isServer
 } from "@tanstack/react-query"
 
 function makeQueryClient() {
@@ -14,18 +15,26 @@ function makeQueryClient() {
                 retry: false
             },
             dehydrate: {
-                // include pending queries in dehydration
-                shouldDehydrateQuery: (query) =>
-                    defaultShouldDehydrateQuery(query) ||
-                    query.state.status === "pending"
+                // only dehydrate successful/error states to avoid initial suspense on the client
+                shouldDehydrateQuery: (query) => defaultShouldDehydrateQuery(query)
             }
         }
     })
 }
 
+let browserQueryClient: QueryClient | undefined = undefined
+
 export function getOrCreateQueryClient() {
-    // Always return a new QueryClient. This avoids carrying client cache
-    // across navigations, which can cause hydration mismatches when SSR data
-    // differs from previously cached client data.
-    return makeQueryClient()
+    if (isServer) {
+        // Server: always make a new query client
+        return makeQueryClient()
+        // biome-ignore lint/style/noUselessElse: <explanation>
+    } else {
+        // Browser: make a new query client if we don't already have one
+        // This is very important, so we don't re-make a new client if React
+        // suspends during the initial render. This may not be needed if we
+        // have a suspense boundary BELOW the creation of the query client
+        if (!browserQueryClient) browserQueryClient = makeQueryClient()
+        return browserQueryClient
+    }
 } 

@@ -1,4 +1,5 @@
 .milkdown-custom .milkdown {
+	border-radius: calc(var(--radius) - 2px);
 	--crepe-color-background: var(--background);
 	--crepe-color-surface: var(--background);
 	--crepe-color-surface-low: var(--muted);

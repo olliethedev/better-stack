@@ -8,12 +8,13 @@ import { Todo } from "../types";
 
 /**
  * Configuration for todos client plugin
+ * Note: queryClient is passed at runtime to both loader and meta (for SSR isolation)
  */
 export interface TodosClientConfig {
   // Required configuration
   queryClient: QueryClient;
   baseURL: string;
-  basePath?: string;
+  basePath: string;
   
   // Optional context to pass to loaders (for SSR)
   context?: Record<string, unknown>;
@@ -21,9 +22,11 @@ export interface TodosClientConfig {
 
 // Loader for SSR prefetching - configured once
 function todosLoader(config: TodosClientConfig) {
-  return async () => {
+  return async (loaderParams: { baseURL?: string; }) => {
     if (typeof window === "undefined") {
-      const { queryClient, baseURL, basePath = "/api" } = config;
+      // Use runtime params for SSR
+      const { baseURL = config.baseURL } = loaderParams;
+      const { queryClient, basePath } = config;
       
       await queryClient.prefetchQuery({
         queryKey: ["todos"],
@@ -51,7 +54,9 @@ function todosLoader(config: TodosClientConfig) {
 // Meta generator - configured once, accesses data via closure
 function createTodosMeta(config: TodosClientConfig, path: string) {
   return () => {
-    const { queryClient, baseURL } = config;
+    // Use queryClient passed at runtime (same as loader!)
+    const { queryClient } = config;
+    const { baseURL } = config;
     const todos = queryClient.getQueryData<Todo[]>(["todos"]) ?? [];
     const fullUrl = `${baseURL}${path}`;
     

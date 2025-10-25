@@ -134,7 +134,11 @@
 	display: block;
 	position: relative;
 	padding: 40px 8px 20px 20px;
-	background: var(--crepe-color-surface);
+	background: color-mix(
+		in srgb,
+		var(--crepe-color-surface-low),
+		transparent 50%
+	);
 	margin: 4px 0;
 }
 
@@ -270,6 +274,7 @@
 .milkdown-custom .milkdown .milkdown-content ol {
 	padding: 0;
 	list-style-type: decimal;
+	margin-left: 20px;
 }
 
 .milkdown-custom .milkdown .milkdown-content li.task-list-item {
@@ -282,12 +287,13 @@
 	.milkdown
 	.milkdown-content
 	li.task-list-item
-	> input[type="checkbox"] {
+	input[type="checkbox"] {
 	width: 18px;
 	height: 18px;
 	position: absolute;
 	left: 0;
-	top: 0;
+	top: auto;
+	bottom: auto;
 	margin: 0;
 }
 

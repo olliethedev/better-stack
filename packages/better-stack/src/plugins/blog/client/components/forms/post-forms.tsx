@@ -176,7 +176,7 @@ function PostFormBody<T extends CommonPostFormValues>({
 							</FormLabel>
 							<FormControl>
 								<MarkdownEditor
-									className="min-h-80 max-w-full"
+									className="min-h-80 max-w-full border-input rounded-md border shadow-xs"
 									value={typeof field.value === "string" ? field.value : ""}
 									onChange={(content: string) => {
 										field.onChange(content);
@@ -412,16 +412,6 @@ const EditPostFormComponent = ({
 		});
 	};
 
-	// Don't render the form until post data is loaded
-	if (!post) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<Loader2 className="h-6 w-6 animate-spin" />
-				<span className="ml-2">{localization.BLOG_FORMS_LOADING_POST}</span>
-			</div>
-		);
-	}
-
 	const form = useForm<z.input<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
@@ -434,6 +424,15 @@ const EditPostFormComponent = ({
 		},
 		values: initialData as z.input<typeof schema>,
 	});
+
+	if (!post) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<Loader2 className="h-6 w-6 animate-spin" />
+				<span className="ml-2">{localization.BLOG_FORMS_LOADING_POST}</span>
+			</div>
+		);
+	}
 
 	return (
 		<PostFormBody

@@ -35,13 +35,13 @@ export interface LoaderContext {
 
 /**
  * Configuration for blog client plugin
- * Includes both hooks and required config (queryClient, baseURL, etc.)
+ * Note: queryClient is passed at runtime to both loader and meta (for SSR isolation)
  */
 export interface BlogClientConfig {
 	// Required configuration
-	queryClient: QueryClient;
 	baseURL: string;
-	basePath?: string;
+	basePath: string;
+	queryClient: QueryClient;
 
 	// Optional SEO/meta configuration
 	seo?: {
@@ -129,12 +129,13 @@ export interface BlogClientHooks {
 
 // Loader for SSR prefetching with hooks - configured once
 function createPostsLoader(published: boolean, config: BlogClientConfig) {
-	return async () => {
+	return async (loaderParams: { baseURL?: string }) => {
 		if (typeof window === "undefined") {
+			// Use runtime params for SSR
+			const { baseURL = config.baseURL } = loaderParams;
 			const {
 				queryClient,
-				baseURL,
-				basePath = "/api",
+				basePath,
 				context: additionalContext,
 				hooks,
 			} = config;
@@ -157,7 +158,7 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 				}
 
 				const limit = 10;
-
+				console.log("createPostsLoader", { baseURL, basePath });
 				const client = createApiClient<BlogApiRouter>({
 					baseURL: baseURL,
 					basePath: basePath,
@@ -194,12 +195,13 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 }
 
 function createPostLoader(slug: string, config: BlogClientConfig) {
-	return async () => {
+	return async (loaderParams: { baseURL?: string }) => {
 		if (typeof window === "undefined") {
+			// Use runtime params for SSR
+			const { baseURL = config.baseURL } = loaderParams;
 			const {
 				queryClient,
-				baseURL,
-				basePath = "/api",
+				basePath,
 				context: additionalContext,
 				hooks,
 			} = config;
@@ -228,7 +230,18 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 				});
 				const queries = createBlogQueryKeys(client);
 				const postQuery = queries.posts.detail(slug);
+				console.log("createPostLoader: prefetching", {
+					slug,
+					queryKey: postQuery.queryKey,
+				});
 				await queryClient.prefetchQuery(postQuery);
+
+				// Verify data was loaded
+				const loadedPost = queryClient.getQueryData<Post>(postQuery.queryKey);
+				console.log("createPostLoader: loaded", {
+					slug,
+					hasData: !!loadedPost,
+				});
 
 				// After hook
 				if (hooks?.afterLoadPost) {
@@ -298,9 +311,11 @@ function createPostsListMeta(config: BlogClientConfig, published: boolean) {
 
 function createPostMeta(config: BlogClientConfig, slug: string) {
 	return () => {
-		const { queryClient, baseURL, seo } = config;
+		// Use queryClient passed at runtime (same as loader!)
+		const { queryClient } = config;
+		const { baseURL, basePath, seo } = config;
 		const queries = createBlogQueryKeys(
-			createApiClient<BlogApiRouter>({ baseURL, basePath: "/api" }),
+			createApiClient<BlogApiRouter>({ baseURL, basePath }),
 		);
 		const post = queryClient.getQueryData<Post>(
 			queries.posts.detail(slug).queryKey,
@@ -419,9 +434,11 @@ function createNewPostMeta(config: BlogClientConfig) {
 
 function createEditPostMeta(config: BlogClientConfig, slug: string) {
 	return () => {
-		const { queryClient, baseURL } = config;
+		// Use queryClient passed at runtime (same as loader!)
+		const { queryClient } = config;
+		const { baseURL, basePath } = config;
 		const queries = createBlogQueryKeys(
-			createApiClient<BlogApiRouter>({ baseURL, basePath: "/api" }),
+			createApiClient<BlogApiRouter>({ baseURL, basePath }),
 		);
 		const post = queryClient.getQueryData<Post>(
 			queries.posts.detail(slug).queryKey,
@@ -490,7 +507,7 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				loader: createPostLoader(slug, config),
 				ErrorComponent: DefaultError,
 				LoadingComponent: FormLoading,
-				meta: createPostMeta(config, slug),
+				meta: createPostMeta(config, slug), //todo: pass data from caller so we can use on both server and client
 			})),
 		}),
 	});

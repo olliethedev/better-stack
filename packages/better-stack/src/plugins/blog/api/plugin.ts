@@ -192,7 +192,6 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					}
 				},
 			);
-
 			const createPost = createEndpoint(
 				"/posts",
 				{
@@ -237,7 +236,6 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					}
 				},
 			);
-
 			const updatePost = createEndpoint(
 				"/posts/:id",
 				{
@@ -289,7 +287,6 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					}
 				},
 			);
-
 			const deletePost = createEndpoint(
 				"/posts/:id",
 				{

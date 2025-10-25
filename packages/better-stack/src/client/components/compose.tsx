@@ -49,10 +49,12 @@ export function RouteRenderer({
 
 		if (PageComponent) {
 			const content = <PageComponent />;
+			// Avoid server-side skeletons: only show loading fallback in the browser
+			const isBrowser = typeof window !== "undefined";
+			const suspenseFallback =
+				isBrowser && LoadingComponent ? <LoadingComponent /> : null;
 			const suspenseWrapped = (
-				<Suspense fallback={LoadingComponent ? <LoadingComponent /> : null}>
-					{content}
-				</Suspense>
+				<Suspense fallback={suspenseFallback}>{content}</Suspense>
 			);
 
 			// Only wrap with ErrorBoundary if a FallbackComponent was provided by the route

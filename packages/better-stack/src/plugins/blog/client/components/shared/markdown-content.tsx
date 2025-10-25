@@ -15,6 +15,8 @@ import type {
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import "../shared/markdown-content-styles.css";
 import "../forms/markdown-editor-styles.css";
@@ -227,8 +229,8 @@ export function MarkdownContent({ markdown, className }: MarkdownContentProps) {
 			<div className="milkdown">
 				<div className="milkdown-content">
 					<ReactMarkdown
-						remarkPlugins={[remarkGfm] as never}
-						rehypePlugins={[rehypeHighlight] as never}
+						remarkPlugins={[remarkGfm, remarkMath] as never}
+						rehypePlugins={[rehypeHighlight, rehypeKatex] as never}
 						components={components as never}
 					>
 						{markdown}

@@ -3,12 +3,10 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
 import type { DehydratedState } from "@tanstack/react-query"
 import { notFound } from "next/navigation"
 import { getOrCreateQueryClient } from "@/lib/query-client"
-import { router } from "@/lib/better-stack-client"
+import { getStackClient } from "@/lib/better-stack-client"
 import { ClientRouteResolver } from "@/lib/route-resolver"
 
-const baseURL = process.env.BASE_URL ?? "http://localhost:3000"
-
-const queryClient = getOrCreateQueryClient()
+const baseURL = "http://localhost:3000"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -21,12 +19,19 @@ export default async function ExamplePage({
     const pathParams = await params
     const path = pathParams?.all ? `/${pathParams.all.join("/")}` : "/"
 
-    const route = router.getRoute(path)
+    // Create a queryClient for this request
+    const queryClient = getOrCreateQueryClient()
+
+    const stackClient = getStackClient(queryClient)
+
+    const route = stackClient.router.getRoute(path)
+
+    
 
     // Load data server-side if loader exists
     if (route?.loader) {
-        // ✅ No parameters needed! Everything configured at plugin initialization
-        await route.loader()
+        // Pass SSR-specific baseURL and queryClient
+        await route.loader({ baseURL })
     }
     
     const dehydratedState: DehydratedState = dehydrate(queryClient)
@@ -50,7 +55,10 @@ export default async function ExamplePage({
 export async function generateMetadata({ params }: { params: Promise<{ all: string[] }> }) {
     const pathParams = await params
     const path = pathParams?.all ? `/${pathParams.all.join("/")}` : "/"
-    const route = router.getRoute(path)
+    // Create a queryClient for this request
+    const queryClient = getOrCreateQueryClient()
+    const stackClient = getStackClient(queryClient)
+    const route = stackClient.router.getRoute(path)
     if (!route) {
         return notFound()
     }
@@ -59,14 +67,13 @@ export async function generateMetadata({ params }: { params: Promise<{ all: stri
             title: "No meta for this route"
         }
     }
-    const queryClient = getOrCreateQueryClient()
     
     // Load data for metadata if loader exists
     if (route?.loader) {
-        await route.loader()
+        await route.loader({ baseURL })
     }
     
-    // ✅ Meta function has access to everything via closure - no parameters needed!
+    // Pass same queryClient to meta so it can read the loaded data
     return metaElementsToObject(route.meta())
 }
 
