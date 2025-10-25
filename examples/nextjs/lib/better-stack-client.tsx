@@ -3,7 +3,7 @@ import { todosClientPlugin } from "@/lib/plugins/todo/client/client"
 import { blogClientPlugin } from "@btst/stack/plugins/blog/client"
 import { QueryClient } from "@tanstack/react-query"
 
-const baseURL = "http://localhost:3000"
+const baseURL =  process.env.BASE_URL || "http://localhost:3000"
 
 // Create the client library with plugins
 export const getStackClient = (queryClient: QueryClient) => {

@@ -6,7 +6,7 @@ import { getOrCreateQueryClient } from "@/lib/query-client"
 import { getStackClient } from "@/lib/better-stack-client"
 import { ClientRouteResolver } from "@/lib/route-resolver"
 
-const baseURL = "http://localhost:3000"
+const baseURL =  process.env.BASE_URL || "http://localhost:3000"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
