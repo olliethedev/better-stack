@@ -183,7 +183,7 @@ function PreRenderer(props: React.HTMLAttributes<HTMLPreElement>) {
 				["--code-gutter-width" as unknown as string]: `${digitCount + 1}ch`,
 			}}
 		>
-			<div className="code-toolbar" aria-hidden>
+			<div className="code-toolbar">
 				<span className="language-label">{label}</span>
 				<button
 					type="button"

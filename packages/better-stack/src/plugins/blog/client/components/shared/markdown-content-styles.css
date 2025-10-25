@@ -137,7 +137,7 @@
 	background: color-mix(
 		in srgb,
 		var(--crepe-color-surface-low),
-		transparent 50%
+		transparent 10%
 	);
 	margin: 4px 0;
 }
@@ -189,6 +189,11 @@
 }
 
 .milkdown-custom .milkdown .milkdown-code-block:hover .code-toolbar {
+	opacity: 1;
+}
+
+/* Also reveal toolbar when focused via keyboard for accessibility */
+.milkdown-custom .milkdown .milkdown-code-block:focus-within .code-toolbar {
 	opacity: 1;
 }
 

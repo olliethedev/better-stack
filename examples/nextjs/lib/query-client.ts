@@ -3,12 +3,15 @@ import {
     defaultShouldDehydrateQuery,
     isServer
 } from "@tanstack/react-query"
+import { cache } from "react"
 
 function makeQueryClient() {
     return new QueryClient({
         defaultOptions: {
             queries: {
-                staleTime: 0,
+                // SSR: 60s staleTime allows generateMetadata and page component to share cached data
+                // Client: 0 staleTime means always refetch on navigation for fresh data
+                staleTime: isServer ? 60 * 1000 : 0,
                 refetchOnMount: false,
                 refetchOnWindowFocus: false,
                 refetchOnReconnect: false,
@@ -24,10 +27,15 @@ function makeQueryClient() {
 
 let browserQueryClient: QueryClient | undefined = undefined
 
+// Cache the QueryClient for the duration of the request on the server
+// This ensures generateMetadata and the page component get the same instance
+const getServerQueryClient = cache(() => makeQueryClient())
+
 export function getOrCreateQueryClient() {
     if (isServer) {
-        // Server: always make a new query client
-        return makeQueryClient()
+        // Server: use cached query client for this request
+        // React's cache() ensures the same instance is used for generateMetadata + page component
+        return getServerQueryClient()
         // biome-ignore lint/style/noUselessElse: <explanation>
     } else {
         // Browser: make a new query client if we don't already have one
