@@ -1,7 +1,7 @@
 import { defineClientPlugin, createApiClient } from "@btst/stack/plugins";
 import { createRoute } from "@btst/yar";
 import type { QueryClient } from "@tanstack/react-query";
-import type { BlogApiRouter } from "../api/plugin";
+import type { BlogApiRouter } from "../api";
 import { HomePageComponent } from "./components/pages/home-page";
 import { NewPostPageComponent } from "./components/pages/new-post-page";
 import { PostsLoading, FormLoading } from "./components/loading";
@@ -9,7 +9,7 @@ import { DefaultError } from "./components/shared/default-error";
 import { createBlogQueryKeys } from "../query-keys";
 import { EditPostPageComponent } from "./components/pages/edit-post-page";
 import { PostPageComponent } from "./components/pages/post-page";
-import type { Post } from "../types";
+import type { Post, SerializedPost } from "../types";
 
 /**
  * Context passed to route hooks
@@ -510,4 +510,67 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				meta: createPostMeta(config, slug), //todo: pass data from caller so we can use on both server and client
 			})),
 		}),
+
+		sitemap: async () => {
+			const origin = config.baseURL.replace(/\/$/, "");
+			const indexUrl = `${origin}/blog`;
+
+			// Fetch all published posts via API, with pagination
+			const client = createApiClient<BlogApiRouter>({
+				baseURL: config.baseURL,
+				basePath: config.basePath,
+			});
+
+			const limit = 100;
+			let offset = 0;
+			const posts: SerializedPost[] = [];
+			// eslint-disable-next-line no-constant-condition
+			while (true) {
+				const res = await client("/posts", {
+					method: "GET",
+					query: {
+						offset,
+						limit,
+						published: "true",
+					},
+				});
+				const page = (res.data ?? []) as unknown as SerializedPost[];
+				posts.push(...page);
+				if (page.length < limit) break;
+				offset += limit;
+			}
+
+			const getLastModified = (p: SerializedPost): Date | undefined => {
+				const dates = [p.updatedAt, p.publishedAt, p.createdAt].filter(
+					Boolean,
+				) as string[];
+				if (dates.length === 0) return undefined;
+				const times = dates
+					.map((d) => new Date(d).getTime())
+					.filter((t) => !Number.isNaN(t));
+				if (times.length === 0) return undefined;
+				return new Date(Math.max(...times));
+			};
+
+			const latestTime = posts
+				.map((p) => getLastModified(p)?.getTime() ?? 0)
+				.reduce((a, b) => Math.max(a, b), 0);
+
+			const entries = [
+				{
+					url: indexUrl,
+					lastModified: latestTime ? new Date(latestTime) : undefined,
+					changeFrequency: "daily" as const,
+					priority: 0.7,
+				},
+				...posts.map((p) => ({
+					url: `${origin}/blog/${p.slug}`,
+					lastModified: getLastModified(p),
+					changeFrequency: "monthly" as const,
+					priority: 0.6,
+				})),
+			];
+
+			return entries;
+		},
 	});

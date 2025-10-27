@@ -47,6 +47,12 @@ export interface ClientPlugin<
 	 * Returns yar routes that will be composed into the router
 	 */
 	routes: () => TRoutes;
+
+	/**
+	 * Optional sitemap generator for this plugin. Should return absolute URLs.
+	 * Implementations can call their own API endpoints to include dynamic routes.
+	 */
+	sitemap?: () => Promise<Sitemap> | Sitemap;
 }
 
 /**
@@ -180,4 +186,24 @@ export interface ClientLib<
 	TRoutes extends Record<string, Route> = Record<string, Route>,
 > {
 	router: ReturnType<typeof createRouter<TRoutes, {}>>;
+	generateSitemap: () => Promise<Sitemap>;
 }
+
+/**
+ * Minimal sitemap entry shape aligned with Next.js MetadataRoute.Sitemap
+ */
+export type SitemapEntry = {
+	url: string; // absolute
+	lastModified?: string | Date;
+	changeFrequency?:
+		| "always"
+		| "hourly"
+		| "daily"
+		| "weekly"
+		| "monthly"
+		| "yearly"
+		| "never";
+	priority?: number;
+};
+
+export type Sitemap = Array<SitemapEntry>;

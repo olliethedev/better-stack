@@ -4,6 +4,7 @@ import type {
 	ClientLib,
 	ClientPlugin,
 	PluginRoutes,
+	Sitemap,
 } from "../types";
 export type { ClientPlugin } from "../types";
 
@@ -76,6 +77,25 @@ export function createStackClient<
 
 	return {
 		router,
+		async generateSitemap() {
+			const sitemapEntries: Sitemap = [];
+			for (const plugin of Object.values(plugins)) {
+				if (typeof plugin.sitemap === "function") {
+					// Allow each plugin to return a partial sitemap
+					const entries = await plugin.sitemap();
+					if (Array.isArray(entries)) sitemapEntries.push(...entries);
+				}
+			}
+			// De-duplicate by URL while preserving lastModified/priorities preferring the first occurrence
+			const seen = new Set<string>();
+			const deduped: Sitemap = [];
+			for (const entry of sitemapEntries) {
+				if (!entry?.url || seen.has(entry.url)) continue;
+				seen.add(entry.url);
+				deduped.push(entry);
+			}
+			return deduped;
+		},
 	};
 }
 
