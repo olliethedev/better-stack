@@ -6,6 +6,7 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useEffect,
 } from "react";
 import type {
 	ComponentPropsWithoutRef,
@@ -15,11 +16,8 @@ import type {
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import "../shared/markdown-content-styles.css";
-import "../forms/markdown-editor-styles.css";
 import "highlight.js/styles/panda-syntax-light.css";
 import { slugify } from "../../../utils";
 import { CopyIcon } from "lucide-react";
@@ -27,6 +25,18 @@ import { CheckIcon } from "lucide-react";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
 import { DefaultImage, DefaultLink } from "./defaults";
+
+// Utility to detect if markdown contains math syntax
+function containsMath(markdown: string): boolean {
+	// Check for inline math: $...$
+	// Check for display math: $$...$$
+	// Check for block math environments
+	return (
+		/\$\$[\s\S]+?\$\$/.test(markdown) || // Display math
+		/(?<!\$)\$(?!\$)[^\$\n]+?\$(?!\$)/.test(markdown) || // Inline math (not $$)
+		/\\begin\{(equation|align|gather|math)\}/.test(markdown) // Math environments
+	);
+}
 
 export type MarkdownContentProps = {
 	markdown: string;
@@ -258,6 +268,104 @@ function PreRenderer(props: React.HTMLAttributes<HTMLPreElement>) {
 }
 
 export function MarkdownContent({ markdown, className }: MarkdownContentProps) {
+	const [mathPlugins, setMathPlugins] = useState<{
+		remarkMath: unknown;
+		rehypeKatex: unknown;
+	} | null>(null);
+	const [isLoadingMath, setIsLoadingMath] = useState(false);
+
+	const hasMath = useMemo(() => containsMath(markdown), [markdown]);
+
+	// Dynamically load math plugins and CSS only if needed
+	useEffect(() => {
+		if (!hasMath || mathPlugins || isLoadingMath) return;
+
+		setIsLoadingMath(true);
+
+		// Dynamically inject KaTeX CSS into the document
+		const katexCSSId = "katex-css";
+		if (!document.getElementById(katexCSSId)) {
+			const link = document.createElement("link");
+			link.id = katexCSSId;
+			link.rel = "stylesheet";
+			link.href =
+				"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css";
+			link.integrity =
+				"sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+";
+			link.crossOrigin = "anonymous";
+			document.head.appendChild(link);
+
+			// Add font-display override for KaTeX fonts to prevent FOIT
+			// This ensures text remains visible while fonts are loading
+			const fontDisplayStyleId = "katex-font-display-override";
+			if (!document.getElementById(fontDisplayStyleId)) {
+				const style = document.createElement("style");
+				style.id = fontDisplayStyleId;
+				style.textContent = `
+					/* Override KaTeX font-face declarations to add font-display: swap */
+					@font-face {
+						font-family: 'KaTeX_Main';
+						font-style: normal;
+						font-weight: normal;
+						font-display: swap;
+						src: url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Main-Regular.woff2') format('woff2');
+					}
+					@font-face {
+						font-family: 'KaTeX_Math';
+						font-style: italic;
+						font-weight: normal;
+						font-display: swap;
+						src: url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Math-Italic.woff2') format('woff2');
+					}
+					@font-face {
+						font-family: 'KaTeX_Size1';
+						font-style: normal;
+						font-weight: normal;
+						font-display: swap;
+						src: url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size1-Regular.woff2') format('woff2');
+					}
+					@font-face {
+						font-family: 'KaTeX_Size2';
+						font-style: normal;
+						font-weight: normal;
+						font-display: swap;
+						src: url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size2-Regular.woff2') format('woff2');
+					}
+					@font-face {
+						font-family: 'KaTeX_Size3';
+						font-style: normal;
+						font-weight: normal;
+						font-display: swap;
+						src: url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size3-Regular.woff2') format('woff2');
+					}
+					@font-face {
+						font-family: 'KaTeX_Size4';
+						font-style: normal;
+						font-weight: normal;
+						font-display: swap;
+						src: url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size4-Regular.woff2') format('woff2');
+					}
+				`;
+				document.head.appendChild(style);
+			}
+		}
+
+		// Load both the plugins
+		Promise.all([import("remark-math"), import("rehype-katex")])
+			.then(([remarkMathModule, rehypeKatexModule]) => {
+				setMathPlugins({
+					remarkMath: remarkMathModule.default,
+					rehypeKatex: rehypeKatexModule.default,
+				});
+			})
+			.catch((error) => {
+				console.error("Failed to load math plugins:", error);
+			})
+			.finally(() => {
+				setIsLoadingMath(false);
+			});
+	}, [hasMath, mathPlugins, isLoadingMath]);
+
 	const components = useMemo<Components>(() => {
 		return {
 			a: AnchorRenderer,
@@ -274,13 +382,43 @@ export function MarkdownContent({ markdown, className }: MarkdownContentProps) {
 		};
 	}, []);
 
+	// Build plugin arrays based on whether math is needed and loaded
+	const remarkPlugins = useMemo(() => {
+		const plugins: unknown[] = [remarkGfm];
+		if (hasMath && mathPlugins?.remarkMath) {
+			plugins.push(mathPlugins.remarkMath);
+		}
+		return plugins as never;
+	}, [hasMath, mathPlugins]);
+
+	const rehypePlugins = useMemo(() => {
+		const plugins: unknown[] = [rehypeHighlight];
+		if (hasMath && mathPlugins?.rehypeKatex) {
+			plugins.push(mathPlugins.rehypeKatex);
+		}
+		return plugins as never;
+	}, [hasMath, mathPlugins]);
+
+	// Don't render until math plugins are loaded if math is present
+	if (hasMath && !mathPlugins && isLoadingMath) {
+		return (
+			<div className={cn("milkdown-custom", className)}>
+				<div className="milkdown">
+					<div className="milkdown-content">
+						<p className="text-muted-foreground">Loading math renderer...</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className={cn("milkdown-custom", className)}>
 			<div className="milkdown">
 				<div className="milkdown-content">
 					<ReactMarkdown
-						remarkPlugins={[remarkGfm, remarkMath] as never}
-						rehypePlugins={[rehypeHighlight, rehypeKatex] as never}
+						remarkPlugins={remarkPlugins}
+						rehypePlugins={rehypePlugins}
 						components={components as never}
 					>
 						{markdown}

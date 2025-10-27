@@ -96,7 +96,7 @@ export function SearchModal<T extends SearchResult>({
 	// Base button classes for better readability
 	const buttonClasses = [
 		"border-input bg-background text-foreground",
-		"placeholder:text-muted-foreground/70",
+		"placeholder:text-muted-foreground",
 		"focus-visible:border-ring focus-visible:ring-ring/50",
 		"inline-flex h-9 w-fit rounded-md border px-3 py-2 text-sm",
 		"shadow-xs transition-[color,box-shadow] outline-none",
@@ -119,16 +119,16 @@ export function SearchModal<T extends SearchResult>({
 			>
 				<span className="flex grow items-center">
 					<SearchIcon
-						className="-ms-1 me-3 text-muted-foreground/80"
+						className="-ms-1 me-3 text-muted-foreground"
 						size={16}
 						aria-hidden="true"
 					/>
-					<span className="font-normal text-muted-foreground/70">
+					<span className="font-normal text-muted-foreground">
 						{buttonText}
 					</span>
 				</span>
 				{keyboardShortcut && (
-					<kbd className="-me-1 ms-12 inline-flex h-5 max-h-full items-center rounded border bg-background px-1 font-[inherit] font-medium text-[0.625rem] text-muted-foreground/70">
+					<kbd className="-me-1 ms-12 inline-flex h-5 max-h-full items-center rounded border bg-background px-1 font-[inherit] font-medium text-[0.625rem] text-muted-foreground">
 						{keyboardShortcut}
 					</kbd>
 				)}
