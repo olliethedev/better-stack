@@ -20,7 +20,7 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import "../shared/markdown-content-styles.css";
 import "../forms/markdown-editor-styles.css";
-import "highlight.js/styles/atom-one-dark.css";
+import "highlight.js/styles/panda-syntax-light.css";
 import { slugify } from "../../../utils";
 import { CopyIcon } from "lucide-react";
 import { CheckIcon } from "lucide-react";
@@ -42,6 +42,55 @@ function getNodeText(node: ReactNode): string {
 		return getNodeText(props.children as ReactNode);
 	}
 	return "";
+}
+
+function isCheckboxElement(
+	node: ReactNode,
+): node is ReturnType<typeof createElement> {
+	return (
+		isValidElement(node) &&
+		(node.type as unknown) === "input" &&
+		(node.props as { type?: string }).type === "checkbox"
+	);
+}
+
+function createTaskListItemRenderer() {
+	return function LiRenderer(
+		props: React.LiHTMLAttributes<HTMLLIElement> & { children?: ReactNode },
+	) {
+		const { className, children, ...rest } = props;
+		const isTaskItem = (className ?? "").split(" ").includes("task-list-item");
+		if (!isTaskItem) {
+			return (
+				<li className={className} {...rest}>
+					{children}
+				</li>
+			);
+		}
+
+		const childArray = Array.isArray(children) ? children : [children];
+		const checkboxNode = childArray.find(isCheckboxElement);
+		const nonCheckboxChildren = childArray.filter((c) => !isCheckboxElement(c));
+
+		const labelText = getNodeText(nonCheckboxChildren as unknown as ReactNode);
+		const baseId = slugify(labelText || "task-item");
+		const uniqueId = `${baseId}-${Math.random().toString(36).slice(2, 8)}`;
+
+		return (
+			<li className={className} {...rest}>
+				{checkboxNode
+					? createElement(checkboxNode.type, {
+							...checkboxNode.props,
+							id: uniqueId,
+							"aria-label": labelText || "Task item",
+						})
+					: null}
+				<label htmlFor={uniqueId}>
+					{nonCheckboxChildren as unknown as ReactNode}
+				</label>
+			</li>
+		);
+	};
 }
 
 type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
@@ -221,6 +270,7 @@ export function MarkdownContent({ markdown, className }: MarkdownContentProps) {
 			h4: createHeadingRenderer("h4"),
 			h5: createHeadingRenderer("h5"),
 			h6: createHeadingRenderer("h6"),
+			li: createTaskListItemRenderer(),
 		};
 	}, []);
 

@@ -80,6 +80,10 @@ export default defineBuildConfig({
 			jsx: "automatic",
 			jsxImportSource: "react",
 		},
+		// Attach visualizer when ANALYZE env var is set
+		dts: {
+			// no-op, placeholder to keep object shape consistent across unbuild versions
+		} as any,
 	},
 	declaration: true,
 	outDir: "dist",
@@ -133,6 +137,35 @@ export default defineBuildConfig({
 					output.banner = createUseClientBanner();
 				}
 			});
+
+			// Add bundle visualizer when ANALYZE is truthy
+			const analyze = process.env.ANALYZE && process.env.ANALYZE !== "0";
+			if (analyze) {
+				// options.plugins can be undefined in some shapes; normalize then push
+				const existing = Array.isArray((options as any).plugins)
+					? (options as any).plugins
+					: [];
+				let _visualizer: any;
+				try {
+					// eslint-disable-next-line @typescript-eslint/no-var-requires
+					_visualizer = (require as any)("rollup-plugin-visualizer").visualizer;
+				} catch (_err) {
+					_visualizer = null;
+				}
+				if (_visualizer) {
+					const plugin = _visualizer({
+						filename: "dist/stats.html",
+						template: "treemap",
+						gzipSize: true,
+						brotliSize: true,
+						title: "better-stack bundle analysis",
+						open: false,
+					});
+					(options as any).plugins = [...existing, plugin];
+				} else {
+					(options as any).plugins = existing;
+				}
+			}
 
 			if (outputs.length === 0) {
 				options.output = undefined;
