@@ -6,7 +6,6 @@ import { getOrCreateQueryClient } from "@/lib/query-client"
 import { getStackClient } from "@/lib/better-stack-client"
 import { ClientRouteResolver } from "@/lib/route-resolver"
 
-const baseURL =  process.env.BASE_URL || "http://localhost:3000"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -26,12 +25,9 @@ export default async function ExamplePage({
 
     const route = stackClient.router.getRoute(path)
 
-    
-
     // Load data server-side if loader exists
     if (route?.loader) {
-        // Pass SSR-specific baseURL and queryClient
-        await route.loader({ baseURL })
+        await route.loader()
     }
     
     const dehydratedState: DehydratedState = dehydrate(queryClient)
@@ -70,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ all: stri
     
     // Load data for metadata if loader exists
     if (route?.loader) {
-        await route.loader({ baseURL })
+        await route.loader()
     }
     
     // Pass same queryClient to meta so it can read the loaded data

@@ -13,8 +13,10 @@ import { Todo } from "../types";
 export interface TodosClientConfig {
   // Required configuration
   queryClient: QueryClient;
-  baseURL: string;
-  basePath: string;
+  apiBaseURL: string;
+  apiBasePath: string;
+  siteBaseURL: string;
+  siteBasePath: string;
   
   // Optional context to pass to loaders (for SSR)
   context?: Record<string, unknown>;
@@ -22,18 +24,16 @@ export interface TodosClientConfig {
 
 // Loader for SSR prefetching - configured once
 function todosLoader(config: TodosClientConfig) {
-  return async (loaderParams: { baseURL?: string; }) => {
+  return async () => {
     if (typeof window === "undefined") {
-      // Use runtime params for SSR
-      const { baseURL = config.baseURL } = loaderParams;
-      const { queryClient, basePath } = config;
+      const { queryClient, apiBasePath, apiBaseURL } = config;
       
       await queryClient.prefetchQuery({
         queryKey: ["todos"],
         queryFn: async () => {
           const client = createApiClient<TodosApiRouter>({
-            baseURL: baseURL,
-            basePath: basePath,
+            baseURL: apiBaseURL,
+            basePath: apiBasePath,
           });
           try {
             const response = await client("/todos", {
@@ -56,9 +56,9 @@ function createTodosMeta(config: TodosClientConfig, path: string) {
   return () => {
     // Use queryClient passed at runtime (same as loader!)
     const { queryClient } = config;
-    const { baseURL } = config;
+    const { siteBaseURL, siteBasePath } = config;
     const todos = queryClient.getQueryData<Todo[]>(["todos"]) ?? [];
-    const fullUrl = `${baseURL}${path}`;
+    const fullUrl = `${siteBaseURL}${siteBasePath}${path}`;
     
     return [
       { name: "title", content: `${todos.length} Todos` },
@@ -89,8 +89,8 @@ function createTodosMeta(config: TodosClientConfig, path: string) {
 // Meta generator for add todo page
 function createAddTodoMeta(config: TodosClientConfig, path: string) {
   return () => {
-    const { baseURL } = config;
-    const fullUrl = `${baseURL}${path}`;
+    const { siteBaseURL, siteBasePath } = config;
+    const fullUrl = `${siteBaseURL}${siteBasePath}${path}`;
     
     return [
       { name: "title", content: "Add Todo" },
@@ -130,4 +130,10 @@ export const todosClientPlugin = (config: TodosClientConfig) =>
         meta: createAddTodoMeta(config, "/todos/add"),
       })),
     }),
+    sitemap: async () => { 
+      return [
+        { url: `${config.siteBaseURL}${config.siteBasePath}/todos`, lastModified: new Date(), priority: 0.7 },
+        { url: `${config.siteBaseURL}${config.siteBasePath}/todos/add`, lastModified: new Date(), priority: 0.6 },
+      ];
+    },
   });

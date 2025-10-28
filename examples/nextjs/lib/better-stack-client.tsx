@@ -11,13 +11,17 @@ export const getStackClient = (queryClient: QueryClient) => {
         plugins: {
             todos: todosClientPlugin({
                 queryClient: queryClient,
-                baseURL,
-                basePath: "/api",
+                apiBaseURL: baseURL,
+                apiBasePath: "/api",
+                siteBaseURL: baseURL,
+                siteBasePath: "/pages",
             }),
             blog: blogClientPlugin({
                 // Required config - provided once at plugin initialization
-                baseURL,
-                basePath: "/api",
+                apiBaseURL: baseURL,
+                apiBasePath: "/api",
+                siteBaseURL: baseURL,
+                siteBasePath: "/pages",
                 queryClient: queryClient,
                 // Optional: SEO configuration
                 seo: {

@@ -28,8 +28,8 @@ export interface LoaderContext {
 	path: string;
 	params?: Record<string, string>;
 	isSSR: boolean;
-	baseURL: string;
-	basePath: string;
+	apiBaseURL: string;
+	apiBasePath: string;
 	[key: string]: any;
 }
 
@@ -39,8 +39,10 @@ export interface LoaderContext {
  */
 export interface BlogClientConfig {
 	// Required configuration
-	baseURL: string;
-	basePath: string;
+	apiBaseURL: string;
+	apiBasePath: string;
+	siteBaseURL: string;
+	siteBasePath: string;
 	queryClient: QueryClient;
 
 	// Optional SEO/meta configuration
@@ -129,13 +131,12 @@ export interface BlogClientHooks {
 
 // Loader for SSR prefetching with hooks - configured once
 function createPostsLoader(published: boolean, config: BlogClientConfig) {
-	return async (loaderParams: { baseURL?: string }) => {
+	return async () => {
 		if (typeof window === "undefined") {
-			// Use runtime params for SSR
-			const { baseURL = config.baseURL } = loaderParams;
 			const {
 				queryClient,
-				basePath,
+				apiBasePath,
+				apiBaseURL,
 				context: additionalContext,
 				hooks,
 			} = config;
@@ -143,8 +144,8 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 			const context: LoaderContext = {
 				path: published ? "/blog" : "/blog/drafts",
 				isSSR: true,
-				baseURL,
-				basePath,
+				apiBaseURL,
+				apiBasePath,
 				...additionalContext,
 			};
 
@@ -158,10 +159,10 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 				}
 
 				const limit = 10;
-				console.log("createPostsLoader", { baseURL, basePath });
+				console.log("createPostsLoader", { apiBaseURL, apiBasePath });
 				const client = createApiClient<BlogApiRouter>({
-					baseURL: baseURL,
-					basePath: basePath,
+					baseURL: apiBaseURL,
+					basePath: apiBasePath,
 				});
 
 				// note: for a module not to be bundled with client, and to be shared by client and server we need to add it to build.config.ts as an entry
@@ -195,13 +196,12 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 }
 
 function createPostLoader(slug: string, config: BlogClientConfig) {
-	return async (loaderParams: { baseURL?: string }) => {
+	return async () => {
 		if (typeof window === "undefined") {
-			// Use runtime params for SSR
-			const { baseURL = config.baseURL } = loaderParams;
 			const {
 				queryClient,
-				basePath,
+				apiBasePath,
+				apiBaseURL,
 				context: additionalContext,
 				hooks,
 			} = config;
@@ -210,8 +210,8 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 				path: `/blog/${slug}`,
 				params: { slug },
 				isSSR: true,
-				baseURL,
-				basePath,
+				apiBaseURL,
+				apiBasePath,
 				...additionalContext,
 			};
 
@@ -225,8 +225,8 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 				}
 
 				const client = createApiClient<BlogApiRouter>({
-					baseURL: baseURL,
-					basePath: basePath,
+					baseURL: apiBaseURL,
+					basePath: apiBasePath,
 				});
 				const queries = createBlogQueryKeys(client);
 				const postQuery = queries.posts.detail(slug);
@@ -263,9 +263,9 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 // Meta generators with SEO optimization
 function createPostsListMeta(config: BlogClientConfig, published: boolean) {
 	return () => {
-		const { baseURL, seo } = config;
+		const { siteBaseURL, siteBasePath, seo } = config;
 		const path = published ? "/blog" : "/blog/drafts";
-		const fullUrl = `${baseURL}${path}`;
+		const fullUrl = `${siteBaseURL}${siteBasePath}${path}`;
 		const title = published ? "Blog" : "Draft Posts";
 		const description = published
 			? "Read our latest articles, insights, and updates on web development, technology, and more."
@@ -313,9 +313,12 @@ function createPostMeta(config: BlogClientConfig, slug: string) {
 	return () => {
 		// Use queryClient passed at runtime (same as loader!)
 		const { queryClient } = config;
-		const { baseURL, basePath, seo } = config;
+		const { apiBaseURL, apiBasePath, siteBaseURL, siteBasePath, seo } = config;
 		const queries = createBlogQueryKeys(
-			createApiClient<BlogApiRouter>({ baseURL, basePath }),
+			createApiClient<BlogApiRouter>({
+				baseURL: apiBaseURL,
+				basePath: apiBasePath,
+			}),
 		);
 		const post = queryClient.getQueryData<Post>(
 			queries.posts.detail(slug).queryKey,
@@ -329,7 +332,7 @@ function createPostMeta(config: BlogClientConfig, slug: string) {
 			];
 		}
 
-		const fullUrl = `${baseURL}/blog/${post.slug}`;
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/${post.slug}`;
 		const title = post.title;
 		const description = post.excerpt || post.content.substring(0, 160);
 		const publishedTime = post.publishedAt
@@ -408,8 +411,8 @@ function createPostMeta(config: BlogClientConfig, slug: string) {
 
 function createNewPostMeta(config: BlogClientConfig) {
 	return () => {
-		const { baseURL } = config;
-		const fullUrl = `${baseURL}/blog/new`;
+		const { siteBaseURL, siteBasePath } = config;
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/new`;
 
 		return [
 			{ name: "title", content: "Create New Post" },
@@ -436,14 +439,17 @@ function createEditPostMeta(config: BlogClientConfig, slug: string) {
 	return () => {
 		// Use queryClient passed at runtime (same as loader!)
 		const { queryClient } = config;
-		const { baseURL, basePath } = config;
+		const { apiBaseURL, apiBasePath, siteBaseURL, siteBasePath } = config;
 		const queries = createBlogQueryKeys(
-			createApiClient<BlogApiRouter>({ baseURL, basePath }),
+			createApiClient<BlogApiRouter>({
+				baseURL: apiBaseURL,
+				basePath: apiBasePath,
+			}),
 		);
 		const post = queryClient.getQueryData<Post>(
 			queries.posts.detail(slug).queryKey,
 		);
-		const fullUrl = `${baseURL}/blog/${slug}/edit`;
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/${slug}/edit`;
 
 		const title = post ? `Edit: ${post.title}` : "Edit Post";
 
@@ -512,13 +518,13 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 		}),
 
 		sitemap: async () => {
-			const origin = config.baseURL.replace(/\/$/, "");
+			const origin = `${config.siteBaseURL}${config.siteBasePath}`;
 			const indexUrl = `${origin}/blog`;
 
 			// Fetch all published posts via API, with pagination
 			const client = createApiClient<BlogApiRouter>({
-				baseURL: config.baseURL,
-				basePath: config.basePath,
+				baseURL: config.apiBaseURL,
+				basePath: config.apiBasePath,
 			});
 
 			const limit = 100;
