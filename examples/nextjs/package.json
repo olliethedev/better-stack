@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "build:analyze": "ANALYZE=true next build",
     "start": "next start",
     "start:e2e": "rm -rf .next && rm -rf node_modules && pnpm install && pnpm build && NODE_ENV=test next start",
     "lint": "eslint"
@@ -14,6 +15,7 @@
     "@btst/db": "^1.0.2",
     "@btst/stack": "workspace:*",
     "@btst/yar": "^1.1.1",
+    "@next/bundle-analyzer": "^16.0.0",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-separator": "^1.1.7",

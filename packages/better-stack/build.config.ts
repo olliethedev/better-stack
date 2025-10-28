@@ -26,6 +26,7 @@ function createUseClientBanner() {
 		// Also add to top-level client/components/** (outside of plugins)
 		// Also add to shared chunks that include top-level client/components/**
 		// Also add to context/** (BetterStackProvider and hooks use React context)
+		// Also add to chunks/** that include any client-side modules (for lazy-loaded components)
 		const isPluginClientComponentOrHook =
 			chunk.fileName.includes("plugins/") &&
 			(chunk.fileName.includes("/client/components/") ||
@@ -58,13 +59,25 @@ function createUseClientBanner() {
 			chunk.fileName.includes("/context/") ||
 			chunk.fileName.startsWith("context/");
 
+		// Handle lazy-loaded chunks in chunks/** directory
+		const isLazyChunkUsingClientModules =
+			chunk.fileName.includes("chunks/") &&
+			chunk.moduleIds?.some(
+				(id: string) =>
+					id.includes("/client/") ||
+					id.includes("/components/") ||
+					id.includes("/hooks/") ||
+					id.includes("/pages/"),
+			);
+
 		if (
 			isPluginClientComponentOrHook ||
 			isOtherClientChunkExcludingIndex ||
 			isSharedChunkUsingAnyPluginClient ||
 			isTopLevelClientComponents ||
 			isSharedChunkUsingTopLevelClientComponents ||
-			isContextModule
+			isContextModule ||
+			isLazyChunkUsingClientModules
 		) {
 			return '"use client";';
 		}

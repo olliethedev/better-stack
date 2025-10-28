@@ -3,7 +3,7 @@ import { defineClientPlugin } from "@btst/stack/plugins";
 import { createRoute } from "@btst/yar";
 import type { QueryClient } from "@tanstack/react-query";
 import type { TodosApiRouter } from "../api/backend";
-import { AddTodoPage, TodosListPage } from "./components";
+import { lazy } from "react";
 import { Todo } from "../types";
 
 /**
@@ -120,15 +120,27 @@ export const todosClientPlugin = (config: TodosClientConfig) =>
     name: "todos",
 
     routes: () => ({
-      todos: createRoute("/todos", () => ({
-        PageComponent: TodosListPage,
-        loader: todosLoader(config),
-        meta: createTodosMeta(config, "/todos"),
-      })),
-      addTodo: createRoute("/todos/add", () => ({
-        PageComponent: AddTodoPage,
-        meta: createAddTodoMeta(config, "/todos/add"),
-      })),
+      todos: createRoute("/todos", () => {
+        const TodosListPage = lazy(() =>
+          import("./components").then((m) => ({ default: m.TodosListPage }))
+        );
+        
+        return {
+          PageComponent: TodosListPage,
+          loader: todosLoader(config),
+          meta: createTodosMeta(config, "/todos"),
+        };
+      }),
+      addTodo: createRoute("/todos/add", () => {
+        const AddTodoPage = lazy(() =>
+          import("./components").then((m) => ({ default: m.AddTodoPage }))
+        );
+        
+        return {
+          PageComponent: AddTodoPage,
+          meta: createAddTodoMeta(config, "/todos/add"),
+        };
+      }),
     }),
     sitemap: async () => { 
       return [

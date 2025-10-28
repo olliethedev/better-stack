@@ -25,7 +25,7 @@ import { slugify } from "../../../utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { memo, useMemo, useState } from "react";
+import { lazy, memo, Suspense, useMemo, useState } from "react";
 import {
 	type FieldPath,
 	type SubmitHandler,
@@ -35,7 +35,12 @@ import {
 import { toast } from "sonner";
 import { z } from "zod";
 import { FeaturedImageField } from "./image-field";
-import { MarkdownEditor } from "./markdown-editor";
+
+const MarkdownEditor = lazy(() =>
+	import("./markdown-editor").then((module) => ({
+		default: module.MarkdownEditor,
+	})),
+);
 import { BLOG_LOCALIZATION } from "../../localization";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
@@ -175,13 +180,21 @@ function PostFormBody<T extends CommonPostFormValues>({
 								</span>
 							</FormLabel>
 							<FormControl>
-								<MarkdownEditor
-									className="min-h-80 max-w-full border-input rounded-md border shadow-xs"
-									value={typeof field.value === "string" ? field.value : ""}
-									onChange={(content: string) => {
-										field.onChange(content);
-									}}
-								/>
+								<Suspense
+									fallback={
+										<div className="min-h-80 max-w-full border-input rounded-md border shadow-xs flex items-center justify-center bg-muted/50">
+											<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+										</div>
+									}
+								>
+									<MarkdownEditor
+										className="min-h-80 max-w-full border-input rounded-md border shadow-xs"
+										value={typeof field.value === "string" ? field.value : ""}
+										onChange={(content: string) => {
+											field.onChange(content);
+										}}
+									/>
+								</Suspense>
 							</FormControl>
 							<FormDescription />
 							<FormMessage />

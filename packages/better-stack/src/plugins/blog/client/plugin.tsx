@@ -2,13 +2,8 @@ import { defineClientPlugin, createApiClient } from "@btst/stack/plugins";
 import { createRoute } from "@btst/yar";
 import type { QueryClient } from "@tanstack/react-query";
 import type { BlogApiRouter } from "../api";
-import { HomePageComponent } from "./components/pages/home-page";
-import { NewPostPageComponent } from "./components/pages/new-post-page";
-import { PostsLoading, FormLoading } from "./components/loading";
-import { DefaultError } from "./components/shared/default-error";
+import { lazy } from "react";
 import { createBlogQueryKeys } from "../query-keys";
-import { EditPostPageComponent } from "./components/pages/edit-post-page";
-import { PostPageComponent } from "./components/pages/post-page";
 import type { Post, SerializedPost } from "../types";
 
 /**
@@ -481,40 +476,130 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 		name: "blog",
 
 		routes: () => ({
-			posts: createRoute("/blog", () => ({
-				PageComponent: () => <HomePageComponent published={true} />,
-				ErrorComponent: DefaultError,
-				LoadingComponent: PostsLoading,
-				loader: createPostsLoader(true, config),
-				meta: createPostsListMeta(config, true),
-			})),
-			drafts: createRoute("/blog/drafts", () => ({
-				PageComponent: () => <HomePageComponent published={false} />,
-				ErrorComponent: DefaultError,
-				LoadingComponent: PostsLoading,
-				loader: createPostsLoader(false, config),
-				meta: createPostsListMeta(config, false),
-			})),
-			newPost: createRoute("/blog/new", () => ({
-				PageComponent: NewPostPageComponent,
-				ErrorComponent: DefaultError,
-				LoadingComponent: FormLoading,
-				meta: createNewPostMeta(config),
-			})),
-			editPost: createRoute("/blog/:slug/edit", ({ params: { slug } }) => ({
-				PageComponent: () => <EditPostPageComponent slug={slug} />,
-				loader: createPostLoader(slug, config),
-				ErrorComponent: DefaultError,
-				LoadingComponent: FormLoading,
-				meta: createEditPostMeta(config, slug),
-			})),
-			post: createRoute("/blog/:slug", ({ params: { slug } }) => ({
-				PageComponent: () => <PostPageComponent slug={slug} />,
-				loader: createPostLoader(slug, config),
-				ErrorComponent: DefaultError,
-				LoadingComponent: FormLoading,
-				meta: createPostMeta(config, slug), //todo: pass data from caller so we can use on both server and client
-			})),
+			posts: createRoute("/blog", () => {
+				const HomePageComponent = lazy(() =>
+					import("./components/pages/home-page").then((m) => ({
+						default: m.HomePageComponent,
+					})),
+				);
+				const DefaultError = lazy(() =>
+					import("./components/shared/default-error").then((m) => ({
+						default: m.DefaultError,
+					})),
+				);
+				const PostsLoading = lazy(() =>
+					import("./components/loading").then((m) => ({
+						default: m.PostsLoading,
+					})),
+				);
+
+				return {
+					PageComponent: () => <HomePageComponent published={true} />,
+					ErrorComponent: DefaultError,
+					LoadingComponent: PostsLoading,
+					loader: createPostsLoader(true, config),
+					meta: createPostsListMeta(config, true),
+				};
+			}),
+			drafts: createRoute("/blog/drafts", () => {
+				const HomePageComponent = lazy(() =>
+					import("./components/pages/home-page").then((m) => ({
+						default: m.HomePageComponent,
+					})),
+				);
+				const DefaultError = lazy(() =>
+					import("./components/shared/default-error").then((m) => ({
+						default: m.DefaultError,
+					})),
+				);
+				const PostsLoading = lazy(() =>
+					import("./components/loading").then((m) => ({
+						default: m.PostsLoading,
+					})),
+				);
+
+				return {
+					PageComponent: () => <HomePageComponent published={false} />,
+					ErrorComponent: DefaultError,
+					LoadingComponent: PostsLoading,
+					loader: createPostsLoader(false, config),
+					meta: createPostsListMeta(config, false),
+				};
+			}),
+			newPost: createRoute("/blog/new", () => {
+				const NewPostPageComponent = lazy(() =>
+					import("./components/pages/new-post-page").then((m) => ({
+						default: m.NewPostPageComponent,
+					})),
+				);
+				const DefaultError = lazy(() =>
+					import("./components/shared/default-error").then((m) => ({
+						default: m.DefaultError,
+					})),
+				);
+				const FormLoading = lazy(() =>
+					import("./components/loading").then((m) => ({
+						default: m.FormLoading,
+					})),
+				);
+
+				return {
+					PageComponent: NewPostPageComponent,
+					ErrorComponent: DefaultError,
+					LoadingComponent: FormLoading,
+					meta: createNewPostMeta(config),
+				};
+			}),
+			editPost: createRoute("/blog/:slug/edit", ({ params: { slug } }) => {
+				const EditPostPageComponent = lazy(() =>
+					import("./components/pages/edit-post-page").then((m) => ({
+						default: m.EditPostPageComponent,
+					})),
+				);
+				const DefaultError = lazy(() =>
+					import("./components/shared/default-error").then((m) => ({
+						default: m.DefaultError,
+					})),
+				);
+				const FormLoading = lazy(() =>
+					import("./components/loading").then((m) => ({
+						default: m.FormLoading,
+					})),
+				);
+
+				return {
+					PageComponent: () => <EditPostPageComponent slug={slug} />,
+					loader: createPostLoader(slug, config),
+					ErrorComponent: DefaultError,
+					LoadingComponent: FormLoading,
+					meta: createEditPostMeta(config, slug),
+				};
+			}),
+			post: createRoute("/blog/:slug", ({ params: { slug } }) => {
+				const PostPageComponent = lazy(() =>
+					import("./components/pages/post-page").then((m) => ({
+						default: m.PostPageComponent,
+					})),
+				);
+				const DefaultError = lazy(() =>
+					import("./components/shared/default-error").then((m) => ({
+						default: m.DefaultError,
+					})),
+				);
+				const FormLoading = lazy(() =>
+					import("./components/loading").then((m) => ({
+						default: m.FormLoading,
+					})),
+				);
+
+				return {
+					PageComponent: () => <PostPageComponent slug={slug} />,
+					loader: createPostLoader(slug, config),
+					ErrorComponent: DefaultError,
+					LoadingComponent: FormLoading,
+					meta: createPostMeta(config, slug),
+				};
+			}),
 		}),
 
 		sitemap: async () => {

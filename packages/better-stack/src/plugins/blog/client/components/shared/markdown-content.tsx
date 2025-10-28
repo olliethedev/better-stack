@@ -399,19 +399,7 @@ export function MarkdownContent({ markdown, className }: MarkdownContentProps) {
 		return plugins as never;
 	}, [hasMath, mathPlugins]);
 
-	// Don't render until math plugins are loaded if math is present
-	if (hasMath && !mathPlugins && isLoadingMath) {
-		return (
-			<div className={cn("milkdown-custom", className)}>
-				<div className="milkdown">
-					<div className="milkdown-content">
-						<p className="text-muted-foreground">Loading math renderer...</p>
-					</div>
-				</div>
-			</div>
-		);
-	}
-
+	// Render content immediately; math will re-render once plugins load
 	return (
 		<div className={cn("milkdown-custom", className)}>
 			<div className="milkdown">

@@ -53,20 +53,20 @@ export function RouteRenderer({
 			const isBrowser = typeof window !== "undefined";
 			const suspenseFallback =
 				isBrowser && LoadingComponent ? <LoadingComponent /> : null;
-			const suspenseWrapped = (
-				<Suspense fallback={suspenseFallback}>{content}</Suspense>
-			);
 
-			// Only wrap with ErrorBoundary if a FallbackComponent was provided by the route
+			// If an ErrorComponent is provided (which itself may be lazy), ensure we have
+			// a Suspense boundary that can handle both the page content and the lazy error UI
 			if (ErrorComponent) {
 				return (
-					<ErrorBoundary FallbackComponent={ErrorComponent}>
-						{suspenseWrapped}
-					</ErrorBoundary>
+					<Suspense fallback={suspenseFallback}>
+						<ErrorBoundary FallbackComponent={ErrorComponent}>
+							<Suspense fallback={suspenseFallback}>{content}</Suspense>
+						</ErrorBoundary>
+					</Suspense>
 				);
 			}
 
-			return suspenseWrapped;
+			return <Suspense fallback={suspenseFallback}>{content}</Suspense>;
 		}
 	}
 
