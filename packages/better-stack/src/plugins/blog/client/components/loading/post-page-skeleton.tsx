@@ -1,6 +1,6 @@
 import { PageHeaderSkeleton } from "./page-header-skeleton";
 import { PageLayout } from "../shared/page-layout";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 
 export function PostPageSkeleton() {
 	return (

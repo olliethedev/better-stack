@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* Scan UI components for Tailwind classes */
+@source "../components/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
+@source "../hooks/**/*.{ts,tsx}";
+

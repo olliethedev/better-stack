@@ -1,7 +1,7 @@
 import { PageHeaderSkeleton } from "./page-header-skeleton";
 import { PageLayout } from "../shared/page-layout";
 import { PostCardSkeleton } from "./post-card-skeleton";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 
 export function ListPageSkeleton() {
 	return (

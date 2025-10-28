@@ -114,6 +114,7 @@
       }
     },
     "./plugins/blog/css": "./dist/plugins/blog/style.css",
+    "./ui/css": "./dist/ui/components.css",
     "./package.json": "./package.json"
   },
   "typesVersions": {
@@ -142,6 +143,7 @@
     }
   },
   "dependencies": {
+    "@workspace/ui": "workspace:*",
     "@btst/db": "1.0.2",
     "@btst/yar": "1.1.1",
     "@lukemorales/query-key-factory": "^1.3.4",

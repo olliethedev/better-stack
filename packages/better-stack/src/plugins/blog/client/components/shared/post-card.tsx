@@ -1,12 +1,12 @@
 "use client";
-import { Badge } from "../ui/badge";
+import { Badge } from "@workspace/ui/components/badge";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "../ui/card";
+} from "@workspace/ui/components/card";
 import { useBasePath, usePluginOverrides } from "@btst/stack/context";
 import { formatDate } from "date-fns";
 import type { SerializedPost } from "../../../types";

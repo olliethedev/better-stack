@@ -1,12 +1,12 @@
-import { Button } from "../ui/button";
+import { Button } from "@workspace/ui/components/button";
 import {
 	FormControl,
 	FormDescription,
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
+} from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
 import { usePluginOverrides } from "@btst/stack/context";
 import { Loader2, Upload } from "lucide-react";
 import { useRef, useState } from "react";

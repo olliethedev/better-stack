@@ -9,7 +9,7 @@ import {
 	CommandEmpty,
 	CommandInput,
 	CommandList,
-} from "../ui/command";
+} from "@workspace/ui/components/command";
 
 export interface SearchResult {
 	id: string;

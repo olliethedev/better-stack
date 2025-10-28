@@ -1,4 +1,8 @@
 @import "./client.css";
-@source ".";
-@source "../../shared";
-@source "./client";
+
+/* Import pre-compiled UI component styles */
+@import "../../ui/components.css";
+
+/* Ensure Tailwind scans the blog plugin's own sources */
+@source "./client/**/*.{js,mjs,cjs}";
+@source "../../shared/**/*.{js,mjs,cjs}";

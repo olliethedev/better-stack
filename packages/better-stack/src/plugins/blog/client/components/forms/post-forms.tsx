@@ -4,7 +4,7 @@ import {
 	updatePostSchema as PostUpdateSchema,
 } from "../../../schemas";
 
-import { Button } from "../ui/button";
+import { Button } from "@workspace/ui/components/button";
 
 import {
 	Form,
@@ -14,11 +14,11 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
+} from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
 
-import { Switch } from "../ui/switch";
-import { Textarea } from "../ui/textarea";
+import { Switch } from "@workspace/ui/components/switch";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { useCreatePost, usePost, useUpdatePost } from "../../hooks/blog-hooks";
 // import { useBlogContext } from "@/hooks/context-hooks"
 import { slugify } from "../../../utils";

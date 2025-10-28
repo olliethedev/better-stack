@@ -1,5 +1,10 @@
-import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+} from "@workspace/ui/components/card";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 
 export function PostCardSkeleton() {
 	return (
