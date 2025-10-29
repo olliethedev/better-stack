@@ -43,4 +43,12 @@ export interface BlogPluginOverrides {
 	 * Localization object for the blog plugin
 	 */
 	localization?: BlogLocalization;
+	/**
+	 * API base URL
+	 */
+	apiBaseURL: string;
+	/**
+	 * API base path
+	 */
+	apiBasePath: string;
 }

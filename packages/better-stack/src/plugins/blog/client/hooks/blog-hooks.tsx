@@ -83,7 +83,12 @@ export type PostUpdateInput = z.infer<typeof updatePostSchema>;
  * Hook for fetching paginated posts with load more functionality
  */
 export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
-	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
 	const { tag, limit = 10, enabled = true, query, published } = options;
 	const queries = createBlogQueryKeys(client);
 
@@ -139,7 +144,12 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
 	isLoadingMore: boolean;
 	refetch: () => Promise<unknown>;
 } {
-	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
 	const { tag, limit = 10, enabled = true, query, published } = options;
 	const queries = createBlogQueryKeys(client);
 
@@ -173,7 +183,12 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
  * Hook for fetching a single post by slug
  */
 export function usePost(slug?: string): UsePostResult {
-	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
 	const queries = createBlogQueryKeys(client);
 
 	const basePost = queries.posts.detail(slug ?? "");
@@ -201,7 +216,12 @@ export function useSuspensePost(slug: string): {
 	post: SerializedPost | null;
 	refetch: () => Promise<unknown>;
 } {
-	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
 	const queries = createBlogQueryKeys(client);
 	const basePost = queries.posts.detail(slug);
 	const { data, refetch } = useSuspenseQuery<
@@ -218,10 +238,14 @@ export function useSuspensePost(slug: string): {
 
 /** Create a new post */
 export function useCreatePost() {
-	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const { refresh, apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
 	const queryClient = useQueryClient();
 	const queries = createBlogQueryKeys(client);
-	const { refresh } = usePluginOverrides<BlogPluginOverrides>("blog") ?? {};
 
 	return useMutation<SerializedPost | null, Error, PostCreateInput>({
 		mutationKey: [...queries.posts._def, "create"],
@@ -257,10 +281,16 @@ export function useCreatePost() {
 
 /** Update an existing post by id */
 export function useUpdatePost() {
-	const client = createApiClient<BlogApiRouter>({ baseURL: "/api" });
+	const { refresh, apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
+
 	const queryClient = useQueryClient();
 	const queries = createBlogQueryKeys(client);
-	const { refresh } = usePluginOverrides<BlogPluginOverrides>("blog");
 
 	return useMutation<
 		SerializedPost | null,

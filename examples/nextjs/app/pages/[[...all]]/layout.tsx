@@ -10,6 +10,9 @@ import type { TodosPluginOverrides } from "@/lib/plugins/todo/client/overrides"
 import { getOrCreateQueryClient } from "@/lib/query-client"
 import { BlogPluginOverrides } from "@btst/stack/plugins/blog/client"
 
+
+const baseURL =  process.env.BASE_URL || "http://localhost:3000"
+
 // Define the shape of all plugin overrides
 type PluginOverrides = {
     todos: TodosPluginOverrides
@@ -38,6 +41,8 @@ export default function ExampleLayout({
                         navigate: (path) => router.push(path)
                     },
                     blog: {
+                        apiBaseURL: baseURL,
+                        apiBasePath: "/api/data",
                         navigate: (path) => router.push(path),
                         refresh: () => router.refresh(),
                         uploadImage: async (file) => {

@@ -24,24 +24,24 @@ export default defineConfig({
 		// Next.js with memory provider and custom plugin
 		{
 			command: "pnpm -F examples/nextjs run start:e2e",
-			port: 3001,
+			port: 3003,
 			reuseExistingServer: !process.env["CI"],
 			timeout: 120_000,
 			stdout: "pipe",
 			stderr: "pipe",
 			env: {
 				...process.env,
-				PORT: "3001",
+				PORT: "3003",
 				HOST: "127.0.0.1",
-				BASE_URL: "http://localhost:3001",
+				BASE_URL: "http://localhost:3003",
 			},
 		},
 	],
 	projects: [
 		{
 			name: "nextjs:memory",
-			use: { baseURL: "http://localhost:3001" },
-			testMatch: ["**/*.spec.ts"],
+			use: { baseURL: "http://localhost:3003" },
+			testMatch: ["**/*.todos.spec.ts"],
 		},
 	],
 });

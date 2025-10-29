@@ -98,7 +98,14 @@ export function MarkdownEditor({
 		if (!crepeRef.current) return;
 		if (typeof value !== "string") return;
 
-		const currentMarkdown = crepeRef.current.getMarkdown();
+		let currentMarkdown: string | undefined;
+		try {
+			currentMarkdown = crepeRef.current?.getMarkdown?.();
+		} catch {
+			// Editor may not have finished initializing its view/state; skip sync for now
+			return;
+		}
+
 		if (currentMarkdown === value) return;
 
 		crepeRef.current.editor.action((ctx) => {

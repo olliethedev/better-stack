@@ -1,0 +1,46 @@
+{
+  "name": "tanstack",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@btst/adapter-memory": "^1.0.2",
+    "@btst/db": "^1.0.2",
+    "@btst/stack": "workspace:*",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@tanstack/react-query": "^5.90.2",
+    "@tanstack/react-query-devtools": "^5.90.2",
+    "@tanstack/react-router": "^1.133.36",
+    "@tanstack/react-router-ssr-query": "^1.133.36",
+    "@tanstack/react-start": "^1.133.37",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.548.0",
+    "postcss": "^8.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.16"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "nitro": "3.0.1-alpha.0",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "catalog:",
+    "vite": "^7.1.12",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}
