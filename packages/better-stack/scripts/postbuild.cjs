@@ -90,36 +90,8 @@ function runPerPluginPostbuilds() {
 	}
 }
 
-function buildAndCopyUiCss() {
-	console.log(`@btst/stack: building @workspace/ui CSS`);
-	const UI_PACKAGE_DIR = path.resolve(ROOT, "..", "ui");
-	const UI_CSS_SRC = path.join(UI_PACKAGE_DIR, "dist", "components.css");
-	const UI_CSS_DEST = path.join(ROOT, "dist", "ui", "components.css");
-
-	// Build the UI CSS
-	const buildResult = spawnSync("pnpm", ["build:css"], {
-		cwd: UI_PACKAGE_DIR,
-		stdio: "inherit",
-	});
-
-	if (buildResult.status !== 0) {
-		console.warn(`@btst/stack: Failed to build @workspace/ui CSS`);
-		return;
-	}
-
-	// Copy to dist
-	if (fs.existsSync(UI_CSS_SRC)) {
-		ensureDir(path.dirname(UI_CSS_DEST));
-		fs.copyFileSync(UI_CSS_SRC, UI_CSS_DEST);
-		console.log(
-			`@btst/stack: copied UI CSS to ${path.relative(ROOT, UI_CSS_DEST)}`,
-		);
-	}
-}
-
 function main() {
 	ensureDir(DIST_PLUGINS_DIR);
-	buildAndCopyUiCss();
 	copyAllPluginCss();
 	runPerPluginPostbuilds();
 }

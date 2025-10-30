@@ -1,8 +1,22 @@
 @import "./client.css";
 
-/* Import pre-compiled UI component styles */
-@import "../../ui/components.css";
+/*
+ * Blog Plugin CSS - Includes Tailwind class scanning
+ * 
+ * When consumed from npm, Tailwind v4 will automatically scan this package's
+ * source files for Tailwind classes. Consumers only need:
+ *   @import "@btst/stack/plugins/blog/css";
+ */
 
-/* Ensure Tailwind scans the blog plugin's own sources */
-@source "./client/**/*.{js,mjs,cjs}";
-@source "../../shared/**/*.{js,mjs,cjs}";
+/* Scan this package's source files for Tailwind classes */
+@source "../../../src/**/*.{ts,tsx}";
+
+/* Scan UI package components (if in monorepo) */
+@source "../../../../@workspace/ui/src/**/*.{ts,tsx}";
+
+/* Scan UI package components (if installed as npm package) */
+@source "../../../node_modules/@workspace/ui/src/**/*.{ts,tsx}";
+
+/*
+* alternatively consumer can use @source "../node_modules/@btst/stack/src/**\/*.{ts,tsx}";
+*/

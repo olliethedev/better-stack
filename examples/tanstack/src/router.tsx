@@ -30,7 +30,7 @@ export function getRouter() {
   const router = createRouter({
     routeTree,
     scrollRestoration: true,
-    defaultPreload: 'intent',
+    defaultPreload: false,
     context: {
       queryClient,
     },
@@ -46,4 +46,10 @@ export function getRouter() {
   })
 
   return router
+}
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: ReturnType<typeof getRouter>
+  }
 }

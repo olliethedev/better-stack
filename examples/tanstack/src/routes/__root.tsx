@@ -1,6 +1,6 @@
 // src/routes/__root.tsx
 /// <reference types="vite/client" />
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import {
   Outlet,
   HeadContent,
@@ -69,12 +69,20 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       </RootDocument>
     )
   },
+  pendingComponent: () => {
+    return <div>Pending...</div>
+  },
+  errorComponent: () => {
+    return <div>Error...</div>
+  },
 })
 
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Outlet />
+      </Suspense>
     </RootDocument>
   )
 }

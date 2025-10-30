@@ -114,6 +114,7 @@
       }
     },
     "./plugins/blog/css": "./dist/plugins/blog/style.css",
+    "./dist/*": "./dist/*",
     "./ui/css": "./dist/ui/components.css",
     "./package.json": "./package.json"
   },
@@ -193,6 +194,7 @@
     "vue": "^3.5.18"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ]
 }

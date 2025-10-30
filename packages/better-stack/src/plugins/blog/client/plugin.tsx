@@ -5,6 +5,8 @@ import type { BlogApiRouter } from "../api";
 import { lazy } from "react";
 import { createBlogQueryKeys } from "../query-keys";
 import type { Post, SerializedPost } from "../types";
+//note: do not lazy load the loading components as they need to be available immediately for some fullstack frameworks like tanstack start or client side navigation rendering breaks in a weird way
+import { PostsLoading } from "./components/loading";
 
 /**
  * Context passed to route hooks
@@ -487,11 +489,6 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 						default: m.DefaultError,
 					})),
 				);
-				const PostsLoading = lazy(() =>
-					import("./components/loading").then((m) => ({
-						default: m.PostsLoading,
-					})),
-				);
 
 				return {
 					PageComponent: () => <HomePageComponent published={true} />,
@@ -510,11 +507,6 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				const DefaultError = lazy(() =>
 					import("./components/shared/default-error").then((m) => ({
 						default: m.DefaultError,
-					})),
-				);
-				const PostsLoading = lazy(() =>
-					import("./components/loading").then((m) => ({
-						default: m.PostsLoading,
 					})),
 				);
 

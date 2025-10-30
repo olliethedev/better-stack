@@ -42,7 +42,7 @@ export default function ExampleLayout({
                     },
                     blog: {
                         apiBaseURL: baseURL,
-                        apiBasePath: "/api/data",
+                        apiBasePath: "/api",
                         navigate: (path) => router.push(path),
                         refresh: () => router.refresh(),
                         uploadImage: async (file) => {

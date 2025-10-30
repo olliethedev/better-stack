@@ -58,15 +58,24 @@ export function RouteRenderer({
 			// a Suspense boundary that can handle both the page content and the lazy error UI
 			if (ErrorComponent) {
 				return (
-					<Suspense fallback={suspenseFallback}>
-						<ErrorBoundary FallbackComponent={ErrorComponent}>
-							<Suspense fallback={suspenseFallback}>{content}</Suspense>
+					<Suspense key={`outer-${path}`} fallback={suspenseFallback}>
+						<ErrorBoundary
+							FallbackComponent={ErrorComponent}
+							resetKeys={[path]}
+						>
+							<Suspense key={`inner-${path}`} fallback={suspenseFallback}>
+								{content}
+							</Suspense>
 						</ErrorBoundary>
 					</Suspense>
 				);
 			}
 
-			return <Suspense fallback={suspenseFallback}>{content}</Suspense>;
+			return (
+				<Suspense key={path} fallback={suspenseFallback}>
+					{content}
+				</Suspense>
+			);
 		}
 	}
 

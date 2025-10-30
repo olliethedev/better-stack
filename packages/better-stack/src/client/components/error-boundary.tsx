@@ -7,12 +7,17 @@ import {
 export function ErrorBoundary({
 	children,
 	FallbackComponent,
+	resetKeys,
 }: {
 	children: React.ReactNode;
 	FallbackComponent: React.ComponentType<FallbackProps>;
+	resetKeys?: Array<string | number | boolean | null | undefined>;
 }) {
 	return (
-		<ReactErrorBoundary FallbackComponent={FallbackComponent}>
+		<ReactErrorBoundary
+			FallbackComponent={FallbackComponent}
+			resetKeys={resetKeys}
+		>
 			{children}
 		</ReactErrorBoundary>
 	);

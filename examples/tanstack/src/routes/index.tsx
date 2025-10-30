@@ -25,6 +25,7 @@ function Home() {
                 <b className="border-b-2 border-destructive w-full text-center p-2">Pages:</b>
                 <Button className="text-destructive" variant="link" asChild>
                     <Link to="/pages/$"
+                    data-testid="blog-link"
                     params={{
                         _splat: "blog",
                     }}

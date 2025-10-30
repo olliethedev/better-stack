@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { BlogPluginOverrides } from "@btst/stack/plugins/blog/client"
 import { Link, useRouter, Outlet, createFileRoute } from "@tanstack/react-router"
+import { Suspense } from "react"
 
 const baseURL =  process.env.BASE_URL || "http://localhost:3000"
 
@@ -14,10 +15,9 @@ type PluginOverrides = {
 
 export const Route = createFileRoute('/pages')({
     component: Layout,
-    ssr: true,
     notFoundComponent: () => {
         return <p>This page doesn't exist!</p>
-    },
+    }
 })
 
 function Layout() {
@@ -46,7 +46,9 @@ function Layout() {
                     }
                 }}
             >
-                <Outlet />
+                <Suspense fallback={<div>Loading...</div>}>
+                    <Outlet />
+                </Suspense>
             </BetterStackProvider>
         </QueryClientProvider>
     )

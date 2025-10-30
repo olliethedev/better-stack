@@ -59,8 +59,13 @@ function Page() {
   const context = Route.useRouteContext();
   const { _splat } = Route.useParams();
   const stackClient = getStackClient(context.queryClient);
+  const normalizedPath = normalizePath(_splat);
   return (
-    <RouteRenderer router={stackClient.router} path={normalizePath(_splat)} />
+    <RouteRenderer 
+      key={normalizedPath} 
+      router={stackClient.router} 
+      path={normalizedPath} 
+    />
   );
 }
 
