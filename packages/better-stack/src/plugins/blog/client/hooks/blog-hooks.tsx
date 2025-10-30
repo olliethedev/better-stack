@@ -15,6 +15,7 @@ import type { BlogApiRouter } from "../../api/plugin";
 import { useDebounce } from "./use-debounce";
 import { useEffect, useRef } from "react";
 import { z } from "zod";
+import { useInView } from "react-intersection-observer";
 import { createPostSchema, updatePostSchema } from "../../schemas";
 import { createBlogQueryKeys } from "../../query-keys";
 import { usePluginOverrides } from "@btst/stack/context";
@@ -380,5 +381,69 @@ export function usePostSearch({
 		refetch,
 		isSearching: effectiveLoading,
 		searchQuery: debouncedQuery,
+	};
+}
+
+export interface UseNextPreviousPostsOptions {
+	enabled?: boolean;
+}
+
+export interface UseNextPreviousPostsResult {
+	previousPost: SerializedPost | null;
+	nextPost: SerializedPost | null;
+	isLoading: boolean;
+	error: Error | null;
+	refetch: () => void;
+}
+
+/**
+ * Hook for fetching previous and next posts relative to a given date
+ * Uses useInView to only fetch when the component is in view
+ */
+export function useNextPreviousPosts(
+	createdAt: string | Date,
+	options: UseNextPreviousPostsOptions = {},
+): UseNextPreviousPostsResult & {
+	ref: (node: Element | null) => void;
+	inView: boolean;
+} {
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
+	const queries = createBlogQueryKeys(client);
+
+	const { ref, inView } = useInView({
+		// start a little early so the data is ready as it scrolls in
+		rootMargin: "200px 0px",
+		// run once; keep data cached after
+		triggerOnce: true,
+	});
+
+	const dateValue =
+		typeof createdAt === "string" ? new Date(createdAt) : createdAt;
+	const baseQuery = queries.posts.nextPrevious(dateValue);
+
+	const { data, isLoading, error, refetch } = useQuery<
+		{ previous: SerializedPost | null; next: SerializedPost | null },
+		Error,
+		{ previous: SerializedPost | null; next: SerializedPost | null },
+		typeof baseQuery.queryKey
+	>({
+		...baseQuery,
+		...SHARED_QUERY_CONFIG,
+		enabled: (options.enabled ?? true) && inView && !!client,
+	});
+
+	return {
+		previousPost: data?.previous ?? null,
+		nextPost: data?.next ?? null,
+		isLoading,
+		error,
+		refetch,
+		ref,
+		inView,
 	};
 }

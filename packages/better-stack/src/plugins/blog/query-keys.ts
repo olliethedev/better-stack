@@ -63,6 +63,24 @@ function createPostsQueries(
 				return (response.data?.[0] ?? null) as unknown as SerializedPost | null;
 			},
 		}),
+
+		// Next/previous posts query
+		nextPrevious: (date: Date | string) => ({
+			queryKey: ["nextPrevious", date],
+			queryFn: async () => {
+				const dateValue = typeof date === "string" ? new Date(date) : date;
+				const response = await client("/posts/next-previous", {
+					method: "GET",
+					query: {
+						date: dateValue.toISOString(),
+					},
+				});
+				return response.data as {
+					previous: SerializedPost | null;
+					next: SerializedPost | null;
+				};
+			},
+		}),
 	});
 }
 

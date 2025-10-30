@@ -23,6 +23,10 @@ export const PostListQuerySchema = z.object({
 		}),
 });
 
+export const NextPreviousPostsQuerySchema = z.object({
+	date: z.coerce.date(),
+});
+
 /**
  * Context passed to blog API hooks
  */
@@ -329,11 +333,93 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 				},
 			);
 
+			const getNextPreviousPosts = createEndpoint(
+				"/posts/next-previous",
+				{
+					method: "GET",
+					query: NextPreviousPostsQuerySchema,
+				},
+				async ({ query }) => {
+					const context: BlogApiContext = { query };
+
+					try {
+						// Authorization hook
+						if (hooks?.canListPosts) {
+							const canList = await hooks.canListPosts(
+								{ published: true },
+								context,
+							);
+							if (!canList) {
+								throw new Error("Unauthorized: Cannot list posts");
+							}
+						}
+
+						const date = query.date;
+
+						// Get previous post (createdAt < date, newest first)
+						const previousPost = await adapter.findMany<Post>({
+							model: "post",
+							limit: 1,
+							where: [
+								{
+									field: "createdAt",
+									value: date,
+									operator: "lt" as const,
+								},
+								{
+									field: "published",
+									value: true,
+									operator: "eq" as const,
+								},
+							],
+							sortBy: {
+								field: "createdAt",
+								direction: "desc",
+							},
+						});
+
+						// Get next post (createdAt > date, oldest first)
+						const nextPost = await adapter.findMany<Post>({
+							model: "post",
+							limit: 1,
+							where: [
+								{
+									field: "createdAt",
+									value: date,
+									operator: "gt" as const,
+								},
+								{
+									field: "published",
+									value: true,
+									operator: "eq" as const,
+								},
+							],
+							sortBy: {
+								field: "createdAt",
+								direction: "asc",
+							},
+						});
+
+						return {
+							previous: previousPost?.[0] || null,
+							next: nextPost?.[0] || null,
+						};
+					} catch (error) {
+						// Error hook
+						if (hooks?.onListPostsError) {
+							await hooks.onListPostsError(error as Error, context);
+						}
+						throw error;
+					}
+				},
+			);
+
 			return {
 				listPosts,
 				createPost,
 				updatePost,
 				deletePost,
+				getNextPreviousPosts,
 			} as const;
 		},
 	});

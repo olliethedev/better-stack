@@ -2,27 +2,35 @@
 
 import { usePluginOverrides } from "@btst/stack/context";
 import { formatDate } from "date-fns";
-import { useSuspensePost } from "../../hooks/blog-hooks";
+import { useSuspensePost, useNextPreviousPosts } from "../../hooks/blog-hooks";
 import { EmptyList } from "../shared/empty-list";
 import { MarkdownContent } from "../shared/markdown-content";
 import { PageHeader } from "../shared/page-header";
 import { PageWrapper } from "../shared/page-wrapper";
 import type { BlogPluginOverrides } from "../../overrides";
-import { DefaultImage, DefaultLink } from "../shared/defaults";
+import { DefaultImage } from "../shared/defaults";
 import { BLOG_LOCALIZATION } from "../../localization";
+import { PostNavigation } from "../shared/post-navigation";
 
 export function PostPageComponent({ slug }: { slug: string }) {
 	const { Image, localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
 	>("blog", {
-		Link: DefaultLink,
 		Image: DefaultImage,
 		localization: BLOG_LOCALIZATION,
 	});
 
 	// Call hook unconditionally to comply with Rules of Hooks
 	const { post } = useSuspensePost(slug ?? "");
+
+	// Fetch next/previous posts when scrolled into view
+	const { previousPost, nextPost, ref } = useNextPreviousPosts(
+		post?.createdAt ?? new Date(),
+		{
+			enabled: !!post,
+		},
+	);
 
 	// Check for missing slug or post after hook call
 	if (!slug || !post) {
@@ -52,6 +60,12 @@ export function PostPageComponent({ slug }: { slug: string }) {
 			</div>
 
 			<MarkdownContent markdown={post.content} />
+
+			<PostNavigation
+				previousPost={previousPost}
+				nextPost={nextPost}
+				ref={ref}
+			/>
 		</PageWrapper>
 	);
 }
