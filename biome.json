@@ -68,7 +68,8 @@
       "!**/playwright-report",
       "!**/.output",
       "!**/.tmp",
-      "!**/examples/**"
+      "!**/examples/**",
+      "!**/packages/ui/**"
     ]
   }
 }

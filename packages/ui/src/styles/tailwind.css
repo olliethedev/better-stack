@@ -1,0 +1,10 @@
+/*
+ * Tailwind v4 @source directive for @workspace/ui components
+ * This file scans all UI components for Tailwind classes
+ */
+
+/* Scan all UI package source files */
+@source "../components/**/*.tsx";
+@source "../lib/**/*.ts";
+@source "../hooks/**/*.ts";
+

@@ -1,0 +1,94 @@
+"use client";
+import { Badge } from "@workspace/ui/components/badge";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@workspace/ui/components/card";
+import { useBasePath, usePluginOverrides } from "@btst/stack/context";
+import { formatDate } from "date-fns";
+import type { SerializedPost } from "../../../types";
+import { CalendarIcon, ImageIcon } from "lucide-react";
+import type { BlogPluginOverrides } from "../../overrides";
+import { BLOG_LOCALIZATION } from "../../localization";
+import { DefaultLink, DefaultImage } from "./defaults";
+
+export function PostCard({ post }: { post: SerializedPost }) {
+	const { Link, Image } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		Link: DefaultLink,
+		Image: DefaultImage,
+	});
+	const { localization } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
+		localization: BLOG_LOCALIZATION,
+	});
+	const basePath = useBasePath();
+	const blogPath = `${basePath}/blog/${post.slug}`;
+	const postDate = formatDate(
+		post.publishedAt || post.createdAt,
+		"MMMM d, yyyy",
+	);
+
+	return (
+		<Card className="group relative flex h-full flex-col gap-2 !pt-0 !pb-4 transition-shadow duration-200 hover:shadow-lg">
+			{/* Featured Image or Placeholder */}
+			<Link
+				href={blogPath}
+				className="relative block h-48 w-full overflow-hidden rounded-t-xl bg-muted"
+				aria-label={post.title}
+			>
+				{post.image ? (
+					<Image
+						src={post.image}
+						alt={post.title}
+						className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+						width={500}
+						height={300}
+					/>
+				) : (
+					<div className="flex h-full w-full items-center justify-center bg-muted">
+						<ImageIcon className="size-18" />
+					</div>
+				)}
+			</Link>
+
+			{!post.published && (
+				<Badge variant="destructive" className="absolute top-2 left-2 text-xs">
+					{localization.BLOG_CARD_DRAFT_BADGE}
+				</Badge>
+			)}
+
+			<Link
+				href={blogPath}
+				aria-label={`${post.title}`}
+				className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+			>
+				<CardHeader className="flex-1">
+					<div className="mb-2 flex items-center gap-2 text-muted-foreground text-xs">
+						<CalendarIcon className="h-3 w-3" />
+						<time dateTime={postDate}>{postDate}</time>
+					</div>
+
+					<CardTitle className="line-clamp-2 text-lg leading-tight transition-colors group-hover:underline">
+						{post.title}
+					</CardTitle>
+				</CardHeader>
+
+				<CardContent className="flex flex-1 flex-col gap-4">
+					{post.excerpt && (
+						<CardDescription className="mt-2 line-clamp-3">
+							{post.excerpt}
+						</CardDescription>
+					)}
+				</CardContent>
+			</Link>
+		</Card>
+	);
+}

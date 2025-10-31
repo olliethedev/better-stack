@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
+
+/* Import blog plugin styles (tailwind classes,markdown, milkdown, etc.) */
+@import "@btst/stack/plugins/blog/css";
+
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

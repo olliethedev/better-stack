@@ -22,6 +22,18 @@ export default function Home() {
 					<Button className="text-destructive" variant="link" asChild>
 						<Link href="/pages/todos">Todos</Link>
 					</Button>
+					<Button className="text-destructive" variant="link" asChild>
+						<Link href="/pages/todos/add">Add Todo</Link>
+					</Button>
+					<Button className="text-destructive" variant="link" asChild>
+						<Link href="/pages/blog">Blog</Link>
+					</Button>
+					<Button className="text-destructive" variant="link" asChild>
+						<Link href="/pages/blog/drafts">Drafts</Link>
+					</Button>
+					<Button className="text-destructive" variant="link" asChild>
+						<Link href="/pages/blog/new">New Post</Link>
+					</Button>
 				</div>
 			</main>
 		</div>

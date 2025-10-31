@@ -4,6 +4,7 @@ import type {
 	ClientLib,
 	ClientPlugin,
 	PluginRoutes,
+	Sitemap,
 } from "../types";
 export type { ClientPlugin } from "../types";
 
@@ -15,12 +16,39 @@ export type { ClientPlugin } from "../types";
  * // For Next.js with SSR:
  * const lib = createStackClient({
  *   plugins: {
- *     messages: messagesPlugin.client
+ *     blog: blogPlugin.client
  *   }
  * });
  *
- * // Access router for page routing
- * const route = lib.router.getRoute('/messages');
+ * // SPA usage - just render the route
+ * function Page() {
+ *   return lib.resolveRoute('/blog');
+ * }
+ *
+ * // SSR usage - prefetch data with loader, then render
+ * async function Page({ params }) {
+ *   const path = '/blog';
+ *
+ *   // Load data server-side if loader exists
+ *   const loader = lib.getLoader(path);
+ *   if (loader) await loader(queryClient, baseURL, basePath);
+ *
+ *   // Render with built-in Suspense + Error Boundary
+ *   return lib.resolveRoute(path);
+ * }
+ *
+ * // Next.js with notFound() function
+ * import { notFound } from 'next/navigation';
+ *
+ * async function Page({ params }) {
+ *   const path = '/blog';
+ *   const loader = lib.getLoader(path);
+ *   if (loader) await loader(queryClient, baseURL);
+ *
+ *   return lib.resolveRoute(path, {
+ *     onNotFound: notFound // Calls Next.js notFound() instead of rendering
+ *   });
+ * }
  *
  * ```
  *
@@ -49,11 +77,28 @@ export function createStackClient<
 
 	return {
 		router,
+		async generateSitemap() {
+			const sitemapEntries: Sitemap = [];
+			for (const plugin of Object.values(plugins)) {
+				if (typeof plugin.sitemap === "function") {
+					// Allow each plugin to return a partial sitemap
+					const entries = await plugin.sitemap();
+					if (Array.isArray(entries)) sitemapEntries.push(...entries);
+				}
+			}
+			// De-duplicate by URL while preserving lastModified/priorities preferring the first occurrence
+			const seen = new Set<string>();
+			const deduped: Sitemap = [];
+			for (const entry of sitemapEntries) {
+				if (!entry?.url || seen.has(entry.url)) continue;
+				seen.add(entry.url);
+				deduped.push(entry);
+			}
+			return deduped;
+		},
 	};
 }
 
 export type { ClientLib, ClientLibConfig };
 
 export { createRoute } from "@btst/yar";
-
-export { createApiClient } from "../plugins/utils";

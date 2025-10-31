@@ -13,7 +13,7 @@
     "exactOptionalPropertyTypes": false,
     "incremental": true,
     "noErrorTruncation": true,
-    "types": ["node", "bun"]
+    "types": ["node"]
   },
   "exclude": ["**/dist/**", "**/node_modules/**"]
 }

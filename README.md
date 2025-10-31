@@ -763,8 +763,6 @@ Creates a client instance with plugins and returns router and hooks.
 
 **Parameters:**
 - `plugins` - Record of plugin instances
-- `baseURL` - (Optional) Base URL for API calls
-- `basePath` - (Optional) API path prefix (default: "/api")
 
 **Returns:**
 - `router` - Yar router instance
