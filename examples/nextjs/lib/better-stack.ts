@@ -65,7 +65,7 @@ const blogHooks: BlogBackendHooks = {
 };
 
 const { handler, dbSchema } = betterStack({
-    basePath: "/api",
+    basePath: "/api/data",
     plugins: {
         todos: todosBackendPlugin,
         blog: blogBackendPlugin(blogHooks)

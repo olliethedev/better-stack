@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PagesRouteRouteImport } from './routes/pages/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PagesSplatRouteImport } from './routes/pages/$'
 import { Route as ApiDataSplatRouteImport } from './routes/api/data/$'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PagesRouteRoute = PagesRouteRouteImport.update({
   id: '/pages',
   path: '/pages',
@@ -38,12 +44,14 @@ const ApiDataSplatRoute = ApiDataSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/pages': typeof PagesRouteRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/pages/$': typeof PagesSplatRoute
   '/api/data/$': typeof ApiDataSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/pages': typeof PagesRouteRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/pages/$': typeof PagesSplatRoute
   '/api/data/$': typeof ApiDataSplatRoute
 }
@@ -51,25 +59,34 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/pages': typeof PagesRouteRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/pages/$': typeof PagesSplatRoute
   '/api/data/$': typeof ApiDataSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pages' | '/pages/$' | '/api/data/$'
+  fullPaths: '/' | '/pages' | '/sitemap.xml' | '/pages/$' | '/api/data/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pages' | '/pages/$' | '/api/data/$'
-  id: '__root__' | '/' | '/pages' | '/pages/$' | '/api/data/$'
+  to: '/' | '/pages' | '/sitemap.xml' | '/pages/$' | '/api/data/$'
+  id: '__root__' | '/' | '/pages' | '/sitemap.xml' | '/pages/$' | '/api/data/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PagesRouteRoute: typeof PagesRouteRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiDataSplatRoute: typeof ApiDataSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pages': {
       id: '/pages'
       path: '/pages'
@@ -116,6 +133,7 @@ const PagesRouteRouteWithChildren = PagesRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PagesRouteRoute: PagesRouteRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiDataSplatRoute: ApiDataSplatRoute,
 }
 export const routeTree = rootRouteImport

@@ -10,7 +10,7 @@ import type { TodosApiRouter } from "../api/backend"
 
 export function useTodos() {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: "/api"
+        baseURL: "/api/data"
     })
 
     return useSuspenseQuery({
@@ -29,7 +29,7 @@ export function useTodos() {
 
 export function useCreateTodo() {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: "/api"
+        baseURL: "/api/data"
     })
     const queryClient = useQueryClient()
 
@@ -50,7 +50,7 @@ export function useCreateTodo() {
 
 export function useToggleTodo({ onSuccess, onError }: { onSuccess?: () => void, onError?: () => void } = {}) {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: "/api"
+        baseURL: "/api/data"
     })
     const queryClient = useQueryClient()
 
@@ -99,7 +99,7 @@ export function useToggleTodo({ onSuccess, onError }: { onSuccess?: () => void, 
 
 export function useDeleteTodo({ onSuccess, onError }: { onSuccess?: () => void, onError?: () => void } = {}) {
     const client = createApiClient<TodosApiRouter>({
-        baseURL: "/api"
+        baseURL: "/api/data"
     })
     const queryClient = useQueryClient()
 

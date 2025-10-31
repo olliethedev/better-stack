@@ -19,4 +19,8 @@ export default defineConfig({
       { config: { preset: 'node-server' } }
     ),
   ],
+  // Expose BASE_URL as VITE_BASE_URL to client-side code
+  define: {
+    'import.meta.env.VITE_BASE_URL': JSON.stringify(process.env.BASE_URL || 'http://localhost:3000'),
+  },
 })

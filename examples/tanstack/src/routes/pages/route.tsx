@@ -6,7 +6,13 @@ import { BlogPluginOverrides } from "@btst/stack/plugins/blog/client"
 import { Link, useRouter, Outlet, createFileRoute } from "@tanstack/react-router"
 import { Suspense } from "react"
 
-const baseURL =  process.env.BASE_URL || "http://localhost:3000"
+// Get base URL function - works on both server and client
+// On server: uses process.env.BASE_URL
+// On client: uses import.meta.env.VITE_BASE_URL or falls back to window.location.origin (which will be correct)
+const getBaseURL = () => 
+  typeof window !== 'undefined' 
+    ? (import.meta.env.VITE_BASE_URL || window.location.origin)
+    : (process.env.BASE_URL || "http://localhost:3000")
 
 // Define the shape of all plugin overrides
 type PluginOverrides = {
@@ -23,6 +29,7 @@ export const Route = createFileRoute('/pages')({
 function Layout() {
     const router = useRouter()
     const context = Route.useRouteContext()
+    const baseURL = getBaseURL()
 
     return (
         <QueryClientProvider client={context.queryClient}>

@@ -40,6 +40,7 @@ const renderBlogResult = (
 
 	return (
 		<button
+			data-testid="search-result"
 			type="button"
 			key={item.id}
 			className="flex w-full cursor-pointer flex-col gap-2 rounded-sm border-border border-b px-4 py-3 text-left transition-colors hover:bg-accent"

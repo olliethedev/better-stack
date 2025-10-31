@@ -37,6 +37,7 @@ export function PostNavigation({
 				<div className="flex flex-col sm:flex-row gap-4 mt-8 pt-8 border-t w-full justify-between">
 					{previousPost ? (
 						<Link
+							data-testid="previous-post-link"
 							href={`${blogPath}/${previousPost.slug}`}
 							className="flex-1 sm:max-w-1/3"
 						>
@@ -63,6 +64,7 @@ export function PostNavigation({
 
 					{nextPost ? (
 						<Link
+							data-testid="next-post-link"
 							href={`${blogPath}/${nextPost.slug}`}
 							className="flex-1 sm:max-w-1/3"
 						>

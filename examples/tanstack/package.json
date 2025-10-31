@@ -1,12 +1,13 @@
 {
-  "name": "tanstack",
+  "name": "examples/tanstack",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node .output/server/index.mjs"
+    "start": "node .output/server/index.mjs",
+    "start:e2e": "rm -rf .output && rm -rf .nitro && rm -rf .tanstack && rm -rf node_modules && pnpm install && pnpm build && NODE_ENV=test node .output/server/index.mjs"
   },
   "keywords": [],
   "author": "",

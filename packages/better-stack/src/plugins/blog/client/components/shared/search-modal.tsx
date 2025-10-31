@@ -113,6 +113,7 @@ export function SearchModal<T extends SearchResult>({
 	return (
 		<>
 			<button
+				data-testid="search-button"
 				type="button"
 				className={buttonClasses}
 				onClick={() => setOpen(true)}
@@ -133,8 +134,14 @@ export function SearchModal<T extends SearchResult>({
 					</kbd>
 				)}
 			</button>
-			<CommandDialog open={open} onOpenChange={setOpen} className={className}>
+			<CommandDialog
+				data-testid="search-modal"
+				open={open}
+				onOpenChange={setOpen}
+				className={className}
+			>
 				<CommandInput
+					data-testid="search-input"
 					placeholder={placeholder}
 					value={query}
 					onValueChange={setQuery}

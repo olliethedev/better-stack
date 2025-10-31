@@ -10,8 +10,13 @@ import type { TodosPluginOverrides } from "@/lib/plugins/todo/client/overrides"
 import { getOrCreateQueryClient } from "@/lib/query-client"
 import { BlogPluginOverrides } from "@btst/stack/plugins/blog/client"
 
-
-const baseURL =  process.env.BASE_URL || "http://localhost:3000"
+// Get base URL - works on both server and client
+// On server: uses process.env.BASE_URL
+// On client: uses NEXT_PUBLIC_BASE_URL or falls back to window.location.origin (which will be correct)
+const getBaseURL = () => 
+  typeof window !== 'undefined' 
+    ? (process.env.NEXT_PUBLIC_BASE_URL || window.location.origin)
+    : (process.env.BASE_URL || "http://localhost:3000")
 
 // Define the shape of all plugin overrides
 type PluginOverrides = {
@@ -27,6 +32,7 @@ export default function ExampleLayout({
     const router = useRouter()
     // fresh instance to avoid stale client cache overriding hydrated data
     const [queryClient] = useState(() => getOrCreateQueryClient())
+    const baseURL = getBaseURL()
 
     return (
         <QueryClientProvider client={queryClient}>
@@ -42,7 +48,7 @@ export default function ExampleLayout({
                     },
                     blog: {
                         apiBaseURL: baseURL,
-                        apiBasePath: "/api",
+                        apiBasePath: "/api/data",
                         navigate: (path) => router.push(path),
                         refresh: () => router.refresh(),
                         uploadImage: async (file) => {

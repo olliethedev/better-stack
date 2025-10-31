@@ -22,11 +22,19 @@ export function HomePageComponent({
 	});
 
 	return (
-		<PageWrapper testId="home-page">
+		<PageWrapper testId={published ? "home-page" : "drafts-home-page"}>
 			<div className="flex flex-col items-center gap-3">
 				<PageHeader
-					title={localization.BLOG_LIST_TITLE}
-					description={localization.BLOG_LIST_DESCRIPTION}
+					title={
+						published
+							? localization.BLOG_LIST_TITLE
+							: localization.BLOG_LIST_DRAFTS_TITLE
+					}
+					description={
+						published
+							? localization.BLOG_LIST_DESCRIPTION
+							: localization.BLOG_LIST_DRAFTS_DESCRIPTION
+					}
 				/>
 			</div>
 			<Content published={published} />

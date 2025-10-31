@@ -324,7 +324,7 @@ function createPostMeta(config: BlogClientConfig, slug: string) {
 		if (!post) {
 			// Fallback if post not loaded
 			return [
-				{ name: "title", content: "Blog Post" },
+				{ name: "title", content: "Unknown route" },
 				{ name: "robots", content: "noindex" },
 			];
 		}
@@ -448,7 +448,7 @@ function createEditPostMeta(config: BlogClientConfig, slug: string) {
 		);
 		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/${slug}/edit`;
 
-		const title = post ? `Edit: ${post.title}` : "Edit Post";
+		const title = post ? `Edit: ${post.title}` : "Unknown route";
 
 		return [
 			{ name: "title", content: title },

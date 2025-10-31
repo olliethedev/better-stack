@@ -3,23 +3,30 @@ import { todosClientPlugin } from "@/lib/plugins/todo/client/client"
 import { blogClientPlugin } from "@btst/stack/plugins/blog/client"
 import { QueryClient } from "@tanstack/react-query"
 
-const baseURL =  process.env.BASE_URL || "http://localhost:3000"
+// Get base URL function - works on both server and client
+// On server: uses process.env.BASE_URL
+// On client: uses NEXT_PUBLIC_BASE_URL or falls back to window.location.origin
+const getBaseURL = () => 
+  typeof window !== 'undefined' 
+    ? (process.env.NEXT_PUBLIC_BASE_URL || window.location.origin)
+    : (process.env.BASE_URL || "http://localhost:3000")
 
 // Create the client library with plugins
 export const getStackClient = (queryClient: QueryClient) => {
+    const baseURL = getBaseURL()
     return createStackClient({
         plugins: {
             todos: todosClientPlugin({
                 queryClient: queryClient,
                 apiBaseURL: baseURL,
-                apiBasePath: "/api",
+                apiBasePath: "/api/data",
                 siteBaseURL: baseURL,
                 siteBasePath: "/pages",
             }),
             blog: blogClientPlugin({
                 // Required config - provided once at plugin initialization
                 apiBaseURL: baseURL,
-                apiBasePath: "/api",
+                apiBasePath: "/api/data",
                 siteBaseURL: baseURL,
                 siteBasePath: "/pages",
                 queryClient: queryClient,

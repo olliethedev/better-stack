@@ -126,53 +126,52 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 							}
 						}
 
-						// Fetch posts
+						const whereConditions = [];
+
+						if (query.published !== undefined) {
+							whereConditions.push({
+								field: "published",
+								value: query.published,
+								operator: "eq" as const,
+							});
+						}
+
+						if (query.query) {
+							whereConditions.push(
+								{
+									field: "title",
+									value: query.query,
+									operator: "contains" as const,
+									// First search condition: no connector (ANDs with previous)
+								},
+								{
+									field: "content",
+									value: query.query,
+									operator: "contains" as const,
+									connector: "OR" as const, // OR with title
+								},
+								{
+									field: "excerpt",
+									value: query.query,
+									operator: "contains" as const,
+									connector: "OR" as const, // OR with content
+								},
+							);
+						}
+
+						if (query.slug) {
+							whereConditions.push({
+								field: "slug",
+								value: query.slug,
+								operator: "eq" as const,
+							});
+						}
+
 						const posts = await adapter.findMany<Post>({
 							model: "post",
 							limit: query.limit ?? 10,
 							offset: query.offset ?? 0,
-							where: [
-								...(query.query
-									? [
-											{
-												field: "title",
-												value: query.query,
-												operator: "contains" as const,
-												connector: "OR" as const,
-											},
-											{
-												field: "content",
-												value: query.query,
-												operator: "contains" as const,
-												connector: "OR" as const,
-											},
-											{
-												field: "excerpt",
-												value: query.query,
-												operator: "contains" as const,
-												connector: "OR" as const,
-											},
-										]
-									: []),
-								...(query.slug
-									? [
-											{
-												field: "slug",
-												value: query.slug,
-												operator: "eq" as const,
-											},
-										]
-									: []),
-								...(query.published !== undefined
-									? [
-											{
-												field: "published",
-												value: query.published,
-												operator: "eq" as const,
-											},
-										]
-									: []),
-							],
+							where: whereConditions,
 							sortBy: {
 								field: "createdAt",
 								direction: "desc",

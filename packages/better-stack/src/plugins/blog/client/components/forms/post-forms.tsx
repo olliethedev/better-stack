@@ -19,8 +19,11 @@ import { Input } from "@workspace/ui/components/input";
 
 import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { useCreatePost, usePost, useUpdatePost } from "../../hooks/blog-hooks";
-// import { useBlogContext } from "@/hooks/context-hooks"
+import {
+	useCreatePost,
+	useSuspensePost,
+	useUpdatePost,
+} from "../../hooks/blog-hooks";
 import { slugify } from "../../../utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,6 +47,7 @@ const MarkdownEditor = lazy(() =>
 import { BLOG_LOCALIZATION } from "../../localization";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
+import { EmptyList } from "../shared/empty-list";
 
 type CommonPostFormValues = {
 	title: string;
@@ -372,7 +376,7 @@ const EditPostFormComponent = ({
 	});
 	// const { uploadImage } = useBlogContext()
 
-	const { post } = usePost(postSlug);
+	const { post } = useSuspensePost(postSlug);
 
 	const initialData = useMemo(() => {
 		if (!post) return {};
@@ -439,12 +443,7 @@ const EditPostFormComponent = ({
 	});
 
 	if (!post) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<Loader2 className="h-6 w-6 animate-spin" />
-				<span className="ml-2">{localization.BLOG_FORMS_LOADING_POST}</span>
-			</div>
-		);
+		return <EmptyList message={localization.BLOG_PAGE_NOT_FOUND_DESCRIPTION} />;
 	}
 
 	return (
