@@ -7,3 +7,4 @@ export type {
 } from "./plugin";
 export type { UsePostsOptions, UsePostsResult } from "./hooks";
 export type { BlogPluginOverrides } from "./overrides";
+export { metaElementsToObject } from "./meta-utils";

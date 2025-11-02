@@ -1,19 +1,9 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import slug from "slug";
 
-export function slugify(text: string): string {
-	return text
-		.toLowerCase()
-		.replace(/[^\w\s-]/g, "") // Remove special characters except spaces and hyphens
-		.replace(/\s+/g, "-") // Replace spaces with hyphens
-		.replace(/--+/g, "-") // Replace multiple hyphens with single hyphen
-		.trim();
-}
-
-export function deslugify(slug: string): string {
-	return slug
-		.replace(/-/g, " ") // Replace hyphens with spaces
-		.replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
+export function slugify(text: string, locale: string = "en"): string {
+	return slug(text, { lower: true, locale });
 }
 
 export function cn(...inputs: ClassValue[]) {

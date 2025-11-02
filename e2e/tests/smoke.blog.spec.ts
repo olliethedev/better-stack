@@ -307,89 +307,91 @@ test("post navigation buttons", async ({ page, request }) => {
 	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
 });
 
-// test("search functionality", async ({ page, request }) => {
-// 	const errors: string[] = [];
-// 	page.on("console", (msg) => {
-// 		if (msg.type() === "error") errors.push(msg.text());
-// 	});
+test("search functionality", async ({ page, request }) => {
+	const errors: string[] = [];
+	page.on("console", (msg) => {
+		if (msg.type() === "error") errors.push(msg.text());
+	});
 
-// 	// Create some posts with distinct titles for search testing
-// 	await createPost(request, {
-// 		title: "Search Test Post Alpha",
-// 		content: "Content for alpha post",
-// 		excerpt: "Excerpt for alpha post",
-// 		slug: "search-test-post-alpha",
-// 		published: true,
-// 		publishedAt: new Date().toISOString(),
-// 		image: "",
-// 	});
+	// Create some posts with distinct titles for search testing
+	await createPost(request, {
+		title: "Search Test Post Alpha",
+		content: "Content for alpha post",
+		excerpt: "Excerpt for alpha post",
+		slug: "search-test-post-alpha",
+		published: true,
+		publishedAt: new Date().toISOString(),
+		image: "",
+	});
 
-// 	await createPost(request, {
-// 		title: "Search Test Post Beta",
-// 		content: "Content for beta post",
-// 		excerpt: "Excerpt for beta post",
-// 		slug: "search-test-post-beta",
-// 		published: true,
-// 		publishedAt: new Date().toISOString(),
-// 		image: "",
-// 	});
+	await createPost(request, {
+		title: "Search Test Post Beta",
+		content: "Content for beta post",
+		excerpt: "Excerpt for beta post",
+		slug: "search-test-post-beta",
+		published: true,
+		publishedAt: new Date().toISOString(),
+		image: "",
+	});
 
-// 	await createPost(request, {
-// 		title: "Search Test Post Gamma",
-// 		content: "Content for gamma post",
-// 		excerpt: "Excerpt for gamma post",
-// 		slug: "search-test-post-gamma",
-// 		published: true,
-// 		publishedAt: new Date().toISOString(),
-// 		image: "",
-// 	});
+	await createPost(request, {
+		title: "Search Test Post Gamma",
+		content: "Content for gamma post",
+		excerpt: "Excerpt for gamma post",
+		slug: "search-test-post-gamma",
+		published: true,
+		publishedAt: new Date().toISOString(),
+		image: "",
+	});
 
-// 	// Navigate to blog page
-// 	await page.goto("/pages/blog", { waitUntil: "networkidle" });
-// 	await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
+	// Navigate to blog page
+	await page.goto("/pages/blog", { waitUntil: "networkidle" });
+	await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 
-// 	// Click the search button
-// 	const searchButton = page.locator('[data-testid="search-button"]');
-// 	await expect(searchButton).toBeVisible();
-// 	await searchButton.click();
+	// Click the search button
+	const searchButton = page.locator('[data-testid="search-button"]');
+	await expect(searchButton).toBeVisible();
+	await searchButton.click();
 
-// 	// Verify the search modal becomes visible
-// 	// The modal is rendered as a dialog with role="dialog" and data-slot="dialog-content"
-// 	// Wait for the search input to appear (which confirms the modal is open)
-// 	const searchInput = page.locator('[data-testid="search-input"]');
-// 	await expect(searchInput).toBeVisible({ timeout: 5000 });
+	// Verify the search modal becomes visible
+	// The modal is rendered as a dialog with role="dialog" and data-slot="dialog-content"
+	// Wait for the search input to appear (which confirms the modal is open)
+	const searchInput = page.locator('[data-testid="search-input"]');
+	await expect(searchInput).toBeVisible({ timeout: 5000 });
 
-// 	// Also verify the dialog element itself is visible
-// 	const searchModal = page.locator('div[role="dialog"][data-slot="dialog-content"]');
-// 	await expect(searchModal).toBeVisible();
+	// Also verify the dialog element itself is visible
+	const searchModal = page.locator(
+		'div[role="dialog"][data-slot="dialog-content"]',
+	);
+	await expect(searchModal).toBeVisible();
 
-// 	// Type a case-sensitive title of a real item into the search input
-// 	// Using "Search Test Post" to match multiple posts
-// 	await searchInput.fill("Search Test Post");
+	// Type a case-sensitive title of a real item into the search input
+	// Using "Search Test Post" to match multiple posts
+	await searchInput.fill("Search Test Post");
 
-// 	// Wait 3 seconds for search results to load
-// 	await page.waitForTimeout(3000);
+	// Wait 3 seconds for search results to load
+	await page.waitForTimeout(3000);
 
-// 	// Verify a bunch of search results are visible
-// 	const searchResults = page.locator('[data-testid="search-result"]');
-// 	const resultCount = await searchResults.count();
-// 	expect(resultCount).toBeGreaterThan(0);
-// 	await expect(searchResults.first()).toBeVisible();
+	// Verify a bunch of search results are visible
+	const searchResults = page.locator('[data-testid="search-result"]');
+	const resultCount = await searchResults.count();
+	expect(resultCount).toBeGreaterThan(0);
+	await expect(searchResults.first()).toBeVisible();
 
-// 	// Clear the input
-// 	await searchInput.clear();
+	// Clear the input
+	await searchInput.clear();
 
-// 	// Type a non-existing title
-// 	await searchInput.fill("NonExistentPostTitleXYZ123");
+	// Type a non-existing title
+	await searchInput.fill("NonExistentPostTitleXYZ123");
 
-// 	// Wait 3 seconds for search results to update
-// 	await page.waitForTimeout(3000);
+	// Wait 3 seconds for search results to update
+	await page.waitForTimeout(3000);
 
-// 	// Verify no search results are visible
-// 	await expect(searchResults).toHaveCount(0, { timeout: 5000 });
+	// Verify no search results are visible
+	await expect(searchResults).toHaveCount(0, { timeout: 5000 });
 
-// 	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
-// });
+	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
+});
 
 // test("unknown tag page state renders", async ({ page }) => {
 //     const errors: string[] = []

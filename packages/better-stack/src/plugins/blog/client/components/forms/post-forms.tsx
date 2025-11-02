@@ -81,6 +81,7 @@ function PostFormBody<T extends CommonPostFormValues>({
 	>("blog", {
 		localization: BLOG_LOCALIZATION,
 	});
+	const [slugTouched, setSlugTouched] = useState(false);
 	const nameTitle = "title" as FieldPath<T>;
 	const nameSlug = "slug" as FieldPath<T>;
 	const nameExcerpt = "excerpt" as FieldPath<T>;
@@ -104,8 +105,7 @@ function PostFormBody<T extends CommonPostFormValues>({
 							<FormLabel>
 								{localization.BLOG_FORMS_TITLE_LABEL}
 								<span className="text-destructive">
-									{" "}
-									{localization.BLOG_FORMS_TITLE_REQUIRED_ASTERISK}
+									{localization.BLOG_FORMS_REQUIRED_ASTERISK}
 								</span>
 							</FormLabel>
 							<FormControl>
@@ -113,6 +113,15 @@ function PostFormBody<T extends CommonPostFormValues>({
 									placeholder={localization.BLOG_FORMS_TITLE_PLACEHOLDER}
 									{...field}
 									value={String(field.value ?? "")}
+									onChange={(e) => {
+										const newTitle = e.target.value;
+										field.onChange(e);
+										// Auto-slugify title if slug is not yet set
+										if (!slugTouched) {
+											// @ts-expect-error - slugify returns string which is compatible with slug field type
+											form.setValue(nameSlug, slugify(newTitle));
+										}
+									}}
 								/>
 							</FormControl>
 							<FormMessage />
@@ -131,6 +140,10 @@ function PostFormBody<T extends CommonPostFormValues>({
 									placeholder={localization.BLOG_FORMS_SLUG_PLACEHOLDER}
 									{...field}
 									value={String(field.value ?? "")}
+									onChange={(e) => {
+										field.onChange(e);
+										setSlugTouched(true);
+									}}
 								/>
 							</FormControl>
 							<FormMessage />
@@ -143,7 +156,12 @@ function PostFormBody<T extends CommonPostFormValues>({
 					name={nameExcerpt}
 					render={({ field }) => (
 						<FormItem className="flex flex-col">
-							<FormLabel>{localization.BLOG_FORMS_EXCERPT_LABEL}</FormLabel>
+							<FormLabel>
+								{localization.BLOG_FORMS_EXCERPT_LABEL}
+								<span className="text-destructive">
+									{localization.BLOG_FORMS_REQUIRED_ASTERISK}
+								</span>
+							</FormLabel>
 							<FormControl>
 								<Textarea
 									placeholder={localization.BLOG_FORMS_EXCERPT_PLACEHOLDER}
@@ -179,7 +197,6 @@ function PostFormBody<T extends CommonPostFormValues>({
 							<FormLabel>
 								{localization.BLOG_FORMS_CONTENT_LABEL}
 								<span className="text-destructive">
-									{" "}
 									{localization.BLOG_FORMS_CONTENT_REQUIRED_ASTERISK}
 								</span>
 							</FormLabel>

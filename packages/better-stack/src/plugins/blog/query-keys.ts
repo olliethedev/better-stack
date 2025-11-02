@@ -43,7 +43,12 @@ function createPostsQueries(
 						query: params?.query,
 						offset: pageParam ?? 0,
 						limit: params?.limit ?? 10,
-						published: params?.published ? "true" : "false",
+						published:
+							params?.published !== undefined
+								? params.published
+									? "true"
+									: "false"
+								: undefined,
 					},
 				});
 				return (response.data ?? []) as unknown as SerializedPost[];

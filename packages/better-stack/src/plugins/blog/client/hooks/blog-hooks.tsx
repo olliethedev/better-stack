@@ -58,6 +58,7 @@ export interface UsePostSearchOptions {
 	enabled?: boolean;
 	debounceMs?: number;
 	limit?: number;
+	published?: boolean;
 }
 
 export interface UsePostSearchResult {
@@ -339,6 +340,7 @@ export function usePostSearch({
 	enabled = true,
 	debounceMs = 300,
 	limit = 10,
+	published = true,
 }: UsePostSearchOptions): UsePostSearchResult {
 	const debouncedQuery = useDebounce(query, debounceMs);
 	const shouldSearch = enabled && (query?.trim().length ?? 0) > 0;
@@ -351,6 +353,7 @@ export function usePostSearch({
 		query: debouncedQuery,
 		limit,
 		enabled: shouldSearch && debouncedQuery.trim() !== "",
+		published,
 	});
 
 	// If search is disabled or query is empty, always return empty results

@@ -9,7 +9,7 @@ const dateFields = {
 const coreFields = {
 	title: z.string().min(1, "Title is required"),
 	content: z.string().min(1, "Content is required"),
-	excerpt: z.string().optional().default(""),
+	excerpt: z.string().min(1, "Excerpt is required"),
 	image: z.string().optional(),
 	published: z.boolean().optional().default(false),
 	slug: z.string().min(1, "Slug is required"),

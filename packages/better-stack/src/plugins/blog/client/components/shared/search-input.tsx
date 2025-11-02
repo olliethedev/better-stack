@@ -102,6 +102,7 @@ export function SearchInput({
 		query: currentQuery,
 		enabled: currentQuery.trim().length > 0,
 		debounceMs: 300,
+		published: true,
 	});
 
 	const formattedResults: BlogPostSearchResult[] = React.useMemo(() => {

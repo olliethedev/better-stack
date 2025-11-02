@@ -156,7 +156,6 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 				}
 
 				const limit = 10;
-				console.log("createPostsLoader", { apiBaseURL, apiBasePath });
 				const client = createApiClient<BlogApiRouter>({
 					baseURL: apiBaseURL,
 					basePath: apiBasePath,
@@ -227,18 +226,7 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 				});
 				const queries = createBlogQueryKeys(client);
 				const postQuery = queries.posts.detail(slug);
-				console.log("createPostLoader: prefetching", {
-					slug,
-					queryKey: postQuery.queryKey,
-				});
 				await queryClient.prefetchQuery(postQuery);
-
-				// Verify data was loaded
-				const loadedPost = queryClient.getQueryData<Post>(postQuery.queryKey);
-				console.log("createPostLoader: loaded", {
-					slug,
-					hasData: !!loadedPost,
-				});
 
 				// After hook
 				if (hooks?.afterLoadPost) {
@@ -270,6 +258,7 @@ function createPostsListMeta(config: BlogClientConfig, published: boolean) {
 
 		return [
 			// Primary meta tags
+			{ title },
 			{ name: "title", content: title },
 			{ name: "description", content: description },
 			{
@@ -324,6 +313,7 @@ function createPostMeta(config: BlogClientConfig, slug: string) {
 		if (!post) {
 			// Fallback if post not loaded
 			return [
+				{ title: "Unknown route" },
 				{ name: "title", content: "Unknown route" },
 				{ name: "robots", content: "noindex" },
 			];
@@ -340,6 +330,7 @@ function createPostMeta(config: BlogClientConfig, slug: string) {
 
 		return [
 			// Primary meta tags
+			{ title },
 			{ name: "title", content: title },
 			{ name: "description", content: description },
 			...(post.authorId || seo?.author
@@ -411,14 +402,17 @@ function createNewPostMeta(config: BlogClientConfig) {
 		const { siteBaseURL, siteBasePath } = config;
 		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/new`;
 
+		const title = "Create New Post";
+
 		return [
-			{ name: "title", content: "Create New Post" },
+			{ title },
+			{ name: "title", content: title },
 			{ name: "description", content: "Write and publish a new blog post." },
 			{ name: "robots", content: "noindex, nofollow" },
 
 			// Open Graph
 			{ property: "og:type", content: "website" },
-			{ property: "og:title", content: "Create New Post" },
+			{ property: "og:title", content: title },
 			{
 				property: "og:description",
 				content: "Write and publish a new blog post.",
@@ -427,7 +421,7 @@ function createNewPostMeta(config: BlogClientConfig) {
 
 			// Twitter
 			{ name: "twitter:card", content: "summary" },
-			{ name: "twitter:title", content: "Create New Post" },
+			{ name: "twitter:title", content: title },
 		];
 	};
 }
@@ -451,6 +445,7 @@ function createEditPostMeta(config: BlogClientConfig, slug: string) {
 		const title = post ? `Edit: ${post.title}` : "Unknown route";
 
 		return [
+			{ title },
 			{ name: "title", content: title },
 			{ name: "description", content: "Edit your blog post." },
 			{ name: "robots", content: "noindex, nofollow" },

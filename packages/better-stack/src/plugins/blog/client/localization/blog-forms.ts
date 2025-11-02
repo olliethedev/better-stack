@@ -2,7 +2,7 @@ export const BLOG_FORMS = {
 	BLOG_FORMS_ERROR_GENERIC: "Something went wrong",
 
 	BLOG_FORMS_TITLE_LABEL: "Title",
-	BLOG_FORMS_TITLE_REQUIRED_ASTERISK: " *",
+	BLOG_FORMS_REQUIRED_ASTERISK: " *",
 	BLOG_FORMS_TITLE_PLACEHOLDER: "Enter your post title...",
 
 	BLOG_FORMS_SLUG_LABEL: "Slug",

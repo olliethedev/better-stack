@@ -38,16 +38,8 @@ export const Route = createFileRoute("/pages/$")({
       };
     }
 
-    // Transform meta array: convert { name: 'title', content: 'value' } to { title: 'value' }
-    const transformedMeta = meta.map((m) => {
-      if (m.name === "title" && m.content) {
-        return { title: m.content };
-      }
-      return m;
-    });
-
     return {
-      meta: transformedMeta,
+      meta,
     };
   },
   notFoundComponent: () => {
