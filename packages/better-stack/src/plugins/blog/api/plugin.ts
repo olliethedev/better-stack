@@ -126,60 +126,60 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 							}
 						}
 
-					const whereConditions = [];
+						const whereConditions = [];
 
-					if (query.published !== undefined) {
-						whereConditions.push({
-							field: "published",
-							value: query.published,
-							operator: "eq" as const,
-						});
-					}
+						if (query.published !== undefined) {
+							whereConditions.push({
+								field: "published",
+								value: query.published,
+								operator: "eq" as const,
+							});
+						}
 
-					if (query.slug) {
-						whereConditions.push({
-							field: "slug",
-							value: query.slug,
-							operator: "eq" as const,
-						});
-					}
+						if (query.slug) {
+							whereConditions.push({
+								field: "slug",
+								value: query.slug,
+								operator: "eq" as const,
+							});
+						}
 
-					// For search queries, fetch more results and filter in application code
-					// because the adapter doesn't support complex grouping like (A AND (B OR C OR D))
-					const posts = await adapter.findMany<Post>({
-						model: "post",
-						limit: query.query ? undefined : query.limit ?? 10,
-						offset: query.query ? undefined : query.offset ?? 0,
-						where: whereConditions,
-						sortBy: {
-							field: "createdAt",
-							direction: "desc",
-						},
-					});
-
-					let result = posts || [];
-
-					// Filter by search query in application code if present
-					if (query.query) {
-						const searchLower = query.query.toLowerCase();
-						result = result.filter((post) => {
-							const titleMatch = post.title
-								?.toLowerCase()
-								.includes(searchLower);
-							const contentMatch = post.content
-								?.toLowerCase()
-								.includes(searchLower);
-							const excerptMatch = post.excerpt
-								?.toLowerCase()
-								.includes(searchLower);
-							return titleMatch || contentMatch || excerptMatch;
+						// For search queries, fetch more results and filter in application code
+						// because the adapter doesn't support complex grouping like (A AND (B OR C OR D))
+						const posts = await adapter.findMany<Post>({
+							model: "post",
+							limit: query.query ? undefined : (query.limit ?? 10),
+							offset: query.query ? undefined : (query.offset ?? 0),
+							where: whereConditions,
+							sortBy: {
+								field: "createdAt",
+								direction: "desc",
+							},
 						});
 
-						// Apply pagination after filtering
-						const offset = query.offset ?? 0;
-						const limit = query.limit ?? 10;
-						result = result.slice(offset, offset + limit);
-					}
+						let result = posts || [];
+
+						// Filter by search query in application code if present
+						if (query.query) {
+							const searchLower = query.query.toLowerCase();
+							result = result.filter((post) => {
+								const titleMatch = post.title
+									?.toLowerCase()
+									.includes(searchLower);
+								const contentMatch = post.content
+									?.toLowerCase()
+									.includes(searchLower);
+								const excerptMatch = post.excerpt
+									?.toLowerCase()
+									.includes(searchLower);
+								return titleMatch || contentMatch || excerptMatch;
+							});
+
+							// Apply pagination after filtering
+							const offset = query.offset ?? 0;
+							const limit = query.limit ?? 10;
+							result = result.slice(offset, offset + limit);
+						}
 
 						// Lifecycle hook
 						if (hooks?.onPostsRead) {
