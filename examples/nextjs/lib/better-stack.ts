@@ -24,7 +24,7 @@ const blogHooks: BlogBackendHooks = {
         if (filter.published === false) {
             // Check authentication for drafts
             console.log("onBeforeListPosts: checking auth for drafts");
-            return false;
+            return true;
         }
         return true; // Allow for now
     },
