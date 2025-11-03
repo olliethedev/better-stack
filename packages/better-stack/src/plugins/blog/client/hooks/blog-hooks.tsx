@@ -158,17 +158,30 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
 	const queryParams = { tag, limit, query, published };
 	const basePosts = queries.posts.list(queryParams);
 
-	const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
-		useSuspenseInfiniteQuery({
-			...basePosts,
-			...SHARED_QUERY_CONFIG,
-			initialPageParam: 0,
-			getNextPageParam: (lastPage, allPages) => {
-				const posts = lastPage as SerializedPost[];
-				if (posts.length < limit) return undefined;
-				return allPages.length * limit;
-			},
-		});
+	const {
+		data,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		refetch,
+		error,
+		isFetching,
+	} = useSuspenseInfiniteQuery({
+		...basePosts,
+		...SHARED_QUERY_CONFIG,
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages) => {
+			const posts = lastPage as SerializedPost[];
+			if (posts.length < limit) return undefined;
+			return allPages.length * limit;
+		},
+	});
+
+	// Manually throw errors for Error Boundaries (per React Query Suspense docs)
+	// useSuspenseQuery only throws errors if there's no data, but we want to throw always
+	if (error && !isFetching) {
+		throw error;
+	}
 
 	const posts = (data.pages?.flat() ?? []) as SerializedPost[];
 
@@ -226,7 +239,7 @@ export function useSuspensePost(slug: string): {
 	});
 	const queries = createBlogQueryKeys(client);
 	const basePost = queries.posts.detail(slug);
-	const { data, refetch } = useSuspenseQuery<
+	const { data, refetch, error, isFetching } = useSuspenseQuery<
 		SerializedPost | null,
 		Error,
 		SerializedPost | null,
@@ -235,6 +248,13 @@ export function useSuspensePost(slug: string): {
 		...basePost,
 		...SHARED_QUERY_CONFIG,
 	});
+
+	// Manually throw errors for Error Boundaries (per React Query Suspense docs)
+	// useSuspenseQuery only throws errors if there's no data, but we want to throw always
+	if (error && !isFetching) {
+		throw error;
+	}
+
 	return { post: data || null, refetch };
 }
 

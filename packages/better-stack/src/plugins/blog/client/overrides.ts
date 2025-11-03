@@ -51,4 +51,8 @@ export interface BlogPluginOverrides {
 	 * API base path
 	 */
 	apiBasePath: string;
+	/**
+	 * Whether to show the attribution
+	 */
+	showAttribution?: boolean;
 }

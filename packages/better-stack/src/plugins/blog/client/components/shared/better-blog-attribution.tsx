@@ -5,13 +5,13 @@ export function BetterBlogAttribution() {
 				Powered by{" "}
 				<a
 					className="flex items-center gap-1 font-semibold underline"
-					href="https://www.better-blog.com/"
+					href="https://www.btst.ai/"
 					target="_blank"
 					rel="noreferrer noopener"
 					aria-label="Better Blog — open-source React blog framework"
 					title="Better Blog — open-source React blog framework"
 				>
-					<span className="cursor-pointer">better-blog</span>
+					<span className="cursor-pointer">BTST</span>
 				</a>
 			</p>
 		</div>

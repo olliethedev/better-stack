@@ -1,7 +1,7 @@
 // src/router.tsx
 import { createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
-import { QueryClient, isServer, defaultShouldDehydrateQuery } from '@tanstack/react-query'
+import { QueryClient, isServer } from '@tanstack/react-query'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 
 
@@ -22,8 +22,11 @@ export function getRouter() {
             retry: false
         },
         dehydrate: {
-            // only dehydrate successful/error states to avoid initial suspense on the client
-            shouldDehydrateQuery: (query) => defaultShouldDehydrateQuery(query)
+            // Include both successful and error states to avoid refetching on the client
+            // This prevents loading states when there's an error in prefetched data
+            shouldDehydrateQuery: (query) => {
+                return query.state.status === 'success' || query.state.status === 'error';
+            }
         }
     }
 })

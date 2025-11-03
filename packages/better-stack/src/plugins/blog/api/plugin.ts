@@ -43,21 +43,21 @@ export interface BlogApiContext<TBody = any, TParams = any, TQuery = any> {
  * All hooks are optional and allow consumers to customize behavior
  */
 export interface BlogBackendHooks {
-	// Authorization hooks - called before the operation
-	canListPosts?: (
+	// Hooks - called before the operation
+	onBeforeListPosts?: (
 		filter: z.infer<typeof PostListQuerySchema>,
 		context: BlogApiContext,
 	) => Promise<boolean> | boolean;
-	canCreatePost?: (
+	onBeforeCreatePost?: (
 		data: z.infer<typeof createPostSchema>,
 		context: BlogApiContext,
 	) => Promise<boolean> | boolean;
-	canUpdatePost?: (
+	onBeforeUpdatePost?: (
 		postId: string,
 		data: z.infer<typeof updatePostSchema>,
 		context: BlogApiContext,
 	) => Promise<boolean> | boolean;
-	canDeletePost?: (
+	onBeforeDeletePost?: (
 		postId: string,
 		context: BlogApiContext,
 	) => Promise<boolean> | boolean;
@@ -114,15 +114,18 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					method: "GET",
 					query: PostListQuerySchema,
 				},
-				async ({ query }) => {
+				async (ctx) => {
+					const { query } = ctx;
 					const context: BlogApiContext = { query };
 
 					try {
 						// Authorization hook
-						if (hooks?.canListPosts) {
-							const canList = await hooks.canListPosts(query, context);
+						if (hooks?.onBeforeListPosts) {
+							const canList = await hooks.onBeforeListPosts(query, context);
 							if (!canList) {
-								throw new Error("Unauthorized: Cannot list posts");
+								throw ctx.error(403, {
+									message: "Unauthorized: Cannot list posts",
+								});
 							}
 						}
 
@@ -207,10 +210,15 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 
 					try {
 						// Authorization hook
-						if (hooks?.canCreatePost) {
-							const canCreate = await hooks.canCreatePost(ctx.body, context);
+						if (hooks?.onBeforeCreatePost) {
+							const canCreate = await hooks.onBeforeCreatePost(
+								ctx.body,
+								context,
+							);
 							if (!canCreate) {
-								throw new Error("Unauthorized: Cannot create post");
+								throw ctx.error(403, {
+									message: "Unauthorized: Cannot create post",
+								});
 							}
 						}
 
@@ -254,14 +262,16 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 
 					try {
 						// Authorization hook
-						if (hooks?.canUpdatePost) {
-							const canUpdate = await hooks.canUpdatePost(
+						if (hooks?.onBeforeUpdatePost) {
+							const canUpdate = await hooks.onBeforeUpdatePost(
 								ctx.params.id,
 								ctx.body,
 								context,
 							);
 							if (!canUpdate) {
-								throw new Error("Unauthorized: Cannot update post");
+								throw ctx.error(403, {
+									message: "Unauthorized: Cannot update post",
+								});
 							}
 						}
 
@@ -273,7 +283,9 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 						});
 
 						if (!updated) {
-							throw new Error("Post not found");
+							throw ctx.error(404, {
+								message: "Post not found",
+							});
 						}
 
 						// Lifecycle hook
@@ -301,13 +313,15 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 
 					try {
 						// Authorization hook
-						if (hooks?.canDeletePost) {
-							const canDelete = await hooks.canDeletePost(
+						if (hooks?.onBeforeDeletePost) {
+							const canDelete = await hooks.onBeforeDeletePost(
 								ctx.params.id,
 								context,
 							);
 							if (!canDelete) {
-								throw new Error("Unauthorized: Cannot delete post");
+								throw ctx.error(403, {
+									message: "Unauthorized: Cannot delete post",
+								});
 							}
 						}
 
@@ -339,18 +353,21 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					method: "GET",
 					query: NextPreviousPostsQuerySchema,
 				},
-				async ({ query }) => {
+				async (ctx) => {
+					const { query } = ctx;
 					const context: BlogApiContext = { query };
 
 					try {
 						// Authorization hook
-						if (hooks?.canListPosts) {
-							const canList = await hooks.canListPosts(
+						if (hooks?.onBeforeListPosts) {
+							const canList = await hooks.onBeforeListPosts(
 								{ published: true },
 								context,
 							);
 							if (!canList) {
-								throw new Error("Unauthorized: Cannot list posts");
+								throw ctx.error(403, {
+									message: "Unauthorized: Cannot list posts",
+								});
 							}
 						}
 

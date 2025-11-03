@@ -32,7 +32,14 @@ export default async function ExamplePage({
         await route.loader()
     }
     
-    const dehydratedState: DehydratedState = dehydrate(queryClient)
+    // Dehydrate with errors included so client doesn't refetch on error
+    const dehydratedState: DehydratedState = dehydrate(queryClient, {
+        shouldDehydrateQuery: (query) => {
+            // Include both successful and failed queries
+            // This prevents refetching on the client when there's an error
+            return query.state.status === 'success' || query.state.status === 'error';
+        },
+    })
     console.log("[SSR] Dehydrated queries:", Object.keys(dehydratedState.queries || {}).length, "queries")
     if (dehydratedState.queries && dehydratedState.queries.length > 0) {
         dehydratedState.queries.forEach((q) => {

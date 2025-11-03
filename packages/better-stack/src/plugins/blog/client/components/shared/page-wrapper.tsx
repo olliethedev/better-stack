@@ -1,7 +1,9 @@
 "use client";
 
+import { usePluginOverrides } from "@btst/stack/context";
 import { BetterBlogAttribution } from "./better-blog-attribution";
 import { PageLayout } from "./page-layout";
+import type { BlogPluginOverrides } from "../../overrides";
 
 export function PageWrapper({
 	children,
@@ -12,9 +14,12 @@ export function PageWrapper({
 	className?: string;
 	testId?: string;
 }) {
-	const { showAttribution } = {
+	const { showAttribution } = usePluginOverrides<
+		BlogPluginOverrides,
+		Partial<BlogPluginOverrides>
+	>("blog", {
 		showAttribution: true,
-	};
+	});
 	return (
 		<>
 			<PageLayout className={className} data-testid={testId}>

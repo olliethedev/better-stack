@@ -6,10 +6,11 @@ import { createRoute } from "@btst/yar";
 import type { QueryClient } from "@tanstack/react-query";
 import type { BlogApiRouter } from "../api";
 import { lazy } from "react";
+import type React from "react";
 import { createBlogQueryKeys } from "../query-keys";
 import type { Post, SerializedPost } from "../types";
 //note: do not lazy load the loading components as they need to be available immediately for some fullstack frameworks like tanstack start or client side navigation rendering breaks in a weird way
-import { PostsLoading } from "./components/loading";
+import { PostsLoading, FormLoading } from "./components/loading";
 
 /**
  * Context passed to route hooks
@@ -17,7 +18,7 @@ import { PostsLoading } from "./components/loading";
 export interface RouteContext {
 	path: string;
 	params?: Record<string, string>;
-	isSSR?: boolean;
+	isSSR: boolean;
 	[key: string]: any;
 }
 
@@ -54,9 +55,6 @@ export interface BlogClientConfig {
 		defaultImage?: string;
 	};
 
-	// Optional context to pass to loaders (for SSR)
-	context?: Record<string, any>;
-
 	// Optional hooks
 	hooks?: BlogClientHooks;
 }
@@ -66,19 +64,6 @@ export interface BlogClientConfig {
  * All hooks are optional and allow consumers to customize behavior
  */
 export interface BlogClientHooks {
-	// Route Authorization Hooks - called before rendering a route
-	canViewPosts?: (context: RouteContext) => Promise<boolean> | boolean;
-	canViewDrafts?: (context: RouteContext) => Promise<boolean> | boolean;
-	canCreatePost?: (context: RouteContext) => Promise<boolean> | boolean;
-	canEditPost?: (
-		slug: string,
-		context: RouteContext,
-	) => Promise<boolean> | boolean;
-	canViewPost?: (
-		slug: string,
-		context: RouteContext,
-	) => Promise<boolean> | boolean;
-
 	// Loader Hooks - called during data loading (SSR or CSR)
 	beforeLoadPosts?: (
 		filter: { published: boolean },
@@ -100,19 +85,6 @@ export interface BlogClientHooks {
 	) => Promise<void> | void;
 	onLoadError?: (error: Error, context: LoaderContext) => Promise<void> | void;
 
-	// Navigation Hooks - called when navigating to a route
-	onNavigateToPosts?: (context: RouteContext) => Promise<void> | void;
-	onNavigateToDrafts?: (context: RouteContext) => Promise<void> | void;
-	onNavigateToNewPost?: (context: RouteContext) => Promise<void> | void;
-	onNavigateToEditPost?: (
-		slug: string,
-		context: RouteContext,
-	) => Promise<void> | void;
-	onNavigateToPost?: (
-		slug: string,
-		context: RouteContext,
-	) => Promise<void> | void;
-
 	// Lifecycle Hooks
 	onRouteRender?: (
 		routeName: string,
@@ -124,29 +96,28 @@ export interface BlogClientHooks {
 		context: RouteContext,
 	) => Promise<void> | void;
 
-	// Redirect/Error Handlers
-	onUnauthorized?: (routeName: string, path: string) => string; // Return redirect path
-	onNotFound?: (routeName: string, path: string) => void;
+	// Page Rendering Hooks - called before rendering, return false to prevent render
+	onBeforePostsPageRendered?: (context: RouteContext) => boolean;
+	onBeforePostPageRendered?: (slug: string, context: RouteContext) => boolean;
+	onBeforeNewPostPageRendered?: (context: RouteContext) => boolean;
+	onBeforeEditPostPageRendered?: (
+		slug: string,
+		context: RouteContext,
+	) => boolean;
+	onBeforeDraftsPageRendered?: (context: RouteContext) => boolean;
 }
 
 // Loader for SSR prefetching with hooks - configured once
 function createPostsLoader(published: boolean, config: BlogClientConfig) {
 	return async () => {
 		if (typeof window === "undefined") {
-			const {
-				queryClient,
-				apiBasePath,
-				apiBaseURL,
-				context: additionalContext,
-				hooks,
-			} = config;
+			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
 
 			const context: LoaderContext = {
 				path: published ? "/blog" : "/blog/drafts",
 				isSSR: true,
 				apiBaseURL,
 				apiBasePath,
-				...additionalContext,
 			};
 
 			try {
@@ -177,18 +148,36 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 					initialPageParam: 0,
 				});
 
+				// Don't throw errors during SSR - let Error Boundaries catch them when components render
+				// React Query stores errors in query state, and Suspense/Error Boundaries handle them
+				// Note: We still call hooks so consumers can log/track errors
+
 				// After hook - get data from queryClient if needed
 				if (hooks?.afterLoadPosts) {
 					const posts =
 						queryClient.getQueryData<Post[]>(listQuery.queryKey) || null;
 					await hooks.afterLoadPosts(posts, { published }, context);
 				}
+
+				// Check if there was an error after afterLoadPosts hook
+				const queryState = queryClient.getQueryState(listQuery.queryKey);
+				if (queryState?.error) {
+					// Call error hook but don't throw - let Error Boundary handle it during render
+					if (hooks?.onLoadError) {
+						const error =
+							queryState.error instanceof Error
+								? queryState.error
+								: new Error(String(queryState.error));
+						await hooks.onLoadError(error, context);
+					}
+				}
 			} catch (error) {
-				// Error hook
+				// Error hook - log the error but don't throw during SSR
+				// Let Error Boundaries handle errors when components render
 				if (hooks?.onLoadError) {
 					await hooks.onLoadError(error as Error, context);
 				}
-				throw error;
+				// Don't re-throw - let Error Boundary catch it during render
 			}
 		}
 	};
@@ -197,13 +186,7 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 function createPostLoader(slug: string, config: BlogClientConfig) {
 	return async () => {
 		if (typeof window === "undefined") {
-			const {
-				queryClient,
-				apiBasePath,
-				apiBaseURL,
-				context: additionalContext,
-				hooks,
-			} = config;
+			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
 
 			const context: LoaderContext = {
 				path: `/blog/${slug}`,
@@ -211,7 +194,6 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 				isSSR: true,
 				apiBaseURL,
 				apiBasePath,
-				...additionalContext,
 			};
 
 			try {
@@ -231,25 +213,43 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 				const postQuery = queries.posts.detail(slug);
 				await queryClient.prefetchQuery(postQuery);
 
+				// Don't throw errors during SSR - let Error Boundaries catch them when components render
+				// React Query stores errors in query state, and Suspense/Error Boundaries handle them
+				// Note: We still call hooks so consumers can log/track errors
+
 				// After hook
 				if (hooks?.afterLoadPost) {
 					const post =
 						queryClient.getQueryData<Post>(postQuery.queryKey) || null;
 					await hooks.afterLoadPost(post, slug, context);
 				}
+
+				// Check if there was an error after afterLoadPost hook
+				const queryState = queryClient.getQueryState(postQuery.queryKey);
+				if (queryState?.error) {
+					// Call error hook but don't throw - let Error Boundary handle it during render
+					if (hooks?.onLoadError) {
+						const error =
+							queryState.error instanceof Error
+								? queryState.error
+								: new Error(String(queryState.error));
+						await hooks.onLoadError(error, context);
+					}
+				}
 			} catch (error) {
-				// Error hook
+				// Error hook - log the error but don't throw during SSR
+				// Let Error Boundaries handle errors when components render
 				if (hooks?.onLoadError) {
 					await hooks.onLoadError(error as Error, context);
 				}
-				throw error;
+				// Don't re-throw - let Error Boundary catch it during render
 			}
 		}
 	};
 }
 
 // Meta generators with SEO optimization
-function createPostsListMeta(config: BlogClientConfig, published: boolean) {
+function createPostsListMeta(published: boolean, config: BlogClientConfig) {
 	return () => {
 		const { siteBaseURL, siteBasePath, seo } = config;
 		const path = published ? "/blog" : "/blog/drafts";
@@ -298,7 +298,7 @@ function createPostsListMeta(config: BlogClientConfig, published: boolean) {
 	};
 }
 
-function createPostMeta(config: BlogClientConfig, slug: string) {
+function createPostMeta(slug: string, config: BlogClientConfig) {
 	return () => {
 		// Use queryClient passed at runtime (same as loader!)
 		const { queryClient } = config;
@@ -429,7 +429,7 @@ function createNewPostMeta(config: BlogClientConfig) {
 	};
 }
 
-function createEditPostMeta(config: BlogClientConfig, slug: string) {
+function createEditPostMeta(slug: string, config: BlogClientConfig) {
 	return () => {
 		// Use queryClient passed at runtime (same as loader!)
 		const { queryClient } = config;
@@ -465,6 +465,92 @@ function createEditPostMeta(config: BlogClientConfig, slug: string) {
 	};
 }
 
+// Wrapper component for page rendering hooks - pure function, no state
+function createPageWrapper(
+	Component: React.ComponentType<any>,
+	routeName: string,
+	path: string,
+	config: BlogClientConfig,
+	beforeRenderHook?: (context: RouteContext) => boolean,
+	props?: any,
+) {
+	return function WrappedPageComponent() {
+		const { hooks } = config;
+		const context: RouteContext = {
+			path,
+			isSSR: typeof window === "undefined",
+			...props,
+		};
+
+		try {
+			// Call before render hook if provided - authorization check
+			if (beforeRenderHook) {
+				const canRender = beforeRenderHook(context);
+				if (!canRender) {
+					throw new Error(`Unauthorized: Cannot render ${routeName}`);
+				}
+			}
+
+			// Call route render hook
+			if (hooks?.onRouteRender) {
+				const result = hooks.onRouteRender(routeName, context);
+				// Handle promise if hook is async
+				if (result instanceof Promise) {
+					void result.catch((error) => {
+						if (hooks?.onRouteError) {
+							hooks.onRouteError(routeName, error as Error, context);
+						}
+					});
+				}
+			}
+
+			return <Component {...props} />;
+		} catch (error) {
+			// Error hook
+			if (hooks?.onRouteError) {
+				const result = hooks.onRouteError(routeName, error as Error, context);
+				// Handle promise if hook is async
+				if (result instanceof Promise) {
+					void result;
+				}
+			}
+			throw error;
+		}
+	};
+}
+
+// Wrapper component for error rendering hooks - pure function, no state
+function createErrorWrapper(
+	Component: React.ComponentType<any>,
+	routeName: string,
+	path: string,
+	config: BlogClientConfig,
+) {
+	return function WrappedErrorComponent(props: any) {
+		const { hooks } = config;
+		const context: RouteContext = {
+			path,
+			isSSR: typeof window === "undefined",
+		};
+
+		try {
+			// Call route error hook
+			if (hooks?.onRouteError && props.error) {
+				const result = hooks.onRouteError(routeName, props.error, context);
+				// Handle promise if hook is async
+				if (result instanceof Promise) {
+					void result;
+				}
+			}
+
+			return <Component {...props} />;
+		} catch (error) {
+			// If error hook itself errors, just render the component
+			return <Component {...props} />;
+		}
+	};
+}
+
 /**
  * Blog client plugin
  * Provides routes, components, and React Query hooks for blog posts
@@ -488,12 +574,32 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 					})),
 				);
 
+				const path = "/blog";
+				const routeName = "posts";
+
 				return {
-					PageComponent: () => <HomePageComponent published={true} />,
-					ErrorComponent: DefaultError,
+					PageComponent: createPageWrapper(
+						HomePageComponent,
+						routeName,
+						path,
+						config,
+						(context) => {
+							if (config.hooks?.onBeforePostsPageRendered) {
+								return config.hooks.onBeforePostsPageRendered(context);
+							}
+							return true;
+						},
+						{ published: true },
+					),
+					ErrorComponent: createErrorWrapper(
+						DefaultError,
+						routeName,
+						path,
+						config,
+					),
 					LoadingComponent: PostsLoading,
 					loader: createPostsLoader(true, config),
-					meta: createPostsListMeta(config, true),
+					meta: createPostsListMeta(true, config),
 				};
 			}),
 			drafts: createRoute("/blog/drafts", () => {
@@ -508,12 +614,32 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 					})),
 				);
 
+				const path = "/blog/drafts";
+				const routeName = "drafts";
+
 				return {
-					PageComponent: () => <HomePageComponent published={false} />,
-					ErrorComponent: DefaultError,
+					PageComponent: createPageWrapper(
+						HomePageComponent,
+						routeName,
+						path,
+						config,
+						(context) => {
+							if (config.hooks?.onBeforeDraftsPageRendered) {
+								return config.hooks.onBeforeDraftsPageRendered(context);
+							}
+							return true;
+						},
+						{ published: false },
+					),
+					ErrorComponent: createErrorWrapper(
+						DefaultError,
+						routeName,
+						path,
+						config,
+					),
 					LoadingComponent: PostsLoading,
 					loader: createPostsLoader(false, config),
-					meta: createPostsListMeta(config, false),
+					meta: createPostsListMeta(false, config),
 				};
 			}),
 			newPost: createRoute("/blog/new", () => {
@@ -527,15 +653,29 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 						default: m.DefaultError,
 					})),
 				);
-				const FormLoading = lazy(() =>
-					import("./components/loading").then((m) => ({
-						default: m.FormLoading,
-					})),
-				);
+
+				const path = "/blog/new";
+				const routeName = "newPost";
 
 				return {
-					PageComponent: NewPostPageComponent,
-					ErrorComponent: DefaultError,
+					PageComponent: createPageWrapper(
+						NewPostPageComponent,
+						routeName,
+						path,
+						config,
+						(context) => {
+							if (config.hooks?.onBeforeNewPostPageRendered) {
+								return config.hooks.onBeforeNewPostPageRendered(context);
+							}
+							return true;
+						},
+					),
+					ErrorComponent: createErrorWrapper(
+						DefaultError,
+						routeName,
+						path,
+						config,
+					),
 					LoadingComponent: FormLoading,
 					meta: createNewPostMeta(config),
 				};
@@ -551,18 +691,33 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 						default: m.DefaultError,
 					})),
 				);
-				const FormLoading = lazy(() =>
-					import("./components/loading").then((m) => ({
-						default: m.FormLoading,
-					})),
-				);
+
+				const path = `/blog/${slug}/edit`;
+				const routeName = "editPost";
 
 				return {
-					PageComponent: () => <EditPostPageComponent slug={slug} />,
+					PageComponent: createPageWrapper(
+						EditPostPageComponent,
+						routeName,
+						path,
+						config,
+						(context) => {
+							if (config.hooks?.onBeforeEditPostPageRendered) {
+								return config.hooks.onBeforeEditPostPageRendered(slug, context);
+							}
+							return true;
+						},
+						{ slug },
+					),
 					loader: createPostLoader(slug, config),
-					ErrorComponent: DefaultError,
+					ErrorComponent: createErrorWrapper(
+						DefaultError,
+						routeName,
+						path,
+						config,
+					),
 					LoadingComponent: FormLoading,
-					meta: createEditPostMeta(config, slug),
+					meta: createEditPostMeta(slug, config),
 				};
 			}),
 			post: createRoute("/blog/:slug", ({ params: { slug } }) => {
@@ -576,18 +731,33 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 						default: m.DefaultError,
 					})),
 				);
-				const FormLoading = lazy(() =>
-					import("./components/loading").then((m) => ({
-						default: m.FormLoading,
-					})),
-				);
+
+				const path = `/blog/${slug}`;
+				const routeName = "post";
 
 				return {
-					PageComponent: () => <PostPageComponent slug={slug} />,
+					PageComponent: createPageWrapper(
+						PostPageComponent,
+						routeName,
+						path,
+						config,
+						(context) => {
+							if (config.hooks?.onBeforePostPageRendered) {
+								return config.hooks.onBeforePostPageRendered(slug, context);
+							}
+							return true;
+						},
+						{ slug },
+					),
 					loader: createPostLoader(slug, config),
-					ErrorComponent: DefaultError,
+					ErrorComponent: createErrorWrapper(
+						DefaultError,
+						routeName,
+						path,
+						config,
+					),
 					LoadingComponent: FormLoading,
-					meta: createPostMeta(config, slug),
+					meta: createPostMeta(slug, config),
 				};
 			}),
 		}),

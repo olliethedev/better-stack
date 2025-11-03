@@ -36,7 +36,14 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
   
   // Now dehydrate the QueryClient with the loaded data
-  const dehydratedState: DehydratedState = dehydrate(queryClient);
+  // Include errors so client doesn't refetch on error
+  const dehydratedState: DehydratedState = dehydrate(queryClient, {
+    shouldDehydrateQuery: (query) => {
+      // Include both successful and failed queries
+      // This prevents refetching on the client when there's an error
+      return query.state.status === 'success' || query.state.status === 'error';
+    },
+  });
   const meta = route?.meta?.();
   
   console.log("[SSR] Dehydrated queries:", Object.keys(dehydratedState.queries || {}).length, "queries");

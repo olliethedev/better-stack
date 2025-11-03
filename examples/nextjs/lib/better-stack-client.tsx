@@ -38,44 +38,36 @@ export const getStackClient = (queryClient: QueryClient) => {
                     locale: "en_US",
                     defaultImage: `${baseURL}/og-image.png`,
                 },
-                
-                // Optional: context to pass to loaders (for SSR)
-                // This can be set per-request in page.tsx if needed
-                context: {
-                    // user: await getUser(),
-                },
-                
-                // Optional: hooks
                 hooks: {
-                    // Route authorization hooks - called before rendering
-                    canViewPosts: async (context) => {
-                        console.log("canViewPosts: checking access for", context.path);
+                    onBeforePostsPageRendered: (context) => {
+                        console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforePostsPageRendered: checking access for`, context.path);
                         return true;
                     },
-                    canViewDrafts: async (context) => {
-                        console.log("canViewDrafts: checking auth for", context.path);
-                        // const session = await getSession();
-                        // return session?.user.isAdmin ?? false;
+                    onBeforeDraftsPageRendered: (context) => {
+                        console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforeDraftsPageRendered: checking auth for`, context.path);
                         return true;
                     },
-                    canCreatePost: async (context) => {
-                        console.log("canCreatePost: checking permissions for", context.path);
+                    onBeforeNewPostPageRendered: (context) => {
+                        console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforeNewPostPageRendered: checking permissions for`, context.path);
                         return true;
                     },
-                    canEditPost: async (slug, context) => {
-                        console.log("canEditPost: checking permissions for", slug, context.path);
+                    onBeforeEditPostPageRendered: (slug, context) => {
+                        console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforeEditPostPageRendered: checking permissions for`, slug, context.path);
+                        return true;
+                    },
+                    onBeforePostPageRendered: (slug, context) => {
+                        console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforePostPageRendered: checking access for`, slug, context.path);
                         return true;
                     },
     
-                    // Loader hooks - called during data fetching (SSR)
+                    // Loader Hooks - called during data fetching (SSR or CSR)
                     beforeLoadPosts: async (filter, context) => {
+                        
                         console.log(
                             `[${context.isSSR ? 'SSR' : 'CSR'}] beforeLoadPosts:`,
-                            filter.published ? 'published' : 'drafts'
+                            filter.published ? 'published' : 'drafts',
+                            { filter }
                         );
-                        if (!filter.published) {
-                            // Check auth for drafts
-                        }
                         return true;
                     },
                     afterLoadPosts: async (posts, filter, context) => {
@@ -101,35 +93,18 @@ export const getStackClient = (queryClient: QueryClient) => {
                         );
                     },
                     onLoadError: async (error, context) => {
-                        console.error(
+                        console.log(
                             `[${context.isSSR ? 'SSR' : 'CSR'}] Load error:`,
                             error.message
                         );
                     },
     
-                    // Navigation hooks
-                    onNavigateToPosts: async (context) => {
-                        console.log("Navigating to posts list for", context.path);
-                    },
-                    onNavigateToNewPost: async (context) => {
-                        console.log("Navigating to new post form for", context.path);
-                    },
-    
-                    // Lifecycle hooks
+                    // Lifecycle Hooks - called during route rendering
                     onRouteRender: async (routeName, context) => {
-                        console.log("Route rendered:", routeName, context.path);
+                        console.log("onRouteRender: Route rendered:", routeName, context.path);
                     },
                     onRouteError: async (routeName, error, context) => {
-                        console.error("Route error:", routeName, error.message, context.path);
-                    },
-    
-                    // Redirect handlers
-                    onUnauthorized: (routeName, path) => {
-                        console.log("Unauthorized access to:", routeName);
-                        return `/login?redirect=${encodeURIComponent(path)}`;
-                    },
-                    onNotFound: (routeName, path) => {
-                        console.log("Route not found:", routeName, path);
+                        console.log("onRouteError: Route error:", routeName, error.message, context.path);
                     },
                 }
             })
