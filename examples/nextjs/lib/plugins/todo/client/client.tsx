@@ -1,6 +1,4 @@
-import { createApiClient } from "@btst/stack/plugins";
-import { defineClientPlugin } from "@btst/stack/plugins";
-import { createRoute } from "@btst/yar";
+import { createApiClient, defineClientPlugin, createRoute } from "@btst/stack/plugins/client";
 import type { QueryClient } from "@tanstack/react-query";
 import type { TodosApiRouter } from "../api/backend";
 import { lazy } from "react";

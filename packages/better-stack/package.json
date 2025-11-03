@@ -83,14 +83,24 @@
         "default": "./dist/context/index.cjs"
       }
     },
-    "./plugins": {
+    "./plugins/api": {
       "import": {
-        "types": "./dist/plugins/index.d.ts",
-        "default": "./dist/plugins/index.mjs"
+        "types": "./dist/plugins/api/index.d.ts",
+        "default": "./dist/plugins/api/index.mjs"
       },
       "require": {
-        "types": "./dist/plugins/index.d.cts",
-        "default": "./dist/plugins/index.cjs"
+        "types": "./dist/plugins/api/index.d.cts",
+        "default": "./dist/plugins/api/index.cjs"
+      }
+    },
+    "./plugins/client": {
+      "import": {
+        "types": "./dist/plugins/client/index.d.ts",
+        "default": "./dist/plugins/client/index.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/client/index.d.cts",
+        "default": "./dist/plugins/client/index.cjs"
       }
     },
     "./plugins/blog/api": {
@@ -132,8 +142,11 @@
       "context": [
         "./dist/context/index.d.ts"
       ],
-      "plugins": [
-        "./dist/plugins/index.d.ts"
+      "plugins/api": [
+        "./dist/plugins/api/index.d.ts"
+      ],
+      "plugins/client": [
+        "./dist/plugins/client/index.d.ts"
       ],
       "plugins/blog/api": [
         "./dist/plugins/blog/api/index.d.ts"

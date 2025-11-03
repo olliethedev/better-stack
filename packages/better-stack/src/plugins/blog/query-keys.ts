@@ -3,7 +3,7 @@ import {
 	createQueryKeys,
 } from "@lukemorales/query-key-factory";
 import type { BlogApiRouter } from "./api";
-import { createApiClient } from "@btst/stack/plugins";
+import { createApiClient } from "@btst/stack/plugins/client";
 import type { SerializedPost } from "./types";
 
 interface PostsListParams {

@@ -1,6 +1,4 @@
-import type { Adapter } from "@btst/db"
-import { defineBackendPlugin } from "@btst/stack/plugins"
-import { createEndpoint } from "@btst/stack/api"
+import { type Adapter, defineBackendPlugin, createEndpoint } from "@btst/stack/plugins/api"
 import { z } from "zod"
 import { todosSchema as dbSchema } from "../schema"
 import type { Todo } from "../types"

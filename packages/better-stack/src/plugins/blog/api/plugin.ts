@@ -1,6 +1,6 @@
 import type { Adapter } from "@btst/db";
-import { defineBackendPlugin } from "@btst/stack/plugins";
-import { createEndpoint } from "@btst/stack/api";
+import { defineBackendPlugin } from "@btst/stack/plugins/api";
+import { createEndpoint } from "@btst/stack/plugins/api";
 import { z } from "zod";
 import { blogSchema as dbSchema } from "../db";
 import type { Post } from "../types";

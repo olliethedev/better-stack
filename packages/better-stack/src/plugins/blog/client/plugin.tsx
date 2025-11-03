@@ -1,4 +1,7 @@
-import { defineClientPlugin, createApiClient } from "@btst/stack/plugins";
+import {
+	defineClientPlugin,
+	createApiClient,
+} from "@btst/stack/plugins/client";
 import { createRoute } from "@btst/yar";
 import type { QueryClient } from "@tanstack/react-query";
 import type { BlogApiRouter } from "../api";

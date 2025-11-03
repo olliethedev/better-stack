@@ -1,4 +1,5 @@
 import { createRouter } from "@btst/yar";
+
 import type {
 	ClientLibConfig,
 	ClientLib,
@@ -100,10 +101,6 @@ export function createStackClient<
 }
 
 export type { ClientLib, ClientLibConfig };
-
-export { createRoute, createRouter } from "@btst/yar";
-
-export { createClient } from "better-call/client";
 
 export { sitemapEntryToXmlString } from "./sitemap-utils";
 

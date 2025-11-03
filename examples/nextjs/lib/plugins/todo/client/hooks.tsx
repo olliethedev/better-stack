@@ -1,7 +1,7 @@
 "use client"
 import {
     createApiClient,
-} from "@btst/stack/plugins"
+} from "@btst/stack/plugins/client"
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import type { Todo } from "../types"
 import type { TodosApiRouter } from "../api/backend"

@@ -1,6 +1,6 @@
 "use client";
 
-import { createApiClient } from "@btst/stack/plugins";
+import { createApiClient } from "@btst/stack/plugins/client";
 import {
 	useInfiniteQuery,
 	useMutation,

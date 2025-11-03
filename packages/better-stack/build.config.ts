@@ -35,6 +35,8 @@ function createUseClientBanner() {
 		const isOtherClientChunkExcludingIndex =
 			chunk.fileName.includes("plugins/") &&
 			chunk.fileName.includes("/client/") &&
+			// Exclude BOTH plugins/client/index.* (plugin utilities) AND plugins/*/client/index.* (plugin entry points)
+			!/plugins\/client\/index\./.test(chunk.fileName) &&
 			!/plugins\/[^/]+\/client\/index\./.test(chunk.fileName);
 
 		const isSharedChunkUsingAnyPluginClient =
@@ -125,8 +127,10 @@ export default defineBuildConfig({
 		"./src/api/index.ts",
 		"./src/client/index.ts",
 		"./src/context/index.ts",
-		"./src/plugins/index.ts",
 		"./src/client/components/index.tsx",
+		// plugin development entries
+		"./src/plugins/api/index.ts",
+		"./src/plugins/client/index.ts",
 		// blog plugin entries
 		"./src/plugins/blog/api/index.ts",
 		"./src/plugins/blog/client/index.ts",

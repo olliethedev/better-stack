@@ -71,6 +71,3 @@ export type {
 	BackendLibConfig,
 	BackendLib,
 } from "../types";
-
-export { createEndpoint, createRouter } from "better-call";
-export { toNodeHandler } from "better-call/node";

@@ -1,4 +1,4 @@
-import { createDbPlugin } from "@btst/db"
+import { createDbPlugin } from "@btst/stack/plugins/api"
 
 /**
  * Todos plugin schema
