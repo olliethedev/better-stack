@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createStackClient } from "../client";
-import { defineClientPlugin } from "../plugins";
+import { defineClientPlugin } from "../plugins/client";
 import { createRoute } from "@btst/yar";
 
 describe("Client sitemap generation", () => {
