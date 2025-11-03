@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { getOrCreateQueryClient } from "@/lib/query-client"
 import { getStackClient } from "@/lib/better-stack-client"
 import { ClientRouteResolver } from "@/lib/route-resolver"
-import { metaElementsToObject } from "@btst/stack/plugins/blog/client"
+import { metaElementsToObject } from "@btst/stack/client"
 import { Metadata } from "next"
 
 

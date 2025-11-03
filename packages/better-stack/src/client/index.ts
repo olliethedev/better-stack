@@ -101,4 +101,10 @@ export function createStackClient<
 
 export type { ClientLib, ClientLibConfig };
 
-export { createRoute } from "@btst/yar";
+export { createRoute, createRouter } from "@btst/yar";
+
+export { createClient } from "better-call/client";
+
+export { sitemapEntryToXmlString } from "./sitemap-utils";
+
+export { metaElementsToObject } from "./meta-utils";

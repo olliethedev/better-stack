@@ -51,6 +51,20 @@ export default defineConfig({
 				BASE_URL: "http://localhost:3004",
 			},
 		},
+		{
+			command: "pnpm -F examples/react-router run start:e2e",
+			port: 3005,
+			reuseExistingServer: !process.env["CI"],
+			timeout: 120_000,
+			stdout: "pipe",
+			stderr: "pipe",
+			env: {
+				...process.env,
+				PORT: "3005",
+				HOST: "127.0.0.1",
+				BASE_URL: "http://localhost:3005",
+			},
+		},
 	],
 	projects: [
 		{
@@ -61,6 +75,11 @@ export default defineConfig({
 		{
 			name: "tanstack:memory",
 			use: { baseURL: "http://localhost:3004" },
+			testMatch: ["**/*.blog.spec.ts"],
+		},
+		{
+			name: "react-router:memory",
+			use: { baseURL: "http://localhost:3005" },
 			testMatch: ["**/*.blog.spec.ts"],
 		},
 	],

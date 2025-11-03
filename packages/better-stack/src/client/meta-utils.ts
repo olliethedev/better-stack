@@ -39,6 +39,19 @@ interface Metadata {
 	}>;
 }
 
+/**
+ * Converts an array of meta elements to a metadata object
+ * @param metaElements - An array of meta elements
+ * @example
+ * ```ts
+ * const metaElements = [
+ *   { name: "title", content: "My Page" },
+ *   { name: "description", content: "This is my page" },
+ * ];
+ * const metadata = metaElementsToObject(metaElements);
+ * console.log(metadata);
+ * ```
+ */
 export function metaElementsToObject(
 	metaElements: Array<React.JSX.IntrinsicElements["meta"] | undefined>,
 ) {
