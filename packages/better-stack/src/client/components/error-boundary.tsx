@@ -4,6 +4,8 @@ import {
 	type FallbackProps,
 } from "react-error-boundary";
 
+export type { FallbackProps } from "react-error-boundary";
+
 export function ErrorBoundary({
 	children,
 	FallbackComponent,

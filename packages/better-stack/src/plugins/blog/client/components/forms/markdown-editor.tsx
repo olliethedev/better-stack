@@ -1,3 +1,4 @@
+"use client";
 import { Crepe, CrepeFeature } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/common/style.css";
 import "./markdown-editor-styles.css";

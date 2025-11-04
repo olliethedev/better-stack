@@ -94,10 +94,10 @@ export const getStackClient = (queryClient: QueryClient) => {
     
                     // Lifecycle Hooks - called during route rendering
                     onRouteRender: async (routeName, context) => {
-                        console.log("onRouteRender: Route rendered:", routeName, context.path);
+                        console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onRouteRender: Route rendered:`, routeName, context.path);
                     },
                     onRouteError: async (routeName, error, context) => {
-                        console.error("onRouteError: Route error:", routeName, error.message, context.path);
+                        console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onRouteError: Route error:`, routeName, error.message, context.path);
                     },
                 }
             })
