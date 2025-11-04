@@ -10,7 +10,7 @@ import {
 	useSuspenseQuery,
 	type InfiniteData,
 } from "@tanstack/react-query";
-import type { SerializedPost } from "../../types";
+import type { SerializedPost, SerializedTag } from "../../types";
 import type { BlogApiRouter } from "../../api/plugin";
 import { useDebounce } from "./use-debounce";
 import { useEffect, useRef } from "react";
@@ -36,6 +36,7 @@ const SHARED_QUERY_CONFIG = {
 
 export interface UsePostsOptions {
 	tag?: string;
+	tagSlug?: string;
 	limit?: number;
 	enabled?: boolean;
 	query?: string;
@@ -91,11 +92,19 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const { tag, limit = 10, enabled = true, query, published } = options;
+	const {
+		tag,
+		tagSlug,
+		limit = 10,
+		enabled = true,
+		query,
+		published,
+	} = options;
 	const queries = createBlogQueryKeys(client);
 
 	const queryParams = {
 		tag,
+		tagSlug,
 		limit,
 		query,
 		published,
@@ -152,10 +161,17 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const { tag, limit = 10, enabled = true, query, published } = options;
+	const {
+		tag,
+		tagSlug,
+		limit = 10,
+		enabled = true,
+		query,
+		published,
+	} = options;
 	const queries = createBlogQueryKeys(client);
 
-	const queryParams = { tag, limit, query, published };
+	const queryParams = { tag, tagSlug, limit, query, published };
 	const basePosts = queries.posts.list(queryParams);
 
 	const {
@@ -256,6 +272,42 @@ export function useSuspensePost(slug: string): {
 	}
 
 	return { post: data || null, refetch };
+}
+
+/**
+ * Hook for fetching all unique tags across posts
+ */
+export function useTags(): {
+	tags: SerializedTag[];
+	isLoading: boolean;
+	error: Error | null;
+	refetch: () => void;
+} {
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
+	const queries = createBlogQueryKeys(client);
+	const baseTags = queries.tags.list();
+	const { data, isLoading, error, refetch } = useQuery<
+		SerializedTag[] | null,
+		Error,
+		SerializedTag[] | null,
+		typeof baseTags.queryKey
+	>({
+		...baseTags,
+		...SHARED_QUERY_CONFIG,
+		enabled: !!client,
+	});
+
+	return {
+		tags: data ?? [],
+		isLoading,
+		error,
+		refetch,
+	};
 }
 
 /** Create a new post */

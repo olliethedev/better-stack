@@ -11,6 +11,9 @@ export const BLOG_FORMS = {
 	BLOG_FORMS_EXCERPT_LABEL: "Excerpt",
 	BLOG_FORMS_EXCERPT_PLACEHOLDER: "Brief summary of your post...",
 
+	BLOG_FORMS_TAGS_LABEL: "Tags",
+	BLOG_FORMS_TAGS_PLACEHOLDER: "Enter your post tags...",
+
 	BLOG_FORMS_CONTENT_LABEL: "Content",
 	BLOG_FORMS_CONTENT_REQUIRED_ASTERISK: " *",
 

@@ -48,6 +48,7 @@ import { BLOG_LOCALIZATION } from "../../localization";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
 import { EmptyList } from "../shared/empty-list";
+import { TagsMultiSelect } from "./tags-multiselect";
 
 type CommonPostFormValues = {
 	title: string;
@@ -56,6 +57,7 @@ type CommonPostFormValues = {
 	slug?: string;
 	image?: string;
 	published?: boolean;
+	tags?: Array<{ name: string } | { id: string; name: string; slug: string }>;
 };
 
 function PostFormBody<T extends CommonPostFormValues>({
@@ -88,6 +90,7 @@ function PostFormBody<T extends CommonPostFormValues>({
 	const nameSlug = "slug" as FieldPath<T>;
 	const nameExcerpt = "excerpt" as FieldPath<T>;
 	const nameImage = "image" as FieldPath<T>;
+	const nameTags = "tags" as FieldPath<T>;
 	const nameContent = "content" as FieldPath<T>;
 	const namePublished = "published" as FieldPath<T>;
 	return (
@@ -199,6 +202,25 @@ function PostFormBody<T extends CommonPostFormValues>({
 							onChange={field.onChange}
 							setFeaturedImageUploading={setFeaturedImageUploading}
 						/>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name={nameTags}
+					render={({ field }) => (
+						<FormItem className="flex flex-col">
+							<FormLabel>{localization.BLOG_FORMS_TAGS_LABEL}</FormLabel>
+							<FormControl>
+								<TagsMultiSelect
+									value={Array.isArray(field.value) ? field.value : []}
+									onChange={field.onChange}
+									placeholder={localization.BLOG_FORMS_TAGS_PLACEHOLDER}
+								/>
+							</FormControl>
+							<FormDescription />
+							<FormMessage />
+						</FormItem>
 					)}
 				/>
 
@@ -335,6 +357,7 @@ const AddPostFormComponent = ({ onClose, onSuccess }: AddPostFormProps) => {
 			published: data.published ?? false,
 			publishedAt: data.published ? new Date() : undefined,
 			image: data.image,
+			tags: data.tags || [],
 		});
 
 		toast.success(localization.BLOG_FORMS_TOAST_CREATE_SUCCESS);
@@ -354,6 +377,7 @@ const AddPostFormComponent = ({ onClose, onSuccess }: AddPostFormProps) => {
 			slug: undefined,
 			published: false,
 			image: "",
+			tags: [],
 		},
 	});
 
@@ -417,6 +441,11 @@ const EditPostFormComponent = ({
 			slug: post.slug,
 			published: post.published,
 			image: post.image || "",
+			tags: post.tags.map((tag) => ({
+				id: tag.id,
+				name: tag.name,
+				slug: tag.slug,
+			})),
 		};
 	}, [post]);
 
@@ -447,6 +476,7 @@ const EditPostFormComponent = ({
 							? new Date(post.publishedAt)
 							: undefined,
 				image: data.image,
+				tags: data.tags || [],
 			},
 		});
 
@@ -468,6 +498,7 @@ const EditPostFormComponent = ({
 			slug: "",
 			published: false,
 			image: "",
+			tags: [],
 		},
 		values: initialData as z.input<typeof schema>,
 	});

@@ -8,7 +8,7 @@ import type { BlogApiRouter } from "../api";
 import { lazy } from "react";
 import type React from "react";
 import { createBlogQueryKeys } from "../query-keys";
-import type { Post, SerializedPost } from "../types";
+import type { Post, SerializedPost, SerializedTag } from "../types";
 //note: do not lazy load the loading components as they need to be available immediately for some fullstack frameworks like tanstack start or client side navigation rendering breaks in a weird way
 import { PostsLoading, FormLoading } from "./components/loading";
 
@@ -248,6 +248,61 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 	};
 }
 
+function createTagLoader(tagSlug: string, config: BlogClientConfig) {
+	return async () => {
+		if (typeof window === "undefined") {
+			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
+
+			const context: LoaderContext = {
+				path: `/blog/tag/${tagSlug}`,
+				params: { tagSlug },
+				isSSR: true,
+				apiBaseURL,
+				apiBasePath,
+			};
+
+			try {
+				const limit = 10;
+				const client = createApiClient<BlogApiRouter>({
+					baseURL: apiBaseURL,
+					basePath: apiBasePath,
+				});
+
+				const queries = createBlogQueryKeys(client);
+				const listQuery = queries.posts.list({
+					query: undefined,
+					limit,
+					published: true,
+					tagSlug: tagSlug,
+				});
+
+				await queryClient.prefetchInfiniteQuery({
+					...listQuery,
+					initialPageParam: 0,
+				});
+
+				const tagsQuery = queries.tags.list();
+				await queryClient.prefetchQuery(tagsQuery);
+
+				if (hooks?.onLoadError) {
+					const queryState = queryClient.getQueryState(listQuery.queryKey);
+					if (queryState?.error) {
+						const error =
+							queryState.error instanceof Error
+								? queryState.error
+								: new Error(String(queryState.error));
+						await hooks.onLoadError(error, context);
+					}
+				}
+			} catch (error) {
+				if (hooks?.onLoadError) {
+					await hooks.onLoadError(error as Error, context);
+				}
+			}
+		}
+	};
+}
+
 // Meta generators with SEO optimization
 function createPostsListMeta(published: boolean, config: BlogClientConfig) {
 	return () => {
@@ -396,6 +451,55 @@ function createPostMeta(slug: string, config: BlogClientConfig) {
 
 			// Additional SEO tags
 			{ name: "publish_date", content: publishedTime },
+		];
+	};
+}
+
+function createTagMeta(tagSlug: string, config: BlogClientConfig) {
+	return () => {
+		const { queryClient } = config;
+		const { apiBaseURL, apiBasePath, siteBaseURL, siteBasePath, seo } = config;
+		const queries = createBlogQueryKeys(
+			createApiClient<BlogApiRouter>({
+				baseURL: apiBaseURL,
+				basePath: apiBasePath,
+			}),
+		);
+		const tags = queryClient.getQueryData<SerializedTag[]>(
+			queries.tags.list().queryKey,
+		);
+		const tag = tags?.find((t) => t.slug === tagSlug);
+
+		if (!tag) {
+			return [
+				{ title: "Unknown route" },
+				{ name: "title", content: "Unknown route" },
+				{ name: "robots", content: "noindex" },
+			];
+		}
+
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/tag/${tag.slug}`;
+		const title = `Posts tagged: ${tag.name}`;
+		const description = `Browse all posts tagged with ${tag.name}`;
+
+		return [
+			{ title },
+			{ name: "title", content: title },
+			{ name: "description", content: description },
+			{ name: "robots", content: "index, follow" },
+			{ name: "keywords", content: `blog, ${tag.name}, articles` },
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: title },
+			{ property: "og:description", content: description },
+			{ property: "og:url", content: fullUrl },
+			...(seo?.siteName
+				? [{ property: "og:site_name", content: seo.siteName }]
+				: []),
+			...(seo?.defaultImage
+				? [{ property: "og:image", content: seo.defaultImage }]
+				: []),
+			{ name: "twitter:card", content: "summary" },
+			{ name: "twitter:title", content: title },
 		];
 	};
 }
@@ -718,6 +822,41 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 					),
 					LoadingComponent: FormLoading,
 					meta: createEditPostMeta(slug, config),
+				};
+			}),
+			tag: createRoute("/blog/tag/:tagSlug", ({ params: { tagSlug } }) => {
+				const TagPageComponent = lazy(() =>
+					import("./components/pages/tag-page").then((m) => ({
+						default: m.TagPageComponent,
+					})),
+				);
+				const DefaultError = lazy(() =>
+					import("./components/shared/default-error").then((m) => ({
+						default: m.DefaultError,
+					})),
+				);
+
+				const path = `/blog/tag/${tagSlug}`;
+				const routeName = "tag";
+
+				return {
+					PageComponent: createPageWrapper(
+						TagPageComponent,
+						routeName,
+						path,
+						config,
+						undefined,
+						{ tagSlug },
+					),
+					loader: createTagLoader(tagSlug, config),
+					ErrorComponent: createErrorWrapper(
+						DefaultError,
+						routeName,
+						path,
+						config,
+					),
+					LoadingComponent: PostsLoading,
+					meta: createTagMeta(tagSlug, config),
 				};
 			}),
 			post: createRoute("/blog/:slug", ({ params: { slug } }) => {

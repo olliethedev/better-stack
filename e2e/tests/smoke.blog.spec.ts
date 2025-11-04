@@ -393,36 +393,114 @@ test("search functionality", async ({ page, request }) => {
 	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
 });
 
-// test("unknown tag page state renders", async ({ page }) => {
-//     const errors: string[] = []
-//     page.on("console", (msg) => {
-//         if (msg.type() === "error") errors.push(msg.text())
-//     })
-//     await page.goto("/pages/blog/tag/unknown", { waitUntil: "networkidle" })
-//     await expect(page.locator(contentSelector)).toBeVisible()
-//     await expect(page).toHaveTitle(/Posts tagged: unknown|Unknown route/i)
-//     // Unknown tag should render empty-state or error placeholder; wait for either to appear
-//     await expect(
-//         page.locator(`${emptySelector}, ${errorSelector}`)
-//     ).toBeVisible()
-//     // expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([])
-// })
+test("tag page renders", async ({ page, request }) => {
+	const errors: string[] = [];
+	page.on("console", (msg) => {
+		if (msg.type() === "error") errors.push(msg.text());
+	});
 
-// test("tag page renders", async ({ page }) => {
-//     const errors: string[] = []
-//     page.on("console", (msg) => {
-//         if (msg.type() === "error") errors.push(msg.text())
-//     })
-//     await page.goto("/pages/blog/tag/react", { waitUntil: "networkidle" })
-//     await expect(page.locator('[data-testid="tags-page"]')).toBeVisible()
-//     await expect(page).toHaveTitle(/Posts tagged: react/i)
-//     // Tag page shows list or empty state when no posts with tag
-//     const maybeEmpty = await page.locator(emptySelector).isVisible().catch(() => false)
-//     if (!maybeEmpty) {
-//         await expect(page.getByTestId("page-header")).toBeVisible()
-//     }
-//     // expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([])
-// })
+	const tagSlug = "react";
+	const postWithTag = await createPost(request, {
+		title: "Tag Test Post",
+		content: "Content for tag test post",
+		excerpt: "Excerpt for tag test post",
+		slug: "tag-test-post",
+		published: true,
+		publishedAt: new Date().toISOString(),
+		image: "",
+	});
+
+	await request.put(`/api/data/posts/${postWithTag.id}`, {
+		headers: {
+			"content-type": "application/json",
+		},
+		data: {
+			...postWithTag,
+			tags: [{ name: "React" }],
+		},
+	});
+
+	await page.goto(`/pages/blog/tag/${tagSlug}`, {
+		waitUntil: "networkidle",
+	});
+	await expect(page.locator('[data-testid="tag-page"]')).toBeVisible();
+	await expect(page).toHaveTitle(/Posts tagged: React/i);
+
+	const maybeEmpty = await page
+		.locator(emptySelector)
+		.isVisible()
+		.catch(() => false);
+	if (!maybeEmpty) {
+		await expect(page.getByTestId("page-header")).toBeVisible();
+		await expect(
+			page.getByText("Tag Test Post", { exact: true }),
+		).toBeVisible();
+	}
+
+	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
+});
+
+test("tag badges appear on post detail page", async ({ page, request }) => {
+	const errors: string[] = [];
+	page.on("console", (msg) => {
+		if (msg.type() === "error") errors.push(msg.text());
+	});
+
+	const tagSlug = "javascript";
+	const postWithTag = await createPost(request, {
+		title: "Post Detail With Tags",
+		content: "Content for post detail with tags",
+		excerpt: "Excerpt for post detail with tags",
+		slug: "post-detail-with-tags",
+		published: true,
+		publishedAt: new Date().toISOString(),
+		image: "",
+	});
+
+	await request.put(`/api/data/posts/${postWithTag.id}`, {
+		headers: {
+			"content-type": "application/json",
+		},
+		data: {
+			...postWithTag,
+			tags: [{ name: "JavaScript" }],
+		},
+	});
+
+	await page.goto("/pages/blog/post-detail-with-tags", {
+		waitUntil: "networkidle",
+	});
+	await expect(page.locator('[data-testid="post-page"]')).toBeVisible();
+
+	const tagBadge = page.getByText("JavaScript", { exact: true });
+	await expect(tagBadge).toBeVisible({ timeout: 5000 });
+
+	await tagBadge.click();
+	await page.waitForURL(`**/pages/blog/tag/${tagSlug}`, { timeout: 10000 });
+	await expect(page.locator('[data-testid="tag-page"]')).toBeVisible();
+
+	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
+});
+
+test("unknown tag page state renders", async ({ page }) => {
+	const errors: string[] = [];
+	page.on("console", (msg) => {
+		if (msg.type() === "error") errors.push(msg.text());
+	});
+	await page.goto("/pages/blog/tag/unknown", { waitUntil: "networkidle" });
+	await expect(page.locator('[data-testid="tag-page"]')).toBeVisible();
+	await expect(page).toHaveTitle(/Posts tagged: unknown|Unknown route/i);
+
+	const maybeEmpty = await page
+		.locator(emptySelector)
+		.isVisible()
+		.catch(() => false);
+	if (!maybeEmpty) {
+		await expect(page.getByTestId("page-header")).toBeVisible();
+	}
+
+	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
+});
 
 // Helper function to create a single post with custom data
 

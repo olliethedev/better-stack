@@ -9,14 +9,29 @@ export type Post = {
 	image?: string;
 	published: boolean;
 	status?: "DRAFT" | "PUBLISHED";
+	tags: Tag[];
 	publishedAt?: Date;
 	createdAt: Date;
 	updatedAt: Date;
 };
 
+export type Tag = {
+	id: string;
+	slug: string;
+	name: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
 export interface SerializedPost
-	extends Omit<Post, "createdAt" | "updatedAt" | "publishedAt"> {
+	extends Omit<Post, "createdAt" | "updatedAt" | "publishedAt" | "tags"> {
+	tags: SerializedTag[];
 	publishedAt?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface SerializedTag extends Omit<Tag, "createdAt" | "updatedAt"> {
 	createdAt: string;
 	updatedAt: string;
 }

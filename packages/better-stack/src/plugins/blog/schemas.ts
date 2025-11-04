@@ -13,6 +13,15 @@ const coreFields = {
 	image: z.string().optional(),
 	published: z.boolean().optional().default(false),
 	slug: z.string().min(1, "Slug is required"),
+	tags: z
+		.array(
+			z.union([
+				z.object({ name: z.string() }),
+				z.object({ id: z.string(), name: z.string(), slug: z.string() }),
+			]),
+		)
+		.optional()
+		.default([]),
 };
 
 export const PostDomainSchema = z.object({

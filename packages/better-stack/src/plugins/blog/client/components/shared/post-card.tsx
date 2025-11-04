@@ -87,6 +87,15 @@ export function PostCard({ post }: { post: SerializedPost }) {
 							{post.excerpt}
 						</CardDescription>
 					)}
+					{post.tags && post.tags.length > 0 && (
+						<div className="flex flex-wrap gap-2">
+							{post.tags.map((tag) => (
+								<Badge key={tag.id} variant="secondary" className="text-xs">
+									{tag.name}
+								</Badge>
+							))}
+						</div>
+					)}
 				</CardContent>
 			</Link>
 		</Card>

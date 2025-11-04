@@ -51,4 +51,40 @@ export const blogSchema = createDbPlugin("blog", {
 			},
 		},
 	},
+	tag: {
+		modelName: "tag",
+		fields: {
+			name: {
+				type: "string",
+				required: true,
+				unique: true,
+			},
+			slug: {
+				type: "string",
+				required: true,
+				unique: true,
+			},
+			createdAt: {
+				type: "date",
+				defaultValue: () => new Date(),
+			},
+			updatedAt: {
+				type: "date",
+				defaultValue: () => new Date(),
+			},
+		},
+	},
+	postTag: {
+		modelName: "postTag",
+		fields: {
+			postId: {
+				type: "string",
+				required: true,
+			},
+			tagId: {
+				type: "string",
+				required: true,
+			},
+		},
+	},
 });

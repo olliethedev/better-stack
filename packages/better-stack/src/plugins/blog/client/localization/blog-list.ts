@@ -17,4 +17,8 @@ export const BLOG_LIST = {
 	BLOG_LIST_SEARCH_EMPTY: "No blog posts found.",
 	BLOG_LIST_ERROR_TITLE: "Whoops!",
 	BLOG_LIST_ERROR: "Failed to load posts",
+	BLOG_TAG_PAGE_TITLE: "Posts tagged:",
+	BLOG_TAG_PAGE_DESCRIPTION: "Browse all posts with this tag",
+	BLOG_TAG_NOT_FOUND: "Tag not found",
+	BLOG_TAG_NOT_FOUND_DESCRIPTION: "The tag you are looking for does not exist.",
 };

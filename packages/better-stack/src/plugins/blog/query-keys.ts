@@ -4,12 +4,13 @@ import {
 } from "@lukemorales/query-key-factory";
 import type { BlogApiRouter } from "./api";
 import { createApiClient } from "@btst/stack/plugins/client";
-import type { SerializedPost } from "./types";
+import type { SerializedPost, SerializedTag } from "./types";
 
 interface PostsListParams {
 	query?: string;
 	limit?: number;
 	published?: boolean;
+	tagSlug?: string;
 }
 
 // Type guard for better-call error responses
@@ -57,8 +58,9 @@ export function createBlogQueryKeys(
 ) {
 	const posts = createPostsQueries(client);
 	const drafts = createDraftsQueries(client);
+	const tags = createTagsQueries(client);
 
-	return mergeQueryKeys(posts, drafts);
+	return mergeQueryKeys(posts, drafts, tags);
 }
 
 function createPostsQueries(
@@ -74,6 +76,7 @@ function createPostsQueries(
 							: params?.query,
 					limit: params?.limit ?? 10,
 					published: params?.published ?? true,
+					tagSlug: params?.tagSlug,
 				},
 			],
 			queryFn: async ({ pageParam }: { pageParam?: number }) => {
@@ -90,6 +93,7 @@ function createPostsQueries(
 										? "true"
 										: "false"
 									: undefined,
+							tagSlug: params?.tagSlug,
 						},
 					});
 					// Check for errors (better-call returns Error$1<unknown> | Data<Post[]>)
@@ -190,6 +194,35 @@ function createDraftsQueries(
 					// Type narrowed to Data<Post[]> after error check
 					return ((response as { data?: unknown }).data ??
 						[]) as unknown as SerializedPost[];
+				} catch (error) {
+					// Re-throw errors so React Query can catch them
+					throw error;
+				}
+			},
+		}),
+	});
+}
+
+function createTagsQueries(
+	client: ReturnType<typeof createApiClient<BlogApiRouter>>,
+) {
+	return createQueryKeys("tags", {
+		list: () => ({
+			queryKey: ["tags"],
+			queryFn: async () => {
+				try {
+					const response = await client("/tags", {
+						method: "GET",
+					});
+					// Check for errors (better-call returns Error$1<unknown> | Data<Tag[]>)
+					if (isErrorResponse(response)) {
+						const errorResponse = response as { error: unknown };
+						throw toError(errorResponse.error);
+					}
+					// Type narrowed to Data<Tag[]> after error check
+					// The API returns serialized tags (dates as strings)
+					return ((response as { data?: unknown }).data ??
+						[]) as unknown as SerializedTag[];
 				} catch (error) {
 					// Re-throw errors so React Query can catch them
 					throw error;
