@@ -16,6 +16,7 @@ import type {
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import "../shared/markdown-content-styles.css";
 import "highlight.js/styles/panda-syntax-light.css";
@@ -392,7 +393,7 @@ export function MarkdownContent({ markdown, className }: MarkdownContentProps) {
 	}, [hasMath, mathPlugins]);
 
 	const rehypePlugins = useMemo(() => {
-		const plugins: unknown[] = [rehypeHighlight];
+		const plugins: unknown[] = [rehypeRaw, rehypeHighlight];
 		if (hasMath && mathPlugins?.rehypeKatex) {
 			plugins.push(mathPlugins.rehypeKatex);
 		}

@@ -2,7 +2,7 @@
 	font-family: var(--crepe-font-default);
 	color: var(--crepe-color-on-background);
 	background: var(--crepe-color-background);
-	padding: 60px 120px;
+	padding: 10px 20px;
 }
 
 .milkdown-custom .milkdown .milkdown-content img {

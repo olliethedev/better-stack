@@ -18,6 +18,7 @@ import { PostNavigation } from "../shared/post-navigation";
 import { RecentPostsCarousel } from "../shared/recent-posts-carousel";
 import { Badge } from "@workspace/ui/components/badge";
 import { useRouteLifecycle } from "../shared/use-route-lifecycle";
+import { OnThisPage } from "../shared/on-this-page";
 
 // Internal component with actual page content
 export function PostPage({ slug }: { slug: string }) {
@@ -67,7 +68,7 @@ export function PostPage({ slug }: { slug: string }) {
 	}
 
 	return (
-		<PageWrapper className="gap-6" testId="post-page">
+		<PageWrapper className="gap-6 px-4 lg:px-4" testId="post-page">
 			<PageHeader title={post.title} description={post.excerpt} />
 
 			<div className="flex flex-col gap-2">
@@ -99,7 +100,15 @@ export function PostPage({ slug }: { slug: string }) {
 				)}
 			</div>
 
-			<MarkdownContent markdown={post.content} />
+			<div className="flex items-start w-full">
+				<div className="w-44 shrink-0 hidden xl:flex" />
+				<div className="flex-1 min-w-0">
+					<div className="w-full px-3">
+						<MarkdownContent markdown={post.content} />
+					</div>
+				</div>
+				<OnThisPage className="mt-10" markdown={post.content} />
+			</div>
 
 			<RecentPostsCarousel posts={recentPosts} ref={recentPostsRef} />
 
