@@ -2,7 +2,11 @@
 
 import { usePluginOverrides, useBasePath } from "@btst/stack/context";
 import { formatDate } from "date-fns";
-import { useSuspensePost, useNextPreviousPosts } from "../../hooks/blog-hooks";
+import {
+	useSuspensePost,
+	useNextPreviousPosts,
+	useRecentPosts,
+} from "../../hooks/blog-hooks";
 import { EmptyList } from "../shared/empty-list";
 import { MarkdownContent } from "../shared/markdown-content";
 import { PageHeader } from "../shared/page-header";
@@ -11,6 +15,7 @@ import type { BlogPluginOverrides } from "../../overrides";
 import { DefaultImage, DefaultLink } from "../shared/defaults";
 import { BLOG_LOCALIZATION } from "../../localization";
 import { PostNavigation } from "../shared/post-navigation";
+import { RecentPostsCarousel } from "../shared/recent-posts-carousel";
 import { Badge } from "@workspace/ui/components/badge";
 import { useRouteLifecycle } from "../shared/use-route-lifecycle";
 
@@ -51,6 +56,12 @@ export function PostPage({ slug }: { slug: string }) {
 		},
 	);
 
+	const { recentPosts, ref: recentPostsRef } = useRecentPosts({
+		limit: 5,
+		excludeSlug: slug,
+		enabled: !!post,
+	});
+
 	if (!slug || !post) {
 		return <EmptyList message={localization.BLOG_PAGE_NOT_FOUND_DESCRIPTION} />;
 	}
@@ -89,6 +100,8 @@ export function PostPage({ slug }: { slug: string }) {
 			</div>
 
 			<MarkdownContent markdown={post.content} />
+
+			<RecentPostsCarousel posts={recentPosts} ref={recentPostsRef} />
 
 			<PostNavigation
 				previousPost={previousPost}

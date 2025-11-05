@@ -522,3 +522,67 @@ export function useNextPreviousPosts(
 		inView,
 	};
 }
+
+export interface UseRecentPostsOptions {
+	limit?: number;
+	excludeSlug?: string;
+	enabled?: boolean;
+}
+
+export interface UseRecentPostsResult {
+	recentPosts: SerializedPost[];
+	isLoading: boolean;
+	error: Error | null;
+	refetch: () => void;
+}
+
+/**
+ * Hook for fetching recent posts
+ * Uses useInView to only fetch when the component is in view
+ */
+export function useRecentPosts(
+	options: UseRecentPostsOptions = {},
+): UseRecentPostsResult & {
+	ref: (node: Element | null) => void;
+	inView: boolean;
+} {
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
+	const queries = createBlogQueryKeys(client);
+
+	const { ref, inView } = useInView({
+		// start a little early so the data is ready as it scrolls in
+		rootMargin: "200px 0px",
+		// run once; keep data cached after
+		triggerOnce: true,
+	});
+
+	const baseQuery = queries.posts.recent({
+		limit: options.limit ?? 5,
+		excludeSlug: options.excludeSlug,
+	});
+
+	const { data, isLoading, error, refetch } = useQuery<
+		SerializedPost[],
+		Error,
+		SerializedPost[],
+		typeof baseQuery.queryKey
+	>({
+		...baseQuery,
+		...SHARED_QUERY_CONFIG,
+		enabled: (options.enabled ?? true) && inView && !!client,
+	});
+
+	return {
+		recentPosts: data ?? [],
+		isLoading,
+		error,
+		refetch,
+		ref,
+		inView,
+	};
+}

@@ -162,6 +162,40 @@ function createPostsQueries(
 				};
 			},
 		}),
+
+		// Recent posts query (separate from main list to avoid cache conflicts)
+		recent: (params?: { limit?: number; excludeSlug?: string }) => ({
+			queryKey: ["recent", params],
+			queryFn: async () => {
+				try {
+					const response = await client("/posts", {
+						method: "GET",
+						query: {
+							limit: params?.limit ?? 5,
+							published: "true",
+						},
+					});
+					// Check for errors (better-call returns Error$1<unknown> | Data<Post[]>)
+					if (isErrorResponse(response)) {
+						const errorResponse = response as { error: unknown };
+						throw toError(errorResponse.error);
+					}
+					// Type narrowed to Data<Post[]> after error check
+					let posts = ((response as { data?: unknown }).data ??
+						[]) as unknown as SerializedPost[];
+
+					// Exclude current post if specified
+					if (params?.excludeSlug) {
+						posts = posts.filter((post) => post.slug !== params.excludeSlug);
+					}
+
+					return posts;
+				} catch (error) {
+					// Re-throw errors so React Query can catch them
+					throw error;
+				}
+			},
+		}),
 	});
 }
 

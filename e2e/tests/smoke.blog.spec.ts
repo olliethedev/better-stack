@@ -307,6 +307,57 @@ test("post navigation buttons", async ({ page, request }) => {
 	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
 });
 
+test("recent posts carousel", async ({ page, request }) => {
+	const errors: string[] = [];
+	page.on("console", (msg) => {
+		if (msg.type() === "error") errors.push(msg.text());
+	});
+
+	// This test assumes posts from "load more button on home page" test exist
+	// Navigate to a post page (test-post-12 from the other test)
+	await page.goto("/pages/blog/test-post-12", { waitUntil: "networkidle" });
+	await expect(page.locator('[data-testid="post-page"]')).toBeVisible();
+
+	// Scroll down to trigger the intersection observer for the carousel
+	await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+	await page.waitForTimeout(500); // Allow time for intersection observer to trigger
+
+	// Verify the recent posts carousel is visible
+	const carousel = page.locator('[data-testid="recent-posts-carousel"]');
+	await expect(carousel).toBeVisible({ timeout: 5000 });
+
+	// Verify carousel contains posts
+	// Check for carousel items (should have at least one post card)
+	const carouselItems = carousel.locator('[data-slot="carousel-item"]');
+	await expect(carouselItems.first()).toBeVisible();
+
+	// Count the number of visible posts (should be up to 5)
+	const itemCount = await carouselItems.count();
+	expect(itemCount).toBeGreaterThan(0);
+	expect(itemCount).toBeLessThanOrEqual(5);
+
+	// Verify carousel navigation buttons are visible
+	const prevButton = carousel.locator('[data-slot="carousel-previous"]');
+	const nextButton = carousel.locator('[data-slot="carousel-next"]');
+
+	// Check if navigation buttons are in the DOM
+	await expect(prevButton).toBeAttached();
+	await expect(nextButton).toBeAttached();
+
+	// The next button should be enabled (assuming there are multiple posts)
+	// The previous button might be disabled initially
+	if (itemCount > 1) {
+		// Try to click the next button to navigate
+		await nextButton.click();
+		await page.waitForTimeout(300); // Allow time for carousel animation
+
+		// After clicking next, previous button should be enabled
+		await expect(prevButton).toBeEnabled();
+	}
+
+	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
+});
+
 test("search functionality", async ({ page, request }) => {
 	const errors: string[] = [];
 	page.on("console", (msg) => {
