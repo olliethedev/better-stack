@@ -5,9 +5,13 @@ import {
 import { createRoute } from "@btst/yar";
 import type { QueryClient } from "@tanstack/react-query";
 import type { BlogApiRouter } from "../api";
-import { lazy } from "react";
 import { createBlogQueryKeys } from "../query-keys";
 import type { Post, SerializedPost, SerializedTag } from "../types";
+import { HomePageComponent } from "./components/pages/home-page";
+import { NewPostPageComponent } from "./components/pages/new-post-page";
+import { EditPostPageComponent } from "./components/pages/edit-post-page";
+import { TagPageComponent } from "./components/pages/tag-page";
+import { PostPageComponent } from "./components/pages/post-page";
 
 /**
  * Context passed to route hooks
@@ -557,12 +561,6 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 
 		routes: () => ({
 			posts: createRoute("/blog", () => {
-				const HomePageComponent = lazy(() =>
-					import("./components/pages/home-page").then((m) => ({
-						default: m.HomePageComponent,
-					})),
-				);
-
 				return {
 					PageComponent: () => <HomePageComponent published={true} />,
 					loader: createPostsLoader(true, config),
@@ -570,12 +568,6 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				};
 			}),
 			drafts: createRoute("/blog/drafts", () => {
-				const HomePageComponent = lazy(() =>
-					import("./components/pages/home-page").then((m) => ({
-						default: m.HomePageComponent,
-					})),
-				);
-
 				return {
 					PageComponent: () => <HomePageComponent published={false} />,
 					loader: createPostsLoader(false, config),
@@ -583,24 +575,12 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				};
 			}),
 			newPost: createRoute("/blog/new", () => {
-				const NewPostPageComponent = lazy(() =>
-					import("./components/pages/new-post-page").then((m) => ({
-						default: m.NewPostPageComponent,
-					})),
-				);
-
 				return {
 					PageComponent: NewPostPageComponent,
 					meta: createNewPostMeta(config),
 				};
 			}),
 			editPost: createRoute("/blog/:slug/edit", ({ params: { slug } }) => {
-				const EditPostPageComponent = lazy(() =>
-					import("./components/pages/edit-post-page").then((m) => ({
-						default: m.EditPostPageComponent,
-					})),
-				);
-
 				return {
 					PageComponent: () => <EditPostPageComponent slug={slug} />,
 					loader: createPostLoader(slug, config),
@@ -608,12 +588,6 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				};
 			}),
 			tag: createRoute("/blog/tag/:tagSlug", ({ params: { tagSlug } }) => {
-				const TagPageComponent = lazy(() =>
-					import("./components/pages/tag-page").then((m) => ({
-						default: m.TagPageComponent,
-					})),
-				);
-
 				return {
 					PageComponent: () => <TagPageComponent tagSlug={tagSlug} />,
 					loader: createTagLoader(tagSlug, config),
@@ -621,12 +595,6 @@ export const blogClientPlugin = (config: BlogClientConfig) =>
 				};
 			}),
 			post: createRoute("/blog/:slug", ({ params: { slug } }) => {
-				const PostPageComponent = lazy(() =>
-					import("./components/pages/post-page").then((m) => ({
-						default: m.PostPageComponent,
-					})),
-				);
-
 				return {
 					PageComponent: () => <PostPageComponent slug={slug} />,
 					loader: createPostLoader(slug, config),

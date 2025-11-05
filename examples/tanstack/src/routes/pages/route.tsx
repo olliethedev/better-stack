@@ -80,9 +80,7 @@ function Layout() {
                     }
                 }}
             >
-                <Suspense fallback={<div>Loading...</div>}>
-                    <Outlet />
-                </Suspense>
+                <Outlet />
             </BetterStackProvider>
         </QueryClientProvider>
     )
