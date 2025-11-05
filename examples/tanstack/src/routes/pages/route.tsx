@@ -49,7 +49,34 @@ function Layout() {
                             <Link to={href} className={className} {...props}>
                               {children}
                             </Link>
-                          ),
+                        ),
+                        // Lifecycle Hooks - called during route rendering
+                        onRouteRender: async (routeName, context) => {
+                            console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onRouteRender: Route rendered:`, routeName, context.path);
+                        },
+                        onRouteError: async (routeName, error, context) => {
+                            console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onRouteError: Route error:`, routeName, error.message, context.path);
+                        },
+                        onBeforePostsPageRendered: (context) => {
+                            console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforePostsPageRendered: checking access for`, context.path);
+                            return true;
+                        },
+                        onBeforeDraftsPageRendered: (context) => {
+                            console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforeDraftsPageRendered: checking auth for`, context.path);
+                            return true;
+                        },
+                        onBeforeNewPostPageRendered: (context) => {
+                            console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforeNewPostPageRendered: checking permissions for`, context.path);
+                            return true;
+                        },
+                        onBeforeEditPostPageRendered: (slug, context) => {
+                            console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforeEditPostPageRendered: checking permissions for`, slug, context.path);
+                            return true;
+                        },
+                        onBeforePostPageRendered: (slug, context) => {
+                            console.log(`[${context.isSSR ? 'SSR' : 'CSR'}] onBeforePostPageRendered: checking access for`, slug, context.path);
+                            return true;
+                        },
                     }
                 }}
             >

@@ -4,10 +4,10 @@ import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
+  useQueryClient,
   type DehydratedState,
 } from "@tanstack/react-query";
 import { getStackClient } from "~/lib/better-stack-client";
-import { ClientRouteResolver } from "~/components/route-resolver";
 
 export async function loader({ params }: Route.LoaderArgs) {
   // params["*"] will contain the remaining URL after files/
@@ -72,19 +72,23 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export default function PagesIndex() {
   const loaderData = useLoaderData<typeof loader>();
+  const queryClient = useQueryClient();
   const { path, dehydratedState } = loaderData;
+
+  const route = getStackClient(queryClient).router.getRoute(path);
+
+  const Page = route && route.PageComponent ? <route.PageComponent /> : <div>Route not found</div>;
   
   // HydrationBoundary MUST be rendered unconditionally with the dehydrated state
   // It hydrates the QueryClient synchronously before children render
   // This prevents queries from showing loading state after SSR
   if (!dehydratedState) {
-    // This shouldn't happen on initial load, but handle gracefully
-    return <ClientRouteResolver path={path} />;
+    return Page;
   }
   
   return (
     <HydrationBoundary state={dehydratedState}>
-      <ClientRouteResolver path={path} />
+      {Page}
     </HydrationBoundary>
   );
 }

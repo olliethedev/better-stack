@@ -10,13 +10,29 @@ import { BLOG_LOCALIZATION } from "../../localization";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
 import { useTags } from "../../hooks/blog-hooks";
+import { ComposedRoute } from "@btst/stack/client/components";
+import { DefaultError } from "../shared/default-error";
+import { PostsLoading } from "../loading";
+import { NotFoundPage } from "./404-page";
+import { useRouteLifecycle } from "../shared/use-route-lifecycle";
 
-export function TagPageComponent({ tagSlug }: { tagSlug: string }) {
+// Internal component with actual page content
+function TagPage({ tagSlug }: { tagSlug: string }) {
 	const { localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
 	>("blog", {
 		localization: BLOG_LOCALIZATION,
+	});
+
+	// Call lifecycle hooks
+	useRouteLifecycle({
+		routeName: "tag",
+		context: {
+			path: `/blog/tag/${tagSlug}`,
+			params: { tagSlug },
+			isSSR: typeof window === "undefined",
+		},
 	});
 
 	const { tags } = useTags();
@@ -60,6 +76,30 @@ function Content({ tagSlug }: { tagSlug: string }) {
 			onLoadMore={loadMore}
 			hasMore={hasMore}
 			isLoadingMore={isLoadingMore}
+		/>
+	);
+}
+
+// Exported wrapped component with error and loading boundaries
+export function TagPageComponent({ tagSlug }: { tagSlug: string }) {
+	const { onRouteError } = usePluginOverrides<BlogPluginOverrides>("blog");
+	return (
+		<ComposedRoute
+			path={`/blog/tag/${tagSlug}`}
+			PageComponent={TagPage}
+			ErrorComponent={DefaultError}
+			LoadingComponent={PostsLoading}
+			NotFoundComponent={NotFoundPage}
+			props={{ tagSlug }}
+			onError={(error) => {
+				if (onRouteError) {
+					onRouteError("tag", error, {
+						path: `/blog/tag/${tagSlug}`,
+						isSSR: typeof window === "undefined",
+						tagSlug,
+					});
+				}
+			}}
 		/>
 	);
 }

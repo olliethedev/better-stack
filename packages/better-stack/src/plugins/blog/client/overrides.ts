@@ -3,7 +3,17 @@ import type { ComponentType, ReactNode } from "react";
 import type { BlogLocalization } from "./localization";
 
 /**
- * Overridable components and functions for the Todos plugin
+ * Context passed to lifecycle hooks
+ */
+export interface RouteContext {
+	path: string;
+	params?: Record<string, string>;
+	isSSR: boolean;
+	[key: string]: any;
+}
+
+/**
+ * Overridable components and functions for the Blog plugin
  *
  * External consumers can provide their own implementations of these
  * to customize the behavior for their framework (Next.js, React Router, etc.)
@@ -55,4 +65,67 @@ export interface BlogPluginOverrides {
 	 * Whether to show the attribution
 	 */
 	showAttribution?: boolean;
+
+	// Lifecycle Hooks (optional)
+	/**
+	 * Called when a route is rendered
+	 * @param routeName - Name of the route (e.g., 'posts', 'post', 'newPost')
+	 * @param context - Route context with path, params, etc.
+	 */
+	onRouteRender?: (
+		routeName: string,
+		context: RouteContext,
+	) => void | Promise<void>;
+
+	/**
+	 * Called when a route encounters an error
+	 * @param routeName - Name of the route
+	 * @param error - The error that occurred
+	 * @param context - Route context
+	 */
+	onRouteError?: (
+		routeName: string,
+		error: Error,
+		context: RouteContext,
+	) => void | Promise<void>;
+
+	/**
+	 * Called before the posts list page is rendered
+	 * Return false to prevent rendering (e.g., for authorization)
+	 * @param context - Route context
+	 */
+	onBeforePostsPageRendered?: (context: RouteContext) => boolean;
+
+	/**
+	 * Called before a single post page is rendered
+	 * Return false to prevent rendering (e.g., for authorization)
+	 * @param slug - The post slug
+	 * @param context - Route context
+	 */
+	onBeforePostPageRendered?: (slug: string, context: RouteContext) => boolean;
+
+	/**
+	 * Called before the new post page is rendered
+	 * Return false to prevent rendering (e.g., for authorization)
+	 * @param context - Route context
+	 */
+	onBeforeNewPostPageRendered?: (context: RouteContext) => boolean;
+
+	/**
+	 * Called before the edit post page is rendered
+	 * Return false to prevent rendering (e.g., for authorization)
+	 * @param slug - The post slug being edited
+	 * @param context - Route context
+	 */
+	onBeforeEditPostPageRendered?: (
+		slug: string,
+		context: RouteContext,
+	) => boolean;
+
+	/**
+	 * Called before the drafts page is rendered
+	 * Return false to prevent rendering (e.g., for authorization)
+	 * @param context - Route context
+	 */
+	onBeforeDraftsPageRendered?: (context: RouteContext) => boolean;
 }

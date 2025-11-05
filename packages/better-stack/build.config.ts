@@ -1,4 +1,5 @@
 import { defineBuildConfig } from "unbuild";
+import preserveDirectives from "rollup-plugin-preserve-directives";
 
 function withExcludedPluginPostbuildExternal(prevExternal: any) {
 	const postbuildMatcher = /plugins\/[^/]+\/postbuild\.(?:js|cjs|mjs|ts)$/;
@@ -16,80 +17,12 @@ function withExcludedPluginPostbuildExternal(prevExternal: any) {
 	};
 }
 
-function createUseClientBanner() {
-	return (chunk: any) => {
-		// Add "use client" to any plugin client-side bundles:
-		// - plugins/*/client/components/**
-		// - plugins/*/client/hooks/**
-		// - plugins/*/client/** (excluding the top-level client/index.* entry)
-		// Also add to shared chunks that include modules from plugins/*/client/**
-		// Also add to top-level client/components/** (outside of plugins)
-		// Also add to shared chunks that include top-level client/components/**
-		// Also add to context/** (BetterStackProvider and hooks use React context)
-		// Also add to chunks/** that include any client-side modules (for lazy-loaded components)
-		const isPluginClientComponentOrHook =
-			chunk.fileName.includes("plugins/") &&
-			(chunk.fileName.includes("/client/components/") ||
-				chunk.fileName.includes("/client/hooks/"));
-
-		const isOtherClientChunkExcludingIndex =
-			chunk.fileName.includes("plugins/") &&
-			chunk.fileName.includes("/client/") &&
-			// Exclude BOTH plugins/client/index.* (plugin utilities) AND plugins/*/client/index.* (plugin entry points)
-			!/plugins\/client\/index\./.test(chunk.fileName) &&
-			!/plugins\/[^/]+\/client\/index\./.test(chunk.fileName);
-
-		const isSharedChunkUsingAnyPluginClient =
-			chunk.fileName.includes("shared/") &&
-			chunk.moduleIds?.some(
-				(id: string) => id.includes("plugins/") && id.includes("/client/"),
-			);
-
-		const isTopLevelClientComponents =
-			(chunk.fileName.includes("/client/components/") ||
-				chunk.fileName.startsWith("client/components/")) &&
-			!chunk.fileName.includes("plugins/");
-
-		const isSharedChunkUsingTopLevelClientComponents =
-			chunk.fileName.includes("shared/") &&
-			chunk.moduleIds?.some(
-				(id: string) =>
-					id.includes("/client/components/") && !id.includes("plugins/"),
-			);
-
-		const isContextModule =
-			chunk.fileName.includes("/context/") ||
-			chunk.fileName.startsWith("context/");
-
-		// Handle lazy-loaded chunks in chunks/** directory
-		const isLazyChunkUsingClientModules =
-			chunk.fileName.includes("chunks/") &&
-			chunk.moduleIds?.some(
-				(id: string) =>
-					id.includes("/client/") ||
-					id.includes("/components/") ||
-					id.includes("/hooks/") ||
-					id.includes("/pages/"),
-			);
-
-		if (
-			isPluginClientComponentOrHook ||
-			isOtherClientChunkExcludingIndex ||
-			isSharedChunkUsingAnyPluginClient ||
-			isTopLevelClientComponents ||
-			isSharedChunkUsingTopLevelClientComponents ||
-			isContextModule ||
-			isLazyChunkUsingClientModules
-		) {
-			return '"use client";';
-		}
-		return "";
-	};
-}
-
 export default defineBuildConfig({
 	rollup: {
 		emitCJS: true,
+		output: {
+			preserveModules: true,
+		},
 		esbuild: {
 			treeShaking: true,
 			jsx: "automatic",
@@ -143,25 +76,28 @@ export default defineBuildConfig({
 			// Ensure per-plugin postbuild scripts are never bundled
 			options.external = withExcludedPluginPostbuildExternal(options.external);
 
-			const outputs = Array.isArray(options.output)
-				? (options.output.filter(Boolean) as typeof options.output)
-				: options.output
-					? [options.output]
-					: [];
-
-			outputs.forEach((output) => {
-				if (output) {
-					output.banner = createUseClientBanner();
+			// Ensure preserveModules is set on outputs FIRST (must be true for preserve-directives plugin)
+			// This needs to be set before plugins are added so the plugin can see it
+			if (options.output) {
+				if (Array.isArray(options.output)) {
+					options.output.forEach((output: any) => {
+						if (output) {
+							output.preserveModules = true;
+						}
+					});
+				} else if (options.output) {
+					options.output.preserveModules = true;
 				}
-			});
+			}
+
+			// Normalize plugins array (preserve existing plugins from unbuild)
+			const existingPlugins = Array.isArray((options as any).plugins)
+				? (options as any).plugins
+				: [];
 
 			// Add bundle visualizer when ANALYZE is truthy
 			const analyze = process.env.ANALYZE && process.env.ANALYZE !== "0";
 			if (analyze) {
-				// options.plugins can be undefined in some shapes; normalize then push
-				const existing = Array.isArray((options as any).plugins)
-					? (options as any).plugins
-					: [];
 				let _visualizer: any;
 				try {
 					// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -178,18 +114,29 @@ export default defineBuildConfig({
 						title: "better-stack bundle analysis",
 						open: false,
 					});
-					(options as any).plugins = [...existing, plugin];
-				} else {
-					(options as any).plugins = existing;
+					existingPlugins.push(plugin);
 				}
 			}
 
-			if (outputs.length === 0) {
-				options.output = undefined;
-			} else if (outputs.length === 1) {
-				options.output = outputs[0]!;
-			} else {
-				options.output = outputs;
+			// Add preserve directives plugin last (must be after transform plugins)
+			// Note: suppressPreserveModulesWarning is set because preserveModules IS set,
+			// but the plugin checks it before outputs are finalized, causing false warnings
+			existingPlugins.push(
+				preserveDirectives({ suppressPreserveModulesWarning: true }),
+			);
+			(options as any).plugins = existingPlugins;
+
+			// Ensure preserveModules is set again after plugins (in case outputs were modified)
+			if (options.output) {
+				if (Array.isArray(options.output)) {
+					options.output.forEach((output: any) => {
+						if (output) {
+							output.preserveModules = true;
+						}
+					});
+				} else if (options.output) {
+					options.output.preserveModules = true;
+				}
 			}
 		},
 	},

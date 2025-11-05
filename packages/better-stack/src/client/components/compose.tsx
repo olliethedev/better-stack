@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, type ErrorInfo } from "react";
 import { type FallbackProps } from "react-error-boundary";
 import type { createRouter } from "@btst/yar";
 import { ErrorBoundary } from "./error-boundary";
@@ -28,68 +28,89 @@ export function RouteRenderer({
 	path,
 	NotFoundComponent,
 	onNotFound,
+	onError,
+	props,
 }: {
 	router: ReturnType<typeof createRouter>;
 	path: string;
 	NotFoundComponent?: React.ComponentType<{ message: string }>;
-	/**
-	 * Function to call when route is not found (e.g., Next.js notFound())
-	 * If provided, this will be called instead of rendering NotFoundComponent
-	 */
 	onNotFound?: () => never;
+	onError: (error: Error, info: ErrorInfo) => void;
+	props?: any;
 }) {
 	// Resolve route on the client where components are available
 	const route = router.getRoute(path);
 
-	if (route) {
-		// Get components from the route
-		const PageComponent = route.PageComponent;
-		const ErrorComponent = route.ErrorComponent;
-		const LoadingComponent = route.LoadingComponent;
+	return (
+		<ComposedRoute
+			path={path}
+			PageComponent={route?.PageComponent}
+			ErrorComponent={route?.ErrorComponent}
+			LoadingComponent={route?.LoadingComponent}
+			onNotFound={onNotFound}
+			NotFoundComponent={NotFoundComponent}
+			onError={onError}
+			props={props}
+		/>
+	);
+}
 
-		if (PageComponent) {
-			const content = <PageComponent />;
-			// Avoid server-side skeletons: only show loading fallback in the browser
-			const isBrowser = typeof window !== "undefined";
-			const suspenseFallback =
-				isBrowser && LoadingComponent ? <LoadingComponent /> : null;
+export function ComposedRoute({
+	path,
+	PageComponent,
+	ErrorComponent,
+	LoadingComponent,
+	onNotFound,
+	NotFoundComponent,
+	props,
+	onError,
+}: {
+	path: string;
+	PageComponent: React.ComponentType<any>;
+	ErrorComponent?: React.ComponentType<FallbackProps>;
+	LoadingComponent: React.ComponentType;
+	onNotFound?: () => never;
+	NotFoundComponent?: React.ComponentType<{ message: string }>;
+	props?: any;
+	onError: (error: Error, info: ErrorInfo) => void;
+}) {
+	if (PageComponent) {
+		const content = <PageComponent {...props} />;
+		// Avoid server-side skeletons: only show loading fallback in the browser
+		const isBrowser = typeof window !== "undefined";
+		const suspenseFallback =
+			isBrowser && LoadingComponent ? <LoadingComponent /> : null;
 
-			// If an ErrorComponent is provided (which itself may be lazy), ensure we have
-			// a Suspense boundary that can handle both the page content and the lazy error UI
-			if (ErrorComponent) {
-				return (
-					<Suspense key={`outer-${path}`} fallback={suspenseFallback}>
-						<ErrorBoundary
-							FallbackComponent={ErrorComponent}
-							resetKeys={[path]}
-						>
-							<Suspense key={`inner-${path}`} fallback={suspenseFallback}>
-								{content}
-							</Suspense>
-						</ErrorBoundary>
-					</Suspense>
-				);
-			}
-
+		// If an ErrorComponent is provided (which itself may be lazy), ensure we have
+		// a Suspense boundary that can handle both the page content and the lazy error UI
+		if (ErrorComponent) {
 			return (
-				<Suspense key={path} fallback={suspenseFallback}>
-					{content}
+				<Suspense key={`outer-${path}`} fallback={suspenseFallback}>
+					<ErrorBoundary
+						FallbackComponent={ErrorComponent}
+						resetKeys={[path]}
+						onError={onError}
+					>
+						<Suspense key={`inner-${path}`} fallback={suspenseFallback}>
+							{content}
+						</Suspense>
+					</ErrorBoundary>
 				</Suspense>
 			);
 		}
-	}
 
-	// Fallback for unknown routes
-	// If onNotFound function is provided (e.g., Next.js notFound()), call it
-	if (onNotFound) {
-		onNotFound();
-	}
+		return (
+			<Suspense key={path} fallback={suspenseFallback}>
+				{content}
+			</Suspense>
+		);
+	} else {
+		if (onNotFound) {
+			onNotFound();
+		}
 
-	// Otherwise render the NotFoundComponent if provided
-	if (NotFoundComponent) {
-		return <NotFoundComponent message={`Unknown route: ${path}`} />;
+		if (NotFoundComponent) {
+			return <NotFoundComponent message={`Unknown route: ${path}`} />;
+		}
 	}
-
-	// Ultimate fallback
-	return null;
 }

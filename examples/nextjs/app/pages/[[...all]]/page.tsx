@@ -4,7 +4,6 @@ import type { DehydratedState } from "@tanstack/react-query"
 import { notFound } from "next/navigation"
 import { getOrCreateQueryClient } from "@/lib/query-client"
 import { getStackClient } from "@/lib/better-stack-client"
-import { ClientRouteResolver } from "@/lib/route-resolver"
 import { metaElementsToObject } from "@btst/stack/client"
 import { Metadata } from "next"
 
@@ -50,7 +49,7 @@ export default async function ExamplePage({
     // Pass path to client resolver which has access to router via closure
     return (
         <HydrationBoundary state={dehydratedState}>
-            {route ? <ClientRouteResolver path={path} /> : notFound()}
+            {route && route.PageComponent ? <route.PageComponent /> : notFound()}
         </HydrationBoundary>
     )
 

@@ -6,8 +6,14 @@ import { PageHeader } from "../shared/page-header";
 import { PageWrapper } from "../shared/page-wrapper";
 import type { BlogPluginOverrides } from "../../overrides";
 import { BLOG_LOCALIZATION } from "../../localization";
+import { ComposedRoute } from "@btst/stack/client/components";
+import { DefaultError } from "../shared/default-error";
+import { FormLoading } from "../loading";
+import { NotFoundPage } from "./404-page";
+import { useRouteLifecycle } from "../shared/use-route-lifecycle";
 
-export function NewPostPageComponent() {
+// Internal component with actual page content
+function NewPostPage() {
 	const { localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
@@ -16,6 +22,21 @@ export function NewPostPageComponent() {
 	});
 	const { navigate } = usePluginOverrides<BlogPluginOverrides>("blog");
 	const basePath = useBasePath();
+
+	// Call lifecycle hooks
+	useRouteLifecycle({
+		routeName: "newPost",
+		context: {
+			path: "/blog/new",
+			isSSR: typeof window === "undefined",
+		},
+		beforeRenderHook: (overrides, context) => {
+			if (overrides.onBeforeNewPostPageRendered) {
+				return overrides.onBeforeNewPostPageRendered(context);
+			}
+			return true;
+		},
+	});
 
 	const handleClose = () => {
 		navigate(`${basePath}/blog`);
@@ -38,5 +59,27 @@ export function NewPostPageComponent() {
 			/>
 			<AddPostForm onClose={handleClose} onSuccess={handleSuccess} />
 		</PageWrapper>
+	);
+}
+
+// Exported wrapped component with error and loading boundaries
+export function NewPostPageComponent() {
+	const { onRouteError } = usePluginOverrides<BlogPluginOverrides>("blog");
+	return (
+		<ComposedRoute
+			path="/blog/new"
+			PageComponent={NewPostPage}
+			ErrorComponent={DefaultError}
+			LoadingComponent={FormLoading}
+			NotFoundComponent={NotFoundPage}
+			onError={(error) => {
+				if (onRouteError) {
+					onRouteError("newPost", error, {
+						path: `/blog/new`,
+						isSSR: typeof window === "undefined",
+					});
+				}
+			}}
+		/>
 	);
 }

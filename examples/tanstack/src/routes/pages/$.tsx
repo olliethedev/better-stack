@@ -1,5 +1,4 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { RouteRenderer } from "@btst/stack/client/components";
 import { getStackClient } from "@/lib/better-stack-client";
 
 export const Route = createFileRoute("/pages/$")({
@@ -52,13 +51,9 @@ function Page() {
   const { _splat } = Route.useParams();
   const stackClient = getStackClient(context.queryClient);
   const normalizedPath = normalizePath(_splat);
-  return (
-    <RouteRenderer 
-      key={normalizedPath} 
-      router={stackClient.router} 
-      path={normalizedPath} 
-    />
-  );
+  const route = stackClient.router.getRoute(normalizedPath);
+  const Page = route && route.PageComponent ? <route.PageComponent /> : <div>Route not found</div>;
+  return Page;
 }
 
 function normalizePath(splat?: string): string {

@@ -6,8 +6,14 @@ import { PageHeader } from "../shared/page-header";
 import { PageWrapper } from "../shared/page-wrapper";
 import { BLOG_LOCALIZATION } from "../../localization";
 import type { BlogPluginOverrides } from "../../overrides";
+import { ComposedRoute } from "@btst/stack/client/components";
+import { DefaultError } from "../shared/default-error";
+import { FormLoading } from "../loading";
+import { NotFoundPage } from "./404-page";
+import { useRouteLifecycle } from "../shared/use-route-lifecycle";
 
-export function EditPostPageComponent({ slug }: { slug: string }) {
+// Internal component with actual page content
+function EditPostPage({ slug }: { slug: string }) {
 	const { localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
@@ -16,6 +22,22 @@ export function EditPostPageComponent({ slug }: { slug: string }) {
 	});
 	const basePath = useBasePath();
 	const { navigate } = usePluginOverrides<BlogPluginOverrides>("blog");
+
+	// Call lifecycle hooks
+	useRouteLifecycle({
+		routeName: "editPost",
+		context: {
+			path: `/blog/${slug}/edit`,
+			params: { slug },
+			isSSR: typeof window === "undefined",
+		},
+		beforeRenderHook: (overrides, context) => {
+			if (overrides.onBeforeEditPostPageRendered) {
+				return overrides.onBeforeEditPostPageRendered(slug, context);
+			}
+			return true;
+		},
+	});
 
 	const handleClose = () => {
 		navigate(`${basePath}/blog`);
@@ -38,5 +60,29 @@ export function EditPostPageComponent({ slug }: { slug: string }) {
 				onSuccess={handleSuccess}
 			/>
 		</PageWrapper>
+	);
+}
+
+// Exported wrapped component with error and loading boundaries
+export function EditPostPageComponent({ slug }: { slug: string }) {
+	const { onRouteError } = usePluginOverrides<BlogPluginOverrides>("blog");
+	return (
+		<ComposedRoute
+			path={`/blog/${slug}/edit`}
+			PageComponent={EditPostPage}
+			ErrorComponent={DefaultError}
+			LoadingComponent={FormLoading}
+			NotFoundComponent={NotFoundPage}
+			props={{ slug }}
+			onError={(error) => {
+				if (onRouteError) {
+					onRouteError("editPost", error, {
+						path: `/blog/${slug}/edit`,
+						isSSR: typeof window === "undefined",
+						slug,
+					});
+				}
+			}}
+		/>
 	);
 }

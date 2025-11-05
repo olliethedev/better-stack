@@ -37,8 +37,8 @@ export function PostCard({ post }: { post: SerializedPost }) {
 	);
 
 	return (
-		<Card className="group relative flex h-full flex-col gap-2 !pt-0 !pb-4 transition-shadow duration-200 hover:shadow-lg">
-			{/* Featured Image or Placeholder */}
+		<Card className="group relative flex h-full flex-col gap-2 pt-0! pb-4! transition-shadow duration-200 hover:shadow-lg">
+			{/* Image or Placeholder */}
 			<Link
 				href={blogPath}
 				className="relative block h-48 w-full overflow-hidden rounded-t-xl bg-muted"

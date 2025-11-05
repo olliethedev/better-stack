@@ -8,17 +8,38 @@ import { useSuspensePosts } from "../../hooks/blog-hooks";
 import { BLOG_LOCALIZATION } from "../../localization";
 import { usePluginOverrides } from "@btst/stack/context";
 import type { BlogPluginOverrides } from "../../overrides";
+import { ComposedRoute } from "@btst/stack/client/components";
+import { DefaultError } from "../shared/default-error";
+import { PostsLoading } from "../loading";
+import { NotFoundPage } from "./404-page";
+import { useRouteLifecycle } from "../shared/use-route-lifecycle";
 
-export function HomePageComponent({
-	published = true,
-}: {
-	published?: boolean;
-}) {
+// Internal component with actual page content
+function HomePage({ published }: { published: boolean }) {
 	const { localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
 	>("blog", {
 		localization: BLOG_LOCALIZATION,
+	});
+
+	// Call lifecycle hooks
+	useRouteLifecycle({
+		routeName: published ? "posts" : "drafts",
+		context: {
+			path: published ? "/blog" : "/blog/drafts",
+			isSSR: typeof window === "undefined",
+			published,
+		},
+		beforeRenderHook: (overrides, context) => {
+			if (published && overrides.onBeforePostsPageRendered) {
+				return overrides.onBeforePostsPageRendered(context);
+			}
+			if (!published && overrides.onBeforeDraftsPageRendered) {
+				return overrides.onBeforeDraftsPageRendered(context);
+			}
+			return true;
+		},
 	});
 
 	return (
@@ -52,6 +73,34 @@ function Content({ published }: { published: boolean }) {
 			onLoadMore={loadMore}
 			hasMore={hasMore}
 			isLoadingMore={isLoadingMore}
+		/>
+	);
+}
+
+// Exported wrapped component with error and loading boundaries
+export function HomePageComponent({
+	published = true,
+}: {
+	published?: boolean;
+}) {
+	const { onRouteError } = usePluginOverrides<BlogPluginOverrides>("blog");
+	return (
+		<ComposedRoute
+			path={published ? "/blog" : "/blog/drafts"}
+			PageComponent={HomePage}
+			ErrorComponent={DefaultError}
+			LoadingComponent={PostsLoading}
+			NotFoundComponent={NotFoundPage}
+			props={{ published }}
+			onError={(error) => {
+				if (onRouteError) {
+					onRouteError("posts", error, {
+						path: published ? "/blog" : "/blog/drafts",
+						isSSR: typeof window === "undefined",
+						published,
+					});
+				}
+			}}
 		/>
 	);
 }

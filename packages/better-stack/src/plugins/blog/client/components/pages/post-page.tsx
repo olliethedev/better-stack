@@ -12,8 +12,14 @@ import { DefaultImage, DefaultLink } from "../shared/defaults";
 import { BLOG_LOCALIZATION } from "../../localization";
 import { PostNavigation } from "../shared/post-navigation";
 import { Badge } from "@workspace/ui/components/badge";
+import { ComposedRoute } from "@btst/stack/client/components";
+import { DefaultError } from "../shared/default-error";
+import { PostLoading } from "../loading";
+import { NotFoundPage } from "./404-page";
+import { useRouteLifecycle } from "../shared/use-route-lifecycle";
 
-export function PostPageComponent({ slug }: { slug: string }) {
+// Internal component with actual page content
+function PostPage({ slug }: { slug: string }) {
 	const { Image, Link, localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
@@ -23,6 +29,22 @@ export function PostPageComponent({ slug }: { slug: string }) {
 		localization: BLOG_LOCALIZATION,
 	});
 	const basePath = useBasePath();
+
+	// Call lifecycle hooks
+	useRouteLifecycle({
+		routeName: "post",
+		context: {
+			path: `/blog/${slug}`,
+			params: { slug },
+			isSSR: typeof window === "undefined",
+		},
+		beforeRenderHook: (overrides, context) => {
+			if (overrides.onBeforePostPageRendered) {
+				return overrides.onBeforePostPageRendered(slug, context);
+			}
+			return true;
+		},
+	});
 
 	const { post } = useSuspensePost(slug ?? "");
 
@@ -78,5 +100,29 @@ export function PostPageComponent({ slug }: { slug: string }) {
 				ref={ref}
 			/>
 		</PageWrapper>
+	);
+}
+
+// Exported wrapped component with error and loading boundaries
+export function PostPageComponent({ slug }: { slug: string }) {
+	const { onRouteError } = usePluginOverrides<BlogPluginOverrides>("blog");
+	return (
+		<ComposedRoute
+			path={`/blog/${slug}`}
+			PageComponent={PostPage}
+			ErrorComponent={DefaultError}
+			LoadingComponent={PostLoading}
+			NotFoundComponent={NotFoundPage}
+			props={{ slug }}
+			onError={(error) => {
+				if (onRouteError) {
+					onRouteError("post", error, {
+						path: `/blog/${slug}`,
+						isSSR: typeof window === "undefined",
+						slug,
+					});
+				}
+			}}
+		/>
 	);
 }
