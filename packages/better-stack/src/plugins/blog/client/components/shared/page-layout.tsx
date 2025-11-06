@@ -12,7 +12,7 @@ export function PageLayout({
 	return (
 		<div
 			className={cn(
-				"container mx-auto flex min-h-dvh flex-col items-center gap-16 px-4 py-18 lg:px-16",
+				"container mx-auto flex min-h-dvh flex-col items-center gap-12 px-4 py-18 lg:px-16",
 				className,
 			)}
 			data-testid={dataTestId}

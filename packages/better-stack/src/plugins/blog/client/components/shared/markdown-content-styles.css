@@ -2,12 +2,29 @@
 	font-family: var(--crepe-font-default);
 	color: var(--crepe-color-on-background);
 	background: var(--crepe-color-background);
-	padding: 10px 20px;
+	padding: 0px;
 }
 
 .milkdown-custom .milkdown .milkdown-content img {
 	vertical-align: bottom;
 	max-width: 100%;
+}
+
+.milkdown-custom .milkdown .milkdown-content .markdown-image-wrapper {
+	display: block;
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	min-height: 200px;
+}
+
+.milkdown-custom .milkdown .milkdown-content .markdown-image-wrapper > div {
+	width: 100%;
+	height: 100%;
+}
+
+.milkdown-custom .milkdown .milkdown-content .markdown-image-wrapper img {
+	object-fit: contain;
 }
 
 .milkdown-custom .milkdown .milkdown-content h1,
@@ -280,7 +297,7 @@
 .milkdown-custom .milkdown .milkdown-content li.task-list-item {
 	position: relative;
 	list-style: none;
-	padding-left: 24px;
+	padding-left: 28px;
 }
 
 .milkdown-custom
@@ -288,12 +305,10 @@
 	.milkdown-content
 	li.task-list-item
 	input[type="checkbox"] {
-	width: 18px;
-	height: 18px;
+	width: 20px;
+	height: 20px;
 	position: absolute;
 	left: 0;
-	top: auto;
-	bottom: 3px;
 	margin: 0;
 }
 

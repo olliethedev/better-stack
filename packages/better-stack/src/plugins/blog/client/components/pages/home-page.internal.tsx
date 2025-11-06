@@ -3,6 +3,7 @@
 import { PageHeader } from "../shared/page-header";
 import { PageWrapper } from "../shared/page-wrapper";
 import { PostsList } from "../shared/posts-list";
+import { TagsList } from "../shared/tags-list";
 
 import { useSuspensePosts } from "../../hooks/blog-hooks";
 import { BLOG_LOCALIZATION } from "../../localization";
@@ -47,11 +48,7 @@ export function HomePage({ published }: { published: boolean }) {
 							? localization.BLOG_LIST_TITLE
 							: localization.BLOG_LIST_DRAFTS_TITLE
 					}
-					description={
-						published
-							? localization.BLOG_LIST_DESCRIPTION
-							: localization.BLOG_LIST_DRAFTS_DESCRIPTION
-					}
+					childrenBottom={<TagsList />}
 				/>
 			</div>
 			<Content published={published} />

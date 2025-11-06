@@ -128,6 +128,10 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 					initialPageParam: 0,
 				});
 
+				// Prefetch tags
+				const tagsQuery = queries.tags.list();
+				await queryClient.prefetchQuery(tagsQuery);
+
 				// Don't throw errors during SSR - let Error Boundaries catch them when components render
 				// React Query stores errors in query state, and Suspense/Error Boundaries handle them
 				// Note: We still call hooks so consumers can log/track errors
@@ -459,8 +463,8 @@ function createTagMeta(tagSlug: string, config: BlogClientConfig) {
 		}
 
 		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/tag/${tag.slug}`;
-		const title = `Posts tagged: ${tag.name}`;
-		const description = `Browse all posts tagged with ${tag.name}`;
+		const title = `${tag.name} Posts`;
+		const description = `Browse all ${tag.name} posts`;
 
 		return [
 			{ title },

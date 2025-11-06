@@ -56,13 +56,30 @@ export default function ExampleLayout({
                             return "https://placehold.co/400/png"
                         },
                         Image: (props) => {
-                            const { alt = "", src = "" } = props as React.ImgHTMLAttributes<HTMLImageElement>
+                            const { alt = "", src = "", width, height, ...rest } = props
+                            
+                            // Use fill mode if width or height are not provided
+                            if (!width || !height) {
+                                return (
+                                    <span className="block relative w-full h-full">
+                                        <Image
+                                            alt={alt}
+                                            src={typeof src === "string" ? src : ""}
+                                            fill
+                                            sizes="400px"
+                                            {...rest}
+                                        />
+                                    </span>
+                                )
+                            }
+                            
                             return (
                                 <Image
                                     alt={alt}
                                     src={typeof src === "string" ? src : ""}
-                                    width={400}
-                                    height={300}
+                                    width={width as number}
+                                    height={height as number}
+                                    {...rest}
                                 />
                             )
                         },

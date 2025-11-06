@@ -95,7 +95,9 @@ test("create post for detail page test", async ({ page }) => {
 
 	// Verify the new post card with title "Hello World" is visible
 	await expect(
-		page.getByText("Hello World", { exact: true }).first(),
+		page
+			.locator('[data-slot="card-title"]')
+			.filter({ hasText: /^Hello World$/ }),
 	).toBeVisible({
 		timeout: 10000,
 	});
@@ -475,7 +477,7 @@ test("tag page renders", async ({ page, request }) => {
 		waitUntil: "networkidle",
 	});
 	await expect(page.locator('[data-testid="tag-page"]')).toBeVisible();
-	await expect(page).toHaveTitle(/Posts tagged: React/i);
+	await expect(page).toHaveTitle(/React Posts/i);
 
 	const maybeEmpty = await page
 		.locator(emptySelector)
@@ -484,7 +486,9 @@ test("tag page renders", async ({ page, request }) => {
 	if (!maybeEmpty) {
 		await expect(page.getByTestId("page-header")).toBeVisible();
 		await expect(
-			page.getByText("Tag Test Post", { exact: true }),
+			page
+				.locator('[data-slot="card-title"]')
+				.filter({ hasText: /^Tag Test Post$/ }),
 		).toBeVisible();
 	}
 
@@ -540,7 +544,7 @@ test("unknown tag page state renders", async ({ page }) => {
 	});
 	await page.goto("/pages/blog/tag/unknown", { waitUntil: "networkidle" });
 	await expect(page.locator('[data-testid="tag-page"]')).toBeVisible();
-	await expect(page).toHaveTitle(/Posts tagged: unknown|Unknown route/i);
+	await expect(page).toHaveTitle(/unknown Posts|Unknown route/i);
 
 	const maybeEmpty = await page
 		.locator(emptySelector)
@@ -648,7 +652,9 @@ async function testLoadMore(
 	// Use exact matching to avoid matching "Test Post 1" with "Test Post 10", "Test Post 11", etc.
 	for (let i = visibleStart; i >= visibleEnd; i--) {
 		await expect(
-			page.getByText(`${titlePrefix} ${i}`, { exact: true }),
+			page
+				.locator('[data-slot="card-title"]')
+				.filter({ hasText: new RegExp(`^${titlePrefix} ${i}$`) }),
 		).toBeVisible();
 	}
 
@@ -656,7 +662,9 @@ async function testLoadMore(
 	if (notVisibleStart !== undefined && notVisibleEnd !== undefined) {
 		for (let i = notVisibleStart; i >= notVisibleEnd; i--) {
 			await expect(
-				page.getByText(`${titlePrefix} ${i}`, { exact: true }),
+				page
+					.locator('[data-slot="card-title"]')
+					.filter({ hasText: new RegExp(`^${titlePrefix} ${i}$`) }),
 			).not.toBeVisible();
 		}
 	}
@@ -671,7 +679,9 @@ async function testLoadMore(
 	// Verify all posts are now visible (still in LIFO order)
 	for (let i = count; i >= 1; i--) {
 		await expect(
-			page.getByText(`${titlePrefix} ${i}`, { exact: true }),
+			page
+				.locator('[data-slot="card-title"]')
+				.filter({ hasText: new RegExp(`^${titlePrefix} ${i}$`) }),
 		).toBeVisible();
 	}
 

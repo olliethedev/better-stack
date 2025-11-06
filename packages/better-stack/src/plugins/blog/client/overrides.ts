@@ -1,5 +1,5 @@
 import type { SerializedPost } from "../types";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
 import type { BlogLocalization } from "./localization";
 
 /**
@@ -19,11 +19,7 @@ export interface RouteContext {
  * to customize the behavior for their framework (Next.js, React Router, etc.)
  */
 export interface BlogPluginOverrides {
-	Link?: ComponentType<{
-		href: string;
-		children: ReactNode;
-		className?: string;
-	}>;
+	Link?: ComponentType<React.ComponentProps<"a"> & Record<string, any>>;
 	PostCard?: ComponentType<{
 		post: SerializedPost;
 	}>;
@@ -38,13 +34,9 @@ export interface BlogPluginOverrides {
 	/**
 	 * Image component for displaying images
 	 */
-	Image?: ComponentType<{
-		src: string;
-		alt: string;
-		className?: string;
-		width?: number | string;
-		height?: number | string;
-	}>;
+	Image?: ComponentType<
+		React.ImgHTMLAttributes<HTMLImageElement> & Record<string, any>
+	>;
 	/**
 	 * Function used to upload an image and return its URL.
 	 */

@@ -52,7 +52,7 @@ export function TagPage({ tagSlug }: { tagSlug: string }) {
 		<PageWrapper testId="tag-page">
 			<div className="flex flex-col items-center gap-3">
 				<PageHeader
-					title={`${localization.BLOG_TAG_PAGE_TITLE} ${tag.name}`}
+					title={`${localization.BLOG_TAG_PAGE_TITLE.replace("{tag}", tag.name)}`}
 					description={localization.BLOG_TAG_PAGE_DESCRIPTION}
 				/>
 			</div>

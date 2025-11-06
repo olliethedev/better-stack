@@ -3,8 +3,6 @@ export const BLOG_LIST = {
 	BLOG_LIST_DRAFTS_TITLE: "Draft Posts",
 	BLOG_LIST_DRAFTS_DESCRIPTION:
 		"Draft posts are posts that are not published yet.",
-	BLOG_LIST_TAG_TITLE: "Posts: {tag}",
-	BLOG_LIST_TAG_DESCRIPTION: "All posts tagged with {tag}",
 	BLOG_LIST_DESCRIPTION: "Discover our latest articles and insights",
 	BLOG_LIST_EMPTY: "There are no posts here yet.",
 	BLOG_LIST_LOAD_MORE: "Load more posts",
@@ -17,7 +15,7 @@ export const BLOG_LIST = {
 	BLOG_LIST_SEARCH_EMPTY: "No blog posts found.",
 	BLOG_LIST_ERROR_TITLE: "Whoops!",
 	BLOG_LIST_ERROR: "Failed to load posts",
-	BLOG_TAG_PAGE_TITLE: "Posts tagged:",
+	BLOG_TAG_PAGE_TITLE: "{tag} Posts",
 	BLOG_TAG_PAGE_DESCRIPTION: "Browse all posts with this tag",
 	BLOG_TAG_NOT_FOUND: "Tag not found",
 	BLOG_TAG_NOT_FOUND_DESCRIPTION: "The tag you are looking for does not exist.",

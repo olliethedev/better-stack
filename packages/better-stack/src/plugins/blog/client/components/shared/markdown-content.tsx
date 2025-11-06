@@ -55,6 +55,18 @@ function getNodeText(node: ReactNode): string {
 	return "";
 }
 
+// Deterministic hash function for generating consistent IDs
+function simpleHash(str: string): string {
+	let hash = 0;
+	for (let i = 0; i < str.length; i++) {
+		const char = str.charCodeAt(i);
+		hash = (hash << 5) - hash + char;
+		hash = hash & hash; // Convert to 32-bit integer
+	}
+	// Convert to base36 and take first 6 characters (matching Math.random().toString(36).slice(2, 8))
+	return Math.abs(hash).toString(36).slice(0, 6);
+}
+
 function isCheckboxElement(
 	node: ReactNode,
 ): node is ReturnType<typeof createElement> {
@@ -85,7 +97,9 @@ function createTaskListItemRenderer() {
 
 		const labelText = getNodeText(nonCheckboxChildren as unknown as ReactNode);
 		const baseId = slugify(labelText || "task-item");
-		const uniqueId = `${baseId}-${Math.random().toString(36).slice(2, 8)}`;
+		// Use deterministic hash instead of Math.random() to avoid hydration mismatches
+		const hashSuffix = simpleHash(labelText || "task-item");
+		const uniqueId = `${baseId}-${hashSuffix}`;
 
 		return (
 			<li className={className} {...rest}>
@@ -156,18 +170,33 @@ function ImgRenderer(props: React.ImgHTMLAttributes<HTMLImageElement>) {
 		className: imgClassName,
 		width,
 		height,
+		style,
 		...rest
 	} = props;
-	return (
-		<Image
-			src={src}
-			alt={alt}
-			className={imgClassName as string}
-			width={width as number}
-			height={height as number}
-			{...rest}
-		/>
-	);
+
+	// Only pass width/height if they're actually defined
+	const imageProps: React.ComponentProps<typeof Image> = {
+		src,
+		alt,
+		className: imgClassName as string,
+		style,
+		...rest,
+	};
+
+	if (width != null && height != null) {
+		imageProps.width = width as number;
+		imageProps.height = height as number;
+	} else {
+		// When dimensions are missing, wrap in a container for fill mode
+		// The container will be styled via CSS to work with fill mode images
+		return (
+			<span className="markdown-image-wrapper">
+				<Image {...imageProps} />
+			</span>
+		);
+	}
+
+	return <Image {...imageProps} />;
 }
 
 type CodeProps = React.HTMLAttributes<HTMLElement> & {

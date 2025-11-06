@@ -310,6 +310,41 @@ export function useTags(): {
 	};
 }
 
+/** Suspense variant of useTags */
+export function useSuspenseTags(): {
+	tags: SerializedTag[];
+	refetch: () => Promise<unknown>;
+} {
+	const { apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
+	const queries = createBlogQueryKeys(client);
+	const baseTags = queries.tags.list();
+	const { data, refetch, error, isFetching } = useSuspenseQuery<
+		SerializedTag[] | null,
+		Error,
+		SerializedTag[] | null,
+		typeof baseTags.queryKey
+	>({
+		...baseTags,
+		...SHARED_QUERY_CONFIG,
+	});
+
+	// Manually throw errors for Error Boundaries (per React Query Suspense docs)
+	// useSuspenseQuery only throws errors if there's no data, but we want to throw always
+	if (error && !isFetching) {
+		throw error;
+	}
+
+	return {
+		tags: data ?? [],
+		refetch,
+	};
+}
+
 /** Create a new post */
 export function useCreatePost() {
 	const { refresh, apiBaseURL, apiBasePath } =
