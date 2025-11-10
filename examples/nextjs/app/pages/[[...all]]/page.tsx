@@ -1,10 +1,15 @@
 
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
+import type { DehydratedState } from "@tanstack/react-query"
 import { notFound } from "next/navigation"
-import { makeQueryClient } from "@/lib/query-client"
-import { router } from "@/lib/better-stack-client"
+import { getOrCreateQueryClient } from "@/lib/query-client"
+import { getStackClient } from "@/lib/better-stack-client"
+import { metaElementsToObject } from "@btst/stack/client"
+import { Metadata } from "next"
 
-const baseURL = process.env.BASE_URL ?? "http://localhost:3000"
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function ExamplePage({
     params
@@ -14,27 +19,63 @@ export default async function ExamplePage({
     const pathParams = await params
     const path = pathParams?.all ? `/${pathParams.all.join("/")}` : "/"
 
+    // Create a queryClient for this request
+    const queryClient = getOrCreateQueryClient()
 
-    const route = router.getRoute(path)
+    const stackClient = getStackClient(queryClient)
 
-    if (!route) {
-        return notFound()
+    const route = stackClient.router.getRoute(path)
+
+    // Load data server-side if loader exists
+    if (route?.loader) {
+        await route.loader()
+    }
+    
+    // Dehydrate with errors included so client doesn't refetch on error
+    const dehydratedState: DehydratedState = dehydrate(queryClient, {
+        shouldDehydrateQuery: (query) => {
+            // Include both successful and failed queries
+            // This prevents refetching on the client when there's an error
+            return query.state.status === 'success' || query.state.status === 'error';
+        },
+    })
+    console.log("[SSR] Dehydrated queries:", Object.keys(dehydratedState.queries || {}).length, "queries")
+    if (dehydratedState.queries && dehydratedState.queries.length > 0) {
+        dehydratedState.queries.forEach((q) => {
+            console.log("[SSR] - Query:", JSON.stringify(q.queryKey), "state:", q.state.status)
+        })
     }
 
-    const { PageComponent, loader } = route
-    const queryClient = makeQueryClient()
-
-    if (loader) {
-        await loader(queryClient, baseURL)
-    }
-    if (!PageComponent) {
-        return notFound()
-    }
-
+    // Pass path to client resolver which has access to router via closure
     return (
-        <HydrationBoundary state={dehydrate(queryClient)}>
-            <PageComponent />
+        <HydrationBoundary state={dehydratedState}>
+            {route && route.PageComponent ? <route.PageComponent /> : notFound()}
         </HydrationBoundary>
     )
 
+}
+
+//meta
+export async function generateMetadata({ params }: { params: Promise<{ all: string[] }> }) {
+    const pathParams = await params
+    const path = pathParams?.all ? `/${pathParams.all.join("/")}` : "/"
+    // Create a queryClient for this request
+    const queryClient = getOrCreateQueryClient()
+    const stackClient = getStackClient(queryClient)
+    const route = stackClient.router.getRoute(path)
+    if (!route) {
+        return notFound()
+    }
+    if (!route.meta) {
+        return {
+            title: "No meta for this route"
+        }
+    }
+    
+    // Load data for metadata if loader exists
+    if (route?.loader) {
+        await route.loader()
+    }
+    
+    return metaElementsToObject(route.meta()) satisfies Metadata
 }

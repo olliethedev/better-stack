@@ -1,791 +1,238 @@
-# Better Stack
+# @BTST - Better Stack
 
 <div align="center">
 
-**A composable, plugin-based framework for building full-stack TypeScript applications**
+**Add complete full-stack features to your React app in minutes, not weeks**
 
 [![npm version](https://img.shields.io/npm/v/@btst/stack.svg)](https://www.npmjs.com/package/@btst/stack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[📖 Documentation](https://www.btst.ai) • [🐛 Issues](https://github.com/olliethedev/better-stack/issues)
+
 </div>
 
-## Overview
+---
 
-Better Stack is a modern, type-safe framework for building full-stack applications with a plugin architecture. It seamlessly integrates:
+## What Problem Does This Solve?
 
-- **🔌 Plugin Architecture** - Build modular, reusable features as standalone plugins
-- **🔄 Full-Stack Type Safety** - End-to-end TypeScript with automatic type inference, no casts needed
-- **🗄️ Schema-First Database** - Define your data models once using Better DB with typed adapters
-- **🚀 Production Ready** - Built on proven libraries (Better Call, Better DB, Yar Router)
-- **⚡ Zero Config** - Works out of the box with sensible defaults
-- **✨ Developer Experience** - Helper functions preserve route keys, hook names, and endpoint types
+Your app needs a blog. Or a scheduling system. Or user feedback collection. Or an AI assistant. These are **horizontal features**—capabilities that cut across your entire app, not specific to your core domain.
+
+Building them from scratch means weeks of work: routes, API endpoints, database schemas, authentication, SSR, metadata, hooks, forms, error handling...
+
+Better Stack lets you **add these features in minutes** as composable plugins that work across any React framework.
+
+- **Composable architecture** - Mix and match features like LEGO blocks. Add blog + scheduling + feedback + newsletters, all working together seamlessly
+- **Framework agnostic** - One feature works with Next.js App Router, React Router, TanStack Router, Remix—switch frameworks without rewriting
+- **Plugin overrides** - Leverage framework-specific features via overrides. Use Next.js `Image` and `Link`, React Router's `Link`, or any framework's components
+- **Full-stack in one package** - Each feature includes routes, API endpoints, database schemas, React components, hooks, loaders, and metadata
+- **Zero boilerplate** - No wiring up routes, API handlers, or query clients. Just configure and it works
+- **First-class SSR** - Server-side rendering, data prefetching, and SEO metadata generation built-in
+- **Lifecycle hooks** - Intercept at any point: authorization, data transformation, analytics, caching, webhooks
+- **Horizontal features** - Perfect for blog, scheduling, feedback, newsletters, AI assistants, comments—anything reusable across apps
+
+## What Can You Add?
+
+**Blog** - Content management, editor, drafts, publishing, SEO, RSS feeds
+
+**Scheduling** - Calendar views, time slot booking, availability management, reminders
+
+**Feedback** - In-app feedback widgets, user surveys, bug reporting, feature requests
+
+**Newsletters** - Subscriber management, email campaigns, unsubscribe handling, analytics
+
+**AI Assistant** - Chat interfaces, prompt templates, conversation history, streaming responses
+
+**Comments** - Threaded discussions, moderation, reactions, notifications
+
+And any other horizontal feature your app needs. Each comes with a complete UI, backend, and data layer.
 
 ## Installation
 
 ```bash
 npm install @btst/stack
-# or
-pnpm add @btst/stack
-# or
-yarn add @btst/stack
 ```
 
-### Dependencies
-
-Better Stack works with your existing stack:
+For database schema management, install the CLI:
 
 ```bash
-npm install @btst/db @btst/adapter-memory better-call @btst/yar zod
+npm install -D @btst/cli
 ```
 
-## Quick Start
+The CLI helps generate migrations, Prisma schemas, and other database artifacts from your plugin schemas.
 
-### 1. Create Your Backend API
+## Quick Example: Add a Blog to Next.js
 
-```typescript
-// app/api/route.ts
-import { betterStack } from "@btst/stack/api";
-import { myPlugin } from "./plugins/my-plugin";
-import { createMemoryAdapter } from "@btst/adapter-memory";
+### 1. Backend API (`lib/better-stack.ts`)
 
-const api = betterStack({
+```ts
+import { betterStack } from "@btst/stack"
+import { blogBackendPlugin } from "@btst/stack/plugins/blog/api"
+import { createPrismaAdapter } from "@btst/adapter-prisma"
+
+const { handler, dbSchema } = betterStack({
+  basePath: "/api/data",
   plugins: {
-    myFeature: myPlugin.backend,
+    blog: blogBackendPlugin()
   },
-  adapter: createMemoryAdapter,
-});
+  adapter: (db) => createPrismaAdapter(db)({})
+})
 
-// Export for Next.js App Router
-export const GET = api.handler;
-export const POST = api.handler;
-export const PUT = api.handler;
-export const DELETE = api.handler;
-export const PATCH = api.handler;
+export { handler, dbSchema }
 ```
 
-### 2. Create Your Client
+**Note:** `betterStack()` returns both `handler` and `dbSchema`. The `dbSchema` contains all merged database schemas from your plugins. Use [@btst/cli](https://www.npmjs.com/package/@btst/cli) to generate migrations, Prisma schemas, or other database artifacts from your `dbSchema`.
 
-```typescript
-// app/lib/client.ts
-import { createStackClient } from "@btst/stack/client";
-import { myPlugin } from "./plugins/my-plugin";
+For example, to generate a Prisma schema from your `dbSchema`:
 
-export const client = createStackClient({
-  plugins: {
-    myFeature: myPlugin.client,
-  },
-});
-
-// Access router and hooks
-export const { router, hooks } = client;
+```bash
+npx @btst/cli generate --orm prisma --config lib/better-db.ts --output prisma/schema.prisma --filter-auth
 ```
 
-### 3. Use in Your Components
+This reads your `dbSchema` export and generates the corresponding Prisma schema file.
 
-```tsx
-// app/components/MyComponent.tsx
-"use client";
-import { hooks } from "../lib/client";
+### 2. API Route (`app/api/[[...]]/route.ts`)
 
-export function MyComponent() {
-  const { useMyData } = hooks.myFeature;
-  const { data, isLoading } = useMyData();
+```ts
+import { handler } from "@/lib/better-stack"
 
-  if (isLoading) return <div>Loading...</div>;
-
-  return (
-    <div>
-      {data?.items.map((item) => (
-        <div key={item.id}>{item.name}</div>
-      ))}
-    </div>
-  );
-}
+export const GET = handler
+export const POST = handler
 ```
 
-## Building Custom Plugins
+### 3. Client Setup (`lib/better-stack-client.tsx`)
 
-Better Stack's power comes from its plugin architecture. Here's how to build your own:
+```ts
+import { createStackClient } from "@btst/stack/client"
+import { blogClientPlugin } from "@btst/stack/plugins/blog/client"
 
-### Plugin Architecture
-
-Better Stack uses **separate backend and client plugins** to:
-- ✅ Prevent SSR issues
-- ✅ Enable better code splitting
-- ✅ Allow independent deployment and versioning
-- ✅ Improve tree-shaking
-
-Each plugin type is completely independent:
-
-1. **Backend Plugin** - API endpoints, database schema, and business logic
-2. **Client Plugin** - Routes, components, and React hooks
-
-### Example: Messages Plugin (Backend)
-
-```typescript
-// plugins/messages/backend.ts
-import { createDbPlugin } from "@btst/db";
-import { createEndpoint } from "better-call";
-import { z } from "zod";
-import {
-  defineBackendPlugin,
-  type BetterAuthDBSchema,
-} from "@btst/stack/plugins";
-
-// 1. Define your schema
-const messagesSchema: BetterAuthDBSchema = {
-  messages: {
-    modelName: "Message",
-    fields: {
-      id: {
-        type: "number",
-        unique: true,
-        required: true,
-      },
-      content: {
-        type: "string",
-        required: true,
-      },
-      userId: {
-        type: "string",
-        required: true,
-      },
-      createdAt: {
-        type: "number",
-        required: true,
-      },
-    },
-  },
-};
-
-// 2. Create and export the backend plugin with full type inference
-export const messagesBackendPlugin = defineBackendPlugin({
-  name: "messages",
-  dbPlugin: createDbPlugin("messages", messagesSchema),
-  routes: (adapter) => ({
-    // List messages
-    list: createEndpoint(
-      "/messages",
-      {
-        method: "GET",
-        query: z.object({
-          userId: z.string().optional(),
-        }),
-      },
-      async ({ query }) => {
-        const messages = await adapter.findMany({
-          model: "messages",
-          where: query.userId
-            ? [{ field: "userId", value: query.userId, operator: "eq" }]
-            : undefined,
-        });
-        return {
-          status: 200,
-          body: messages,
-        };
-      }
-    ),
-
-    // Create message
-    create: createEndpoint(
-      "/messages",
-      {
-        method: "POST",
-        body: z.object({
-          content: z.string().min(1),
-          userId: z.string().min(1),
-        }),
-      },
-      async ({ body }) => {
-        const message = await adapter.create({
-          model: "messages",
-          data: {
-            ...body,
-            id: Date.now(),
-            createdAt: Date.now(),
-          },
-        });
-        return {
-          status: 201,
-          body: message,
-        };
-      }
-    ),
-
-    // Delete message
-    delete: createEndpoint(
-      "/messages/:id",
-      {
-        method: "DELETE",
-        params: z.object({
-          id: z.coerce.number(),
-        }),
-      },
-      async ({ params }) => {
-        await adapter.delete({
-          model: "messages",
-          where: [{ field: "id", value: params.id, operator: "eq" }],
-        });
-        return {
-          status: 204,
-          body: null,
-        };
-      }
-    ),
-  }),
-});
-```
-
-### Example: Messages Plugin (Client)
-
-```typescript
-// plugins/messages/client.ts
-import { defineClientPlugin } from "@btst/stack/plugins";
-import { createRoute } from "@btst/yar";
-import { useQuery } from "@tanstack/react-query";
-
-// Components
-const MessagesPage = ({ data }: { data: any }) => (
-  <div>{/* Render messages */}</div>
-);
-
-// Create and export the client plugin with full type inference
-export const messagesClientPlugin = defineClientPlugin({
-  name: "messages",
-  routes: () => ({
-    // Use Yar's createRoute for proper route creation
-    messagesList: createRoute(
-      "/messages",
-      () => ({
-        PageComponent: MessagesPage,
-        loader: async () => {
-          const response = await fetch("/api/messages");
-          return response.json();
-        },
-        meta: (data) => [
-          { name: "title", content: "Messages" },
-          { name: "description", content: `${data.length} messages` },
-        ],
+export const getStackClient = (queryClient: QueryClient) => {
+  return createStackClient({
+    plugins: {
+      blog: blogClientPlugin({
+        queryClient,
+        apiBaseURL: baseURL,
+        apiBasePath: "/api/data",
+        siteBaseURL: baseURL,
+        siteBasePath: "/pages"
       })
-    ),
-  }),
-  hooks: () => ({
-    useMessages: () => {
-      // Use React Query or your preferred data fetching library
-      return useQuery({
-        queryKey: ["messages"],
-        queryFn: async () => {
-          const response = await fetch("/api/messages");
-          return response.json();
-        },
-      });
-    },
-  }),
-});
-```
-
-> **💡 Type Safety Tip:** Using `defineClientPlugin` and `defineBackendPlugin` helpers ensures full type inference without needing type annotations or casts. Your route keys, hook names, and endpoint types are automatically preserved!
-
-### Using Your Plugins
-
-Backend and client plugins are used independently in their respective contexts:
-
-#### Backend Usage
-
-```typescript
-// app/api/route.ts (Backend only)
-import { betterStack } from "@btst/stack/api";
-import { messagesBackendPlugin } from "./plugins/messages/backend";
-import { createMemoryAdapter } from "@btst/adapter-memory";
-
-const api = betterStack({
-  plugins: {
-    messages: messagesBackendPlugin,
-  },
-  adapter: createMemoryAdapter,
-});
-
-export const GET = api.handler;
-export const POST = api.handler;
-```
-
-#### Client Usage
-
-```typescript
-// app/lib/client.ts (Client only)
-import { createStackClient } from "@btst/stack/client";
-import { messagesClientPlugin } from "./plugins/messages/client";
-
-const client = createStackClient({
-  plugins: {
-    messages: messagesClientPlugin,
-  },
-});
-
-export const { router, hooks } = client;
-
-// Use in components
-// const { useMessages } = hooks.messages;
-```
-
-## Core Concepts
-
-### 1. Plugins
-
-Plugins are self-contained features that can be composed together. Each plugin can provide:
-
-- **Database Schema** - Table definitions using Better DB
-- **API Endpoints** - Type-safe REST endpoints using Better Call
-- **Client Routes** - Page routing using Yar Router
-- **React Hooks** - Data fetching and mutations
-
-### 2. Adapters
-
-Adapters connect your plugins to different databases:
-
-```typescript
-// Memory (for testing)
-import { createMemoryAdapter } from "@btst/adapter-memory";
-
-// PostgreSQL
-import { createPgAdapter } from "@btst/adapter-pg";
-
-// MongoDB
-import { createMongoAdapter } from "@btst/adapter-mongo";
-
-const api = betterStack({
-  plugins: { /* ... */ },
-  adapter: createMemoryAdapter, // or createPgAdapter, createMongoAdapter
-});
-```
-
-### 3. Type Safety
-
-Better Stack provides end-to-end type safety with automatic type inference:
-
-```typescript
-// ✅ Backend: Route keys and endpoint types are preserved
-const myPlugin = defineBackendPlugin({
-  name: "users",
-  routes: (adapter) => ({
-    getUser: createEndpoint(
-      "/users/:id",
-      {
-        method: "GET",
-        params: z.object({ id: z.string() }),
-      },
-      async ({ params }) => {
-        // params.id is typed as string
-        return { status: 200, body: { id: params.id, name: "John" } };
-      }
-    ),
-    listUsers: createEndpoint(/* ... */),
-  })
-});
-// Type: BackendPlugin<{ getUser: Endpoint, listUsers: Endpoint }>
-
-// ✅ Client: Route keys and hook types are preserved
-const myClientPlugin = defineClientPlugin({
-  name: "users",
-  routes: () => ({
-    userProfile: { path: "/users/:id", Component: UserProfile },
-    usersList: { path: "/users", Component: UsersList },
-  }),
-  hooks: () => ({
-    useUser: (id: string) => { /* ... */ },
-    useUsers: () => { /* ... */ },
-  })
-});
-// Routes "userProfile" and "usersList" are fully typed!
-// Hooks "useUser" and "useUsers" are accessible via hooks.users.*
-
-```
-
-## Plugin Utilities
-
-Better Stack exports utilities for building plugins:
-
-```typescript
-// Type-safe plugin helpers (recommended)
-import {
-  defineBackendPlugin,
-  defineClientPlugin,
-} from "@btst/stack/plugins";
-
-// Type definitions for backend plugins
-import type {
-  BackendPlugin,
-  Adapter,
-  DatabaseDefinition,
-  Endpoint,
-  Router,
-} from "@btst/stack/plugins";
-
-// Type definitions for client plugins
-import type {
-  ClientPlugin,
-  Route,
-} from "@btst/stack/plugins";
-
-// Utilities (can be used in both)
-import {
-  createApiClient,
-} from "@btst/stack/plugins";
-```
-
-### Type-Safe Plugin Helpers
-
-Use `defineBackendPlugin` and `defineClientPlugin` for automatic type inference:
-
-```typescript
-// ✅ Recommended: Full type inference, no casts needed
-const myPlugin = defineBackendPlugin({
-  name: "myFeature",
-  routes: (adapter) => ({
-    list: endpoint(...),
-    create: endpoint(...),
-  })
-});
-// Route keys "list" and "create" are fully typed!
-
-// ❌ Old way: Manual type annotation
-const myPlugin: BackendPlugin = {
-  name: "myFeature",
-  routes: (adapter) => ({
-    list: endpoint(...),
-    create: endpoint(...),
-  })
-};
-// Route keys are erased to generic Record<string, Endpoint>
-```
-
-### Why Separate Backend and Client Plugins?
-
-**Traditional Approach (Unified Plugin):**
-```typescript
-// ❌ This can cause SSR issues and bundle bloat
-export const myPlugin = {
-  backend: { /* server-side code */ },
-  client: { /* client-side code */ },
-};
-```
-
-**Better Stack Approach (Separated Plugins):**
-```typescript
-// ✅ Backend stays on the server
-// plugins/my-plugin/backend.ts
-export const myBackendPlugin: BackendPlugin = { /* ... */ };
-
-// ✅ Client stays on the client
-// plugins/my-plugin/client.ts
-export const myClientPlugin: ClientPlugin = { /* ... */ };
-```
-
-**Benefits:**
-1. **No SSR Issues** - Server code never reaches the client bundle
-2. **Better Code Splitting** - Frontend and backend can be deployed separately
-3. **Smaller Bundles** - Client bundles don't include server dependencies
-4. **Independent Versioning** - Update backend without touching frontend
-5. **Type Safety** - TypeScript ensures correct usage in each context
-
-### API Client Utility
-
-Create a typed API client for server-side or client-side requests:
-
-```typescript
-import { createApiClient } from "@btst/stack/plugins";
-
-// For server-side (SSR)
-const api = createApiClient({
-  baseURL: "http://localhost:3000",
-  basePath: "/api",
-});
-
-// For client-side (uses relative URLs)
-const api = createApiClient({
-  basePath: "/api",
-});
-```
-
-## Testing Your Plugins
-
-Better Stack includes comprehensive testing utilities:
-
-```typescript
-// __tests__/my-plugin.test.ts
-import { describe, it, expect } from "vitest";
-import { betterStack } from "@btst/stack/api";
-import { createMemoryAdapter } from "@btst/adapter-memory";
-import { myBackendPlugin } from "../plugins/my-plugin/backend";
-
-describe("My Backend Plugin", () => {
-  it("should create and retrieve items", async () => {
-    // Adapter wrapper for testing
-    const testAdapter = (db) => createMemoryAdapter(db)({});
-    
-    const api = betterStack({
-      plugins: { myFeature: myBackendPlugin },
-      adapter: testAdapter,
-    });
-
-    // Create an item
-    const createResponse = await api.handler(
-      new Request("http://localhost:3000/api/items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "Test Item" }),
-      })
-    );
-
-    expect(createResponse.status).toBe(201);
-
-    // Retrieve items
-    const listResponse = await api.handler(
-      new Request("http://localhost:3000/api/items", {
-        method: "GET",
-      })
-    );
-
-    const items = await listResponse.json();
-    expect(items).toHaveLength(1);
-    expect(items[0].name).toBe("Test Item");
-  });
-});
-```
-
-## Framework Integration
-
-### Next.js App Router
-
-```typescript
-// app/api/[...route]/route.ts
-import { betterStack } from "@btst/stack/api";
-
-const api = betterStack({
-  plugins: { /* ... */ },
-  adapter: /* ... */,
-});
-
-export const GET = api.handler;
-export const POST = api.handler;
-export const PUT = api.handler;
-export const DELETE = api.handler;
-export const PATCH = api.handler;
-```
-
-### Next.js Pages Router
-
-```typescript
-// pages/api/[...route].ts
-import { betterStack } from "@btst/stack/api";
-
-const api = betterStack({
-  plugins: { /* ... */ },
-  adapter: /* ... */,
-});
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const request = new Request(
-    `http://localhost:3000${req.url}`,
-    {
-      method: req.method,
-      headers: req.headers as HeadersInit,
-      body: req.method !== "GET" ? JSON.stringify(req.body) : undefined,
     }
-  );
-
-  const response = await api.handler(request);
-  const data = await response.json();
-
-  res.status(response.status).json(data);
+  })
 }
 ```
 
-### Standalone Express/Node.js
+### 4. Page Handler (`app/pages/[[...all]]/page.tsx`)
 
-```typescript
-import express from "express";
-import { betterStack } from "@btst/stack/api";
-
-const api = betterStack({
-  plugins: { /* ... */ },
-  adapter: /* ... */,
-});
-
-const app = express();
-
-app.all("/api/*", async (req, res) => {
-  const request = new Request(`http://localhost:3000${req.url}`, {
-    method: req.method,
-    headers: req.headers as HeadersInit,
-    body: req.method !== "GET" ? JSON.stringify(req.body) : undefined,
-  });
-
-  const response = await api.handler(request);
-  const data = await response.json();
-
-  res.status(response.status).json(data);
-});
-
-app.listen(3000);
-```
-
-## Architecture
-
-Better Stack is built on top of proven libraries:
-
-```
-┌─────────────────────────────────────────┐
-│           Better Stack                   │
-│  (Plugin Composition & Type Safety)     │
-├─────────────────────────────────────────┤
-│  Better Call  │  Better DB  │  Yar      │
-│  (API Layer)  │  (Database) │  (Router) │
-└─────────────────────────────────────────┘
-```
-
-### Core Libraries
-
-- **[Better Call](https://github.com/olliethedev/better-call)** - Type-safe API endpoints with automatic request/response handling
-- **[Better DB](https://github.com/olliethedev/better-auth)** - Schema-first database ORM with multiple adapter support
-- **[Yar Router](https://github.com/olliethedev/yar)** - Lightweight client-side router for React
-
-## Publishing Your Plugin
-
-Want to share your plugin with the community? Publish backend and client as separate packages for maximum flexibility.
-
-### Publishing Backend Plugin
-
-1. Create backend package:
-```bash
-mkdir my-plugin-backend
-cd my-plugin-backend
-npm init
-```
-
-2. Structure:
-```
-my-plugin-backend/
-├── src/
-│   └── index.ts      # Export BackendPlugin
-├── package.json
-└── tsconfig.json
-```
-
-3. Add peer dependencies:
-```json
-{
-  "name": "@yourorg/my-plugin-backend",
-  "peerDependencies": {
-    "@btst/stack": "^1.0.0",
-    "@btst/db": "^1.0.0",
-    "better-call": "^1.0.19"
-  }
+```ts
+export default async function Page({ params }) {
+  const path = `/${(await params).all?.join("/") || ""}`
+  const stackClient = getStackClient(queryClient)
+  const route = stackClient.router.getRoute(path)
+  
+  if (route?.loader) await route.loader()
+  
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ClientRouteResolver path={path} />
+    </HydrationBoundary>
+  )
 }
 ```
 
-### Publishing Client Plugin
+### 5. Layout Provider (`app/pages/[[...all]]/layout.tsx`)
 
-1. Create client package:
-```bash
-mkdir my-plugin-client
-cd my-plugin-client
-npm init
-```
+```ts
+import { BetterStackProvider } from "@btst/stack/context"
+import Link from "next/link"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 
-2. Structure:
-```
-my-plugin-client/
-├── src/
-│   └── index.tsx     # Export ClientPlugin
-├── package.json
-└── tsconfig.json
-```
-
-3. Add peer dependencies:
-```json
-{
-  "name": "@yourorg/my-plugin-client",
-  "peerDependencies": {
-    "@btst/stack": "^1.0.0",
-    "@btst/yar": "^1.1.1",
-    "react": "^18.0.0 || ^19.0.0"
-  }
+export default function Layout({ children }) {
+  const router = useRouter()
+  
+  return (
+    <BetterStackProvider
+      basePath="/pages"
+      overrides={{
+        blog: {
+          // Use Next.js optimized Image component
+          Image: (props) => (
+            <Image
+              alt={props.alt || ""}
+              src={props.src || ""}
+              width={400}
+              height={300}
+            />
+          ),
+          // Use Next.js Link for client-side navigation
+          navigate: (path) => router.push(path),
+          refresh: () => router.refresh()
+        }
+      }}
+    >
+      {children}
+    </BetterStackProvider>
+  )
 }
 ```
 
-4. Users can install only what they need:
-```bash
-# Server-only deployment
-npm install @yourorg/my-plugin-backend
+### 6. Sitemap Generation (`app/sitemap.ts`)
 
-# Client-only deployment
-npm install @yourorg/my-plugin-client
+```ts
+import type { MetadataRoute } from "next"
+import { QueryClient } from "@tanstack/react-query"
+import { getStackClient } from "@/lib/better-stack-client"
 
-# Full-stack deployment
-npm install @yourorg/my-plugin-backend @yourorg/my-plugin-client
+export const dynamic = "force-dynamic"
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const queryClient = new QueryClient()
+  const stackClient = getStackClient(queryClient)
+  const entries = await stackClient.generateSitemap()
+
+  return entries.map((e) => ({
+    url: e.url,
+    lastModified: e.lastModified,
+    changeFrequency: e.changeFrequency,
+    priority: e.priority,
+  }))
+}
 ```
+
+**That's it.** Your blog feature is live with:
+- ✅ `/blog` - Post listing page
+- ✅ `/blog/[slug]` - Individual post pages  
+- ✅ `/blog/new` - Create post editor
+- ✅ `/blog/[slug]/edit` - Edit post page
+- ✅ Full CRUD API (`/api/data/blog/*`)
+- ✅ Server-side rendering
+- ✅ Automatic metadata generation
+- ✅ Automatic sitemap generation
+- ✅ React Query hooks (`usePosts`, `usePost`, etc.)
+
+Now add scheduling, feedback, or newsletters the same way. Each feature is independent and composable.
+
+## The Bigger Picture
+
+Better Stack transforms how you think about building apps:
+
+• **Internal teams** - Build shared features once, use across multiple apps. Your marketing team's blog plugin works in the main app, the docs site, and the landing page
+• **Open source** - Share complete features, not just code snippets. Someone can add your newsletter feature to their Next.js app in minutes
+• **Agencies** - Create a library of reusable features. Drop scheduling into client A's app, feedback into client B's app, both using React Router
+• **SaaS platforms** - Offer feature plugins your customers can compose. They pick blog + scheduling + AI assistant, mix and match to build their ideal app
+• **Rapid prototyping** - Add 5 features in an afternoon instead of 5 weeks. Validate ideas faster
+
+Each feature is a complete, self-contained full-stack capability. No configuration files. No code generation. No framework lock-in. Just add it and it works.
+
+## Learn More
+
+For complete documentation, examples, and plugin development guides, visit **[https://www.btst.ai](https://www.btst.ai)**
 
 ## Examples
 
-Check out example plugins and applications:
-
-- **Messages Plugin** - See `src/__tests__/plugins.test.ts` for a complete example
-- **Coming Soon**: Example applications in the `examples/` directory
-
-## API Reference
-
-### Backend API
-
-```typescript
-betterStack(config: BackendLibConfig): BackendLib
-```
-
-Creates a backend instance with plugins and returns an API handler.
-
-**Parameters:**
-- `plugins` - Record of plugin instances
-- `adapter` - Database adapter function
-- `dbSchema` - (Optional) Additional database schema
-
-**Returns:**
-- `handler` - Request handler for your framework
-- `router` - Better Call router instance
-- `dbSchema` - Combined database schema
-
-### Client API
-
-```typescript
-createStackClient<TPlugins>(config: ClientLibConfig<TPlugins>): ClientLib
-```
-
-Creates a client instance with plugins and returns router and hooks.
-
-**Parameters:**
-- `plugins` - Record of plugin instances
-- `baseURL` - (Optional) Base URL for API calls
-- `basePath` - (Optional) API path prefix (default: "/api")
-
-**Returns:**
-- `router` - Yar router instance
-- `hooks` - Plugin hooks organized by plugin name
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+- [Next.js App Router](./examples/nextjs) - Full SSR with App Router
+- [React Router](./examples/react-router) - Client-side routing with React Router
+- [TanStack Router](./examples/tanstack) - Type-safe routing with TanStack Router
 
 ## License
 
 MIT © [olliethedev](https://github.com/olliethedev)
-
-## Support
-
-- 📖 [Documentation](https://github.com/olliethedev/better-stack)
-- 🐛 [Issue Tracker](https://github.com/olliethedev/better-stack/issues)
-- 💬 [Discussions](https://github.com/olliethedev/better-stack/discussions)
-
----
-
-<div align="center">
-  <strong>Built with ❤️ using Better Stack</strong>
-</div>

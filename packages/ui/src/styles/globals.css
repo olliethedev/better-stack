@@ -1,0 +1,5 @@
+@source "../components/**/*.{ts,tsx}";
+@source "../hooks/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
+
+

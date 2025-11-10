@@ -1,0 +1,672 @@
+import {
+	defineClientPlugin,
+	createApiClient,
+} from "@btst/stack/plugins/client";
+import { createRoute } from "@btst/yar";
+import type { QueryClient } from "@tanstack/react-query";
+import type { BlogApiRouter } from "../api";
+import { createBlogQueryKeys } from "../query-keys";
+import type { Post, SerializedPost, SerializedTag } from "../types";
+import { HomePageComponent } from "./components/pages/home-page";
+import { NewPostPageComponent } from "./components/pages/new-post-page";
+import { EditPostPageComponent } from "./components/pages/edit-post-page";
+import { TagPageComponent } from "./components/pages/tag-page";
+import { PostPageComponent } from "./components/pages/post-page";
+
+/**
+ * Context passed to route hooks
+ */
+export interface RouteContext {
+	path: string;
+	params?: Record<string, string>;
+	isSSR: boolean;
+	[key: string]: any;
+}
+
+/**
+ * Context passed to loader hooks
+ */
+export interface LoaderContext {
+	path: string;
+	params?: Record<string, string>;
+	isSSR: boolean;
+	apiBaseURL: string;
+	apiBasePath: string;
+	[key: string]: any;
+}
+
+/**
+ * Configuration for blog client plugin
+ * Note: queryClient is passed at runtime to both loader and meta (for SSR isolation)
+ */
+export interface BlogClientConfig {
+	// Required configuration
+	apiBaseURL: string;
+	apiBasePath: string;
+	siteBaseURL: string;
+	siteBasePath: string;
+	queryClient: QueryClient;
+
+	// Optional SEO/meta configuration
+	seo?: {
+		siteName?: string;
+		author?: string;
+		twitterHandle?: string;
+		locale?: string;
+		defaultImage?: string;
+	};
+
+	// Optional hooks
+	hooks?: BlogClientHooks;
+}
+
+/**
+ * Hooks for blog client plugin
+ * All hooks are optional and allow consumers to customize behavior
+ */
+export interface BlogClientHooks {
+	// Loader Hooks - called during data loading (SSR or CSR)
+	beforeLoadPosts?: (
+		filter: { published: boolean },
+		context: LoaderContext,
+	) => Promise<boolean> | boolean;
+	afterLoadPosts?: (
+		posts: Post[] | null,
+		filter: { published: boolean },
+		context: LoaderContext,
+	) => Promise<void> | void;
+	beforeLoadPost?: (
+		slug: string,
+		context: LoaderContext,
+	) => Promise<boolean> | boolean;
+	afterLoadPost?: (
+		post: Post | null,
+		slug: string,
+		context: LoaderContext,
+	) => Promise<void> | void;
+	onLoadError?: (error: Error, context: LoaderContext) => Promise<void> | void;
+}
+
+// Loader for SSR prefetching with hooks - configured once
+function createPostsLoader(published: boolean, config: BlogClientConfig) {
+	return async () => {
+		if (typeof window === "undefined") {
+			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
+
+			const context: LoaderContext = {
+				path: published ? "/blog" : "/blog/drafts",
+				isSSR: true,
+				apiBaseURL,
+				apiBasePath,
+			};
+
+			try {
+				// Before hook
+				if (hooks?.beforeLoadPosts) {
+					const canLoad = await hooks.beforeLoadPosts({ published }, context);
+					if (!canLoad) {
+						throw new Error("Load prevented by beforeLoadPosts hook");
+					}
+				}
+
+				const limit = 10;
+				const client = createApiClient<BlogApiRouter>({
+					baseURL: apiBaseURL,
+					basePath: apiBasePath,
+				});
+
+				// note: for a module not to be bundled with client, and to be shared by client and server we need to add it to build.config.ts as an entry
+				const queries = createBlogQueryKeys(client);
+				const listQuery = queries.posts.list({
+					query: undefined,
+					limit,
+					published: published,
+				});
+
+				await queryClient.prefetchInfiniteQuery({
+					...listQuery,
+					initialPageParam: 0,
+				});
+
+				// Prefetch tags
+				const tagsQuery = queries.tags.list();
+				await queryClient.prefetchQuery(tagsQuery);
+
+				// Don't throw errors during SSR - let Error Boundaries catch them when components render
+				// React Query stores errors in query state, and Suspense/Error Boundaries handle them
+				// Note: We still call hooks so consumers can log/track errors
+
+				// After hook - get data from queryClient if needed
+				if (hooks?.afterLoadPosts) {
+					const posts =
+						queryClient.getQueryData<Post[]>(listQuery.queryKey) || null;
+					await hooks.afterLoadPosts(posts, { published }, context);
+				}
+
+				// Check if there was an error after afterLoadPosts hook
+				const queryState = queryClient.getQueryState(listQuery.queryKey);
+				if (queryState?.error) {
+					// Call error hook but don't throw - let Error Boundary handle it during render
+					if (hooks?.onLoadError) {
+						const error =
+							queryState.error instanceof Error
+								? queryState.error
+								: new Error(String(queryState.error));
+						await hooks.onLoadError(error, context);
+					}
+				}
+			} catch (error) {
+				// Error hook - log the error but don't throw during SSR
+				// Let Error Boundaries handle errors when components render
+				if (hooks?.onLoadError) {
+					await hooks.onLoadError(error as Error, context);
+				}
+				// Don't re-throw - let Error Boundary catch it during render
+			}
+		}
+	};
+}
+
+function createPostLoader(slug: string, config: BlogClientConfig) {
+	return async () => {
+		if (typeof window === "undefined") {
+			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
+
+			const context: LoaderContext = {
+				path: `/blog/${slug}`,
+				params: { slug },
+				isSSR: true,
+				apiBaseURL,
+				apiBasePath,
+			};
+
+			try {
+				// Before hook
+				if (hooks?.beforeLoadPost) {
+					const canLoad = await hooks.beforeLoadPost(slug, context);
+					if (!canLoad) {
+						throw new Error("Load prevented by beforeLoadPost hook");
+					}
+				}
+
+				const client = createApiClient<BlogApiRouter>({
+					baseURL: apiBaseURL,
+					basePath: apiBasePath,
+				});
+				const queries = createBlogQueryKeys(client);
+				const postQuery = queries.posts.detail(slug);
+				await queryClient.prefetchQuery(postQuery);
+
+				// Don't throw errors during SSR - let Error Boundaries catch them when components render
+				// React Query stores errors in query state, and Suspense/Error Boundaries handle them
+				// Note: We still call hooks so consumers can log/track errors
+
+				// After hook
+				if (hooks?.afterLoadPost) {
+					const post =
+						queryClient.getQueryData<Post>(postQuery.queryKey) || null;
+					await hooks.afterLoadPost(post, slug, context);
+				}
+
+				// Check if there was an error after afterLoadPost hook
+				const queryState = queryClient.getQueryState(postQuery.queryKey);
+				if (queryState?.error) {
+					// Call error hook but don't throw - let Error Boundary handle it during render
+					if (hooks?.onLoadError) {
+						const error =
+							queryState.error instanceof Error
+								? queryState.error
+								: new Error(String(queryState.error));
+						await hooks.onLoadError(error, context);
+					}
+				}
+			} catch (error) {
+				// Error hook - log the error but don't throw during SSR
+				// Let Error Boundaries handle errors when components render
+				if (hooks?.onLoadError) {
+					await hooks.onLoadError(error as Error, context);
+				}
+				// Don't re-throw - let Error Boundary catch it during render
+			}
+		}
+	};
+}
+
+function createTagLoader(tagSlug: string, config: BlogClientConfig) {
+	return async () => {
+		if (typeof window === "undefined") {
+			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
+
+			const context: LoaderContext = {
+				path: `/blog/tag/${tagSlug}`,
+				params: { tagSlug },
+				isSSR: true,
+				apiBaseURL,
+				apiBasePath,
+			};
+
+			try {
+				const limit = 10;
+				const client = createApiClient<BlogApiRouter>({
+					baseURL: apiBaseURL,
+					basePath: apiBasePath,
+				});
+
+				const queries = createBlogQueryKeys(client);
+				const listQuery = queries.posts.list({
+					query: undefined,
+					limit,
+					published: true,
+					tagSlug: tagSlug,
+				});
+
+				await queryClient.prefetchInfiniteQuery({
+					...listQuery,
+					initialPageParam: 0,
+				});
+
+				const tagsQuery = queries.tags.list();
+				await queryClient.prefetchQuery(tagsQuery);
+
+				if (hooks?.onLoadError) {
+					const queryState = queryClient.getQueryState(listQuery.queryKey);
+					if (queryState?.error) {
+						const error =
+							queryState.error instanceof Error
+								? queryState.error
+								: new Error(String(queryState.error));
+						await hooks.onLoadError(error, context);
+					}
+				}
+			} catch (error) {
+				if (hooks?.onLoadError) {
+					await hooks.onLoadError(error as Error, context);
+				}
+			}
+		}
+	};
+}
+
+// Meta generators with SEO optimization
+function createPostsListMeta(published: boolean, config: BlogClientConfig) {
+	return () => {
+		const { siteBaseURL, siteBasePath, seo } = config;
+		const path = published ? "/blog" : "/blog/drafts";
+		const fullUrl = `${siteBaseURL}${siteBasePath}${path}`;
+		const title = published ? "Blog" : "Draft Posts";
+		const description = published
+			? "Read our latest articles, insights, and updates on web development, technology, and more."
+			: "View and manage your draft blog posts.";
+
+		return [
+			// Primary meta tags
+			{ title },
+			{ name: "title", content: title },
+			{ name: "description", content: description },
+			{
+				name: "keywords",
+				content: "blog, articles, technology, web development, insights",
+			},
+			...(seo?.author ? [{ name: "author", content: seo.author }] : []),
+			{
+				name: "robots",
+				content: published ? "index, follow" : "noindex, nofollow",
+			},
+
+			// Open Graph / Facebook
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: title },
+			{ property: "og:description", content: description },
+			{ property: "og:url", content: fullUrl },
+			...(seo?.siteName
+				? [{ property: "og:site_name", content: seo.siteName }]
+				: []),
+			...(seo?.locale ? [{ property: "og:locale", content: seo.locale }] : []),
+			...(seo?.defaultImage
+				? [{ property: "og:image", content: seo.defaultImage }]
+				: []),
+
+			// Twitter Card
+			{ name: "twitter:card", content: "summary_large_image" },
+			{ name: "twitter:title", content: title },
+			{ name: "twitter:description", content: description },
+			...(seo?.twitterHandle
+				? [{ name: "twitter:site", content: seo.twitterHandle }]
+				: []),
+		];
+	};
+}
+
+function createPostMeta(slug: string, config: BlogClientConfig) {
+	return () => {
+		// Use queryClient passed at runtime (same as loader!)
+		const { queryClient } = config;
+		const { apiBaseURL, apiBasePath, siteBaseURL, siteBasePath, seo } = config;
+		const queries = createBlogQueryKeys(
+			createApiClient<BlogApiRouter>({
+				baseURL: apiBaseURL,
+				basePath: apiBasePath,
+			}),
+		);
+		const post = queryClient.getQueryData<Post>(
+			queries.posts.detail(slug).queryKey,
+		);
+
+		if (!post) {
+			// Fallback if post not loaded
+			return [
+				{ title: "Unknown route" },
+				{ name: "title", content: "Unknown route" },
+				{ name: "robots", content: "noindex" },
+			];
+		}
+
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/${post.slug}`;
+		const title = post.title;
+		const description = post.excerpt || post.content.substring(0, 160);
+		const publishedTime = post.publishedAt
+			? new Date(post.publishedAt).toISOString()
+			: new Date(post.createdAt).toISOString();
+		const modifiedTime = new Date(post.updatedAt).toISOString();
+		const image = post.image || seo?.defaultImage;
+
+		return [
+			// Primary meta tags
+			{ title },
+			{ name: "title", content: title },
+			{ name: "description", content: description },
+			...(post.authorId || seo?.author
+				? [{ name: "author", content: post.authorId || seo?.author }]
+				: []),
+			{
+				name: "robots",
+				content: post.published ? "index, follow" : "noindex, nofollow",
+			},
+			{
+				name: "keywords",
+				content: `blog, article, ${post.slug.replace(/-/g, ", ")}`,
+			},
+
+			// Open Graph / Facebook
+			{ property: "og:type", content: "article" },
+			{ property: "og:title", content: title },
+			{ property: "og:description", content: description },
+			{ property: "og:url", content: fullUrl },
+			...(seo?.siteName
+				? [{ property: "og:site_name", content: seo.siteName }]
+				: []),
+			...(seo?.locale ? [{ property: "og:locale", content: seo.locale }] : []),
+			...(image ? [{ property: "og:image", content: image }] : []),
+			...(image
+				? [
+						{ property: "og:image:width", content: "1200" },
+						{ property: "og:image:height", content: "630" },
+						{ property: "og:image:alt", content: title },
+					]
+				: []),
+
+			// Article-specific Open Graph tags
+			{ property: "article:published_time", content: publishedTime },
+			{ property: "article:modified_time", content: modifiedTime },
+			...(post.authorId
+				? [{ property: "article:author", content: post.authorId }]
+				: []),
+
+			// Twitter Card
+			{
+				name: "twitter:card",
+				content: image ? "summary_large_image" : "summary",
+			},
+			{ name: "twitter:title", content: title },
+			{ name: "twitter:description", content: description },
+			...(seo?.twitterHandle
+				? [{ name: "twitter:site", content: seo.twitterHandle }]
+				: []),
+			...(post.authorId || seo?.twitterHandle
+				? [
+						{
+							name: "twitter:creator",
+							content: post.authorId || seo?.twitterHandle,
+						},
+					]
+				: []),
+			...(image ? [{ name: "twitter:image", content: image }] : []),
+			...(image ? [{ name: "twitter:image:alt", content: title }] : []),
+
+			// Additional SEO tags
+			{ name: "publish_date", content: publishedTime },
+		];
+	};
+}
+
+function createTagMeta(tagSlug: string, config: BlogClientConfig) {
+	return () => {
+		const { queryClient } = config;
+		const { apiBaseURL, apiBasePath, siteBaseURL, siteBasePath, seo } = config;
+		const queries = createBlogQueryKeys(
+			createApiClient<BlogApiRouter>({
+				baseURL: apiBaseURL,
+				basePath: apiBasePath,
+			}),
+		);
+		const tags = queryClient.getQueryData<SerializedTag[]>(
+			queries.tags.list().queryKey,
+		);
+		const tag = tags?.find((t) => t.slug === tagSlug);
+
+		if (!tag) {
+			return [
+				{ title: "Unknown route" },
+				{ name: "title", content: "Unknown route" },
+				{ name: "robots", content: "noindex" },
+			];
+		}
+
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/tag/${tag.slug}`;
+		const title = `${tag.name} Posts`;
+		const description = `Browse all ${tag.name} posts`;
+
+		return [
+			{ title },
+			{ name: "title", content: title },
+			{ name: "description", content: description },
+			{ name: "robots", content: "index, follow" },
+			{ name: "keywords", content: `blog, ${tag.name}, articles` },
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: title },
+			{ property: "og:description", content: description },
+			{ property: "og:url", content: fullUrl },
+			...(seo?.siteName
+				? [{ property: "og:site_name", content: seo.siteName }]
+				: []),
+			...(seo?.defaultImage
+				? [{ property: "og:image", content: seo.defaultImage }]
+				: []),
+			{ name: "twitter:card", content: "summary" },
+			{ name: "twitter:title", content: title },
+		];
+	};
+}
+
+function createNewPostMeta(config: BlogClientConfig) {
+	return () => {
+		const { siteBaseURL, siteBasePath } = config;
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/new`;
+
+		const title = "Create New Post";
+
+		return [
+			{ title },
+			{ name: "title", content: title },
+			{ name: "description", content: "Write and publish a new blog post." },
+			{ name: "robots", content: "noindex, nofollow" },
+
+			// Open Graph
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: title },
+			{
+				property: "og:description",
+				content: "Write and publish a new blog post.",
+			},
+			{ property: "og:url", content: fullUrl },
+
+			// Twitter
+			{ name: "twitter:card", content: "summary" },
+			{ name: "twitter:title", content: title },
+		];
+	};
+}
+
+function createEditPostMeta(slug: string, config: BlogClientConfig) {
+	return () => {
+		// Use queryClient passed at runtime (same as loader!)
+		const { queryClient } = config;
+		const { apiBaseURL, apiBasePath, siteBaseURL, siteBasePath } = config;
+		const queries = createBlogQueryKeys(
+			createApiClient<BlogApiRouter>({
+				baseURL: apiBaseURL,
+				basePath: apiBasePath,
+			}),
+		);
+		const post = queryClient.getQueryData<Post>(
+			queries.posts.detail(slug).queryKey,
+		);
+		const fullUrl = `${siteBaseURL}${siteBasePath}/blog/${slug}/edit`;
+
+		const title = post ? `Edit: ${post.title}` : "Unknown route";
+
+		return [
+			{ title },
+			{ name: "title", content: title },
+			{ name: "description", content: "Edit your blog post." },
+			{ name: "robots", content: "noindex, nofollow" },
+
+			// Open Graph
+			{ property: "og:type", content: "website" },
+			{ property: "og:title", content: title },
+			{ property: "og:url", content: fullUrl },
+
+			// Twitter
+			{ name: "twitter:card", content: "summary" },
+			{ name: "twitter:title", content: title },
+		];
+	};
+}
+
+/**
+ * Blog client plugin
+ * Provides routes, components, and React Query hooks for blog posts
+ *
+ * @param config - Configuration including queryClient, baseURL, and optional hooks
+ */
+export const blogClientPlugin = (config: BlogClientConfig) =>
+	defineClientPlugin({
+		name: "blog",
+
+		routes: () => ({
+			posts: createRoute("/blog", () => {
+				return {
+					PageComponent: () => <HomePageComponent published={true} />,
+					loader: createPostsLoader(true, config),
+					meta: createPostsListMeta(true, config),
+				};
+			}),
+			drafts: createRoute("/blog/drafts", () => {
+				return {
+					PageComponent: () => <HomePageComponent published={false} />,
+					loader: createPostsLoader(false, config),
+					meta: createPostsListMeta(false, config),
+				};
+			}),
+			newPost: createRoute("/blog/new", () => {
+				return {
+					PageComponent: NewPostPageComponent,
+					meta: createNewPostMeta(config),
+				};
+			}),
+			editPost: createRoute("/blog/:slug/edit", ({ params: { slug } }) => {
+				return {
+					PageComponent: () => <EditPostPageComponent slug={slug} />,
+					loader: createPostLoader(slug, config),
+					meta: createEditPostMeta(slug, config),
+				};
+			}),
+			tag: createRoute("/blog/tag/:tagSlug", ({ params: { tagSlug } }) => {
+				return {
+					PageComponent: () => <TagPageComponent tagSlug={tagSlug} />,
+					loader: createTagLoader(tagSlug, config),
+					meta: createTagMeta(tagSlug, config),
+				};
+			}),
+			post: createRoute("/blog/:slug", ({ params: { slug } }) => {
+				return {
+					PageComponent: () => <PostPageComponent slug={slug} />,
+					loader: createPostLoader(slug, config),
+					meta: createPostMeta(slug, config),
+				};
+			}),
+		}),
+
+		sitemap: async () => {
+			const origin = `${config.siteBaseURL}${config.siteBasePath}`;
+			const indexUrl = `${origin}/blog`;
+
+			// Fetch all published posts via API, with pagination
+			const client = createApiClient<BlogApiRouter>({
+				baseURL: config.apiBaseURL,
+				basePath: config.apiBasePath,
+			});
+
+			const limit = 100;
+			let offset = 0;
+			const posts: SerializedPost[] = [];
+			// eslint-disable-next-line no-constant-condition
+			while (true) {
+				const res = await client("/posts", {
+					method: "GET",
+					query: {
+						offset,
+						limit,
+						published: "true",
+					},
+				});
+				const page = (res.data ?? []) as unknown as SerializedPost[];
+				posts.push(...page);
+				if (page.length < limit) break;
+				offset += limit;
+			}
+
+			const getLastModified = (p: SerializedPost): Date | undefined => {
+				const dates = [p.updatedAt, p.publishedAt, p.createdAt].filter(
+					Boolean,
+				) as string[];
+				if (dates.length === 0) return undefined;
+				const times = dates
+					.map((d) => new Date(d).getTime())
+					.filter((t) => !Number.isNaN(t));
+				if (times.length === 0) return undefined;
+				return new Date(Math.max(...times));
+			};
+
+			const latestTime = posts
+				.map((p) => getLastModified(p)?.getTime() ?? 0)
+				.reduce((a, b) => Math.max(a, b), 0);
+
+			const entries = [
+				{
+					url: indexUrl,
+					lastModified: latestTime ? new Date(latestTime) : undefined,
+					changeFrequency: "daily" as const,
+					priority: 0.7,
+				},
+				...posts.map((p) => ({
+					url: `${origin}/blog/${p.slug}`,
+					lastModified: getLastModified(p),
+					changeFrequency: "monthly" as const,
+					priority: 0.6,
+				})),
+			];
+
+			return entries;
+		},
+	});

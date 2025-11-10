@@ -31,7 +31,8 @@
     },
     "e2e:smoke": {
       "dependsOn": ["^build"],
-      "outputs": []
+      "outputs": [],
+      "cache": false
     },
     "e2e:integration": {
       "dependsOn": ["^build"],

@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { betterStack } from "../api";
 import { createStackClient } from "../client";
-import { defineBackendPlugin, defineClientPlugin } from "../plugins";
+import { defineBackendPlugin } from "../plugins/api";
+import { defineClientPlugin } from "../plugins/client";
 import type { BackendPlugin, ClientPlugin } from "../types";
 import type { BetterAuthDBSchema, DatabaseDefinition, Adapter } from "@btst/db";
 import { createDbPlugin } from "@btst/db";

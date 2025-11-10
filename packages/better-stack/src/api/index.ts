@@ -71,5 +71,3 @@ export type {
 	BackendLibConfig,
 	BackendLib,
 } from "../types";
-
-export { createEndpoint } from "better-call";

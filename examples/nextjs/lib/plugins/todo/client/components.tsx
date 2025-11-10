@@ -25,8 +25,13 @@ import { Suspense } from "react";
 
 export function TodosListPage() {
   return (
-    <div className="mx-auto max-w-2xl p-6 flex flex-col gap-6 items-center justify-center">
-      <h1 className="mb-6 font-bold text-3xl">Todos</h1>
+    <div
+      className="mx-auto max-w-2xl p-6 flex flex-col gap-6 items-center justify-center"
+      data-test-id="todos-list-page"
+    >
+      <h1 className="mb-6 font-bold text-3xl" data-test-id="todos-list-title">
+        Todos
+      </h1>
       <Suspense fallback={<TodosListPageSkeleton />}>
         <TodosList />
       </Suspense>
@@ -58,16 +63,18 @@ function TodosList() {
 
   return (
     <>
-      <div className="space-y-2 w-full">
+      <div className="space-y-2 w-full" data-test-id="todos-list">
         {todos?.map((todo) => (
           <Item
             key={todo.id}
             className="flex items-center gap-3 border border-border rounded-md p-3"
+            data-test-id={`todo-item-${todo.id}`}
           >
             <Checkbox
               id={todo.id}
               value={todo.id}
               checked={todo.completed}
+              data-test-id={`todo-checkbox-${todo.id}`}
               onCheckedChange={() => {
                 toggleTodoMutation.mutate({
                   id: todo.id,
@@ -81,12 +88,14 @@ function TodosList() {
                 "flex-1",
                 todo.completed && "text-muted-foreground line-through"
               )}
+              data-test-id={`todo-title-${todo.id}`}
             >
               {todo.title}
             </Label>
             <Button
               variant="destructive"
               className="hover:cursor-pointer"
+              data-test-id={`todo-delete-${todo.id}`}
               onClick={() => deleteTodoMutation.mutate(todo.id)}
             >
               {deleteTodoMutation.isPending ? <Loader2Icon /> : <TrashIcon />}
@@ -96,7 +105,7 @@ function TodosList() {
         ))}
 
         {todos?.length === 0 && (
-          <Empty>
+          <Empty data-test-id="todos-empty">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <ListIcon />
@@ -106,7 +115,9 @@ function TodosList() {
             </EmptyHeader>
             <EmptyContent>
               <Button asChild>
-                <Link href={`${basePath}/todos/add`}>Add a todo</Link>
+                <Link href={`${basePath}/todos/add`} data-test-id="todos-add-link">
+                  Add a todo
+                </Link>
               </Button>
             </EmptyContent>
           </Empty>
@@ -115,7 +126,7 @@ function TodosList() {
 
       {todos && todos.length > 0 && (
         <Button asChild>
-          <Link href={`${basePath}/todos/add`}>
+          <Link href={`${basePath}/todos/add`} data-test-id="todos-add-link">
             <PlusCircleIcon />
             Add Todo
           </Link>
@@ -148,10 +159,12 @@ export function AddTodoPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-6 font-bold text-3xl">Add Todo</h1>
+    <div className="mx-auto max-w-2xl p-6" data-test-id="add-todo-page">
+      <h1 className="mb-6 font-bold text-3xl" data-test-id="add-todo-title">
+        Add Todo
+      </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" data-test-id="add-todo-form">
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="title">Title</FieldLabel>
@@ -161,6 +174,7 @@ export function AddTodoPage() {
               name="title"
               placeholder="Buy groceries"
               required
+              data-test-id="add-todo-title-input"
             />
           </Field>
         </FieldGroup>
@@ -170,12 +184,13 @@ export function AddTodoPage() {
             type="submit"
             className="hover:cursor-pointer"
             disabled={createTodoMutation.isPending}
+            data-test-id="add-todo-submit"
           >
             {createTodoMutation.isPending ? "Saving..." : "Save"}
           </Button>
 
           <Button variant="outline" asChild>
-            <Link href={`${basePath}/todos`}>Cancel</Link>
+            <Link href={`${basePath}/todos`} data-test-id="add-todo-cancel">Cancel</Link>
           </Button>
         </div>
       </form>
