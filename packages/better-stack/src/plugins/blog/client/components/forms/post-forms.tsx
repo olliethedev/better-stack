@@ -232,7 +232,7 @@ function PostFormBody<T extends CommonPostFormValues>({
 							<FormLabel>
 								{localization.BLOG_FORMS_CONTENT_LABEL}
 								<span className="text-destructive">
-									{localization.BLOG_FORMS_CONTENT_REQUIRED_ASTERISK}
+									{localization.BLOG_FORMS_REQUIRED_ASTERISK}
 								</span>
 							</FormLabel>
 							<FormControl>

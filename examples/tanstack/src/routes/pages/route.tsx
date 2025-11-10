@@ -4,7 +4,6 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import type { BlogPluginOverrides } from "@btst/stack/plugins/blog/client"
 import { Link, useRouter, Outlet, createFileRoute } from "@tanstack/react-router"
-import { Suspense } from "react"
 
 // Get base URL function - works on both server and client
 // On server: uses process.env.BASE_URL

@@ -10,6 +10,9 @@ import {
 
 import globalsCss from "@/styles/globals.css?url"
 import { MyRouterContext } from '@/router'
+import { ThemeProvider } from 'next-themes'
+import { Navbar } from '@/components/navbar'
+import { Toaster } from 'sonner'
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({
@@ -87,7 +90,7 @@ function RootComponent() {
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta
           name="viewport"
@@ -106,7 +109,16 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+          <Navbar />
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>

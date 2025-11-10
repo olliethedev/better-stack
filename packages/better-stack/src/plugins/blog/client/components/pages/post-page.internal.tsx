@@ -63,7 +63,11 @@ export function PostPage({ slug }: { slug: string }) {
 	});
 
 	if (!slug || !post) {
-		return <EmptyList message={localization.BLOG_PAGE_NOT_FOUND_DESCRIPTION} />;
+		return (
+			<PageWrapper>
+				<EmptyList message={localization.BLOG_PAGE_NOT_FOUND_DESCRIPTION} />
+			</PageWrapper>
+		);
 	}
 
 	return (

@@ -1,15 +1,25 @@
 import { NotebookTextIcon } from "lucide-react";
+import {
+	Empty,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@workspace/ui/components/empty";
 
 export function EmptyList({ message }: { message: string }) {
 	return (
-		<div
-			className="flex min-h-[600px] flex-col items-center justify-center gap-10 text-center text-muted-foreground"
-			data-testid="empty-state"
-		>
-			<NotebookTextIcon className="size-[100px]" />
-			<p className="font-bold text-2xl" data-testid="empty-message">
-				{message}
-			</p>
-		</div>
+		<>
+			<Empty
+				className="border border-dashed min-h-[600px] w-full"
+				data-testid="empty-state"
+			>
+				<EmptyHeader>
+					<EmptyMedia variant="icon" className="size-20">
+						<NotebookTextIcon className="text-muted-foreground size-16" />
+					</EmptyMedia>
+					<EmptyTitle data-testid="empty-message">{message}</EmptyTitle>
+				</EmptyHeader>
+			</Empty>
+		</>
 	);
 }

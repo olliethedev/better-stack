@@ -1,6 +1,4 @@
 export const BLOG_FORMS = {
-	BLOG_FORMS_ERROR_GENERIC: "Something went wrong",
-
 	BLOG_FORMS_TITLE_LABEL: "Title",
 	BLOG_FORMS_REQUIRED_ASTERISK: " *",
 	BLOG_FORMS_TITLE_PLACEHOLDER: "Enter your post title...",
@@ -15,7 +13,6 @@ export const BLOG_FORMS = {
 	BLOG_FORMS_TAGS_PLACEHOLDER: "Enter your post tags...",
 
 	BLOG_FORMS_CONTENT_LABEL: "Content",
-	BLOG_FORMS_CONTENT_REQUIRED_ASTERISK: " *",
 
 	BLOG_FORMS_PUBLISHED_LABEL: "Published",
 	BLOG_FORMS_PUBLISHED_DESCRIPTION: "Toggle to publish immediately",

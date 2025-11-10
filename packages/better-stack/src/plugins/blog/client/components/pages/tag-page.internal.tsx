@@ -38,10 +38,7 @@ export function TagPage({ tagSlug }: { tagSlug: string }) {
 		return (
 			<PageWrapper testId="tag-page">
 				<div className="flex flex-col items-center gap-3">
-					<PageHeader
-						title={localization.BLOG_TAG_NOT_FOUND}
-						description={localization.BLOG_TAG_NOT_FOUND_DESCRIPTION}
-					/>
+					<PageHeader title={localization.BLOG_TAG_NOT_FOUND} />
 				</div>
 				<EmptyList message={localization.BLOG_TAG_NOT_FOUND_DESCRIPTION} />
 			</PageWrapper>

@@ -19,6 +19,7 @@ const getBaseURL = () =>
 export default function Layout() {
     
     const baseURL = getBaseURL()
+    console.log("baseURL", baseURL)
     const navigate = useNavigate()
   return (
     
@@ -34,7 +35,7 @@ export default function Layout() {
                             return "https://placehold.co/400/png"
                         },
                         Link: ({ href, children, className, ...props }) => (
-                            <Link to={href} className={className} {...props}>
+                            <Link to={href || ""} className={className} {...props}>
                               {children}
                             </Link>
                         ),

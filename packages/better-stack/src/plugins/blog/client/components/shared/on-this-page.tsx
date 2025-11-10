@@ -35,7 +35,15 @@ export function OnThisPage({ markdown, className }: OnThisPageProps) {
 	const activeId = useActiveHeading(headings);
 
 	if (headings.length === 0) {
-		return null;
+		// placeholder if no headings are found
+		return (
+			<div
+				className={cn(
+					"sticky top-20 z-30 ml-auto hidden xl:flex w-44",
+					className,
+				)}
+			/>
+		);
 	}
 
 	const handleClick = (id: string) => {
@@ -127,9 +135,12 @@ export function OnThisPageSelect({ markdown, className }: OnThisPageProps) {
 	return (
 		<div
 			className={cn(
-				"sticky top-2 z-30 w-full self-stretch xl:hidden bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60",
+				"sticky z-30 w-full self-stretch xl:hidden bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60",
 				className,
 			)}
+			style={{
+				top: "var(--navbar-height, 16px)",
+			}}
 		>
 			<Select value={value} onValueChange={handleValueChange}>
 				<SelectTrigger className="w-full">

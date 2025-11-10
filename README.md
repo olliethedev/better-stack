@@ -85,7 +85,7 @@ export { handler, dbSchema }
 For example, to generate a Prisma schema from your `dbSchema`:
 
 ```bash
-npx @btst/cli generate prisma --schema lib/better-stack.ts --output prisma/schema.prisma
+npx @btst/cli generate --orm prisma --config lib/better-db.ts --output prisma/schema.prisma --filter-auth
 ```
 
 This reads your `dbSchema` export and generates the corresponding Prisma schema file.
