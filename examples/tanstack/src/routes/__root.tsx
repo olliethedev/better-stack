@@ -34,11 +34,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         property: "og:title",
-        content: "Better Blog",
+        content: "Better Stack",
       },
       {
         property: "og:description",
-        content: "A modern blog powered by Better Blog + TanStack.",
+        content: "A modern blog powered by Better Stack + TanStack.",
       },
       // Twitter defaults
       {
@@ -47,11 +47,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         name: "twitter:title",
-        content: "Better Blog",
+        content: "Better Stack",
       },
       {
         name: "twitter:description",
-        content: "A modern blog powered by Better Blog + TanStack.",
+        content: "A modern blog powered by Better Stack + TanStack.",
       },
     ],
     links: [

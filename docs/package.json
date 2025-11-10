@@ -1,0 +1,40 @@
+{
+  "name": "better-stack-docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --turbo",
+    "start": "next start",
+    "postinstall": "fumadocs-mdx"
+  },
+  "dependencies": {
+    "@btst/stack": "workspace:*",
+    "framer-motion": "^12.19.1",
+    "fumadocs-core": "16.0.9",
+    "fumadocs-docgen": "3.0.4",
+    "fumadocs-mdx": "13.0.6",
+    "fumadocs-typescript": "4.0.13",
+    "fumadocs-ui": "16.0.9",
+    "lucide-react": "^0.522.0",
+    "next": "16.0.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-icons": "^5.5.0",
+    "shiki": "^3.12.2",
+    "ts-morph": "^27.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.10",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "24.0.3",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^8",
+    "eslint-config-next": "15.3.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.10",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@10.12.1"
+}

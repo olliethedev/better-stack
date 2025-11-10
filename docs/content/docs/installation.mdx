@@ -1,0 +1,688 @@
+---
+title: Installation
+description: Learn how to install and configure Better Stack in your project.
+---
+
+import { Steps, Step } from "fumadocs-ui/components/steps";
+import { Tabs, Tab } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+# Installation
+
+Learn how to configure Better Stack in your project.
+
+## Prerequisites
+
+In order to use Better Stack, your application must meet the following requirements:
+
+- You must have [shadcn/ui](https://ui.shadcn.com/) installed with CSS variables enabled (plugins use shadcn/ui components)
+- Configure a [Sonner](https://ui.shadcn.com/docs/components/sonner) `<Toaster />` component for toast notifications
+- Ensure you have [TailwindCSS](https://tailwindcss.com) `v4` set up and configured correctly (plugins use Tailwind classes)
+- You must have [@tanstack/react-query](https://tanstack.com/query) installed (required for data fetching and state management)
+
+<Steps>
+  <Step>
+    ### Install the Package
+
+    Let's start by adding Better Stack to your project:
+
+    <Tabs groupId="installation" items={['npm', 'pnpm', 'yarn']} persist>
+      <Tab value="npm">
+        ```bash
+        npm install @btst/stack @tanstack/react-query
+        ```
+      </Tab>
+
+      <Tab value="pnpm">
+        ```bash
+        pnpm add @btst/stack @tanstack/react-query
+        ```
+      </Tab>
+
+      <Tab value="yarn">
+        ```bash
+        yarn add @btst/stack @tanstack/react-query
+        ```
+      </Tab>
+    </Tabs>
+
+    <Callout type="info">
+      Better Stack plugins require `@tanstack/react-query` for server-side prefetching and client-side data fetching and state management.
+    </Callout>
+  </Step>
+
+  <Step>
+    ### Install Database Adapter
+
+    Better Stack requires a database adapter to work with your database. Choose one based on your setup:
+
+    <Tabs groupId="adapter-type" items={["prisma", "drizzle", "kysely", "mongodb", "memory"]} persist>
+      <Tab value="prisma">
+        For Prisma ORM:
+
+        <Tabs groupId="installation" items={['npm', 'pnpm', 'yarn']} persist>
+          <Tab value="npm">
+            ```bash
+            npm install @btst/adapter-prisma
+            ```
+          </Tab>
+
+          <Tab value="pnpm">
+            ```bash
+            pnpm add @btst/adapter-prisma
+            ```
+          </Tab>
+
+          <Tab value="yarn">
+            ```bash
+            yarn add @btst/adapter-prisma
+            ```
+          </Tab>
+        </Tabs>
+      </Tab>
+
+      <Tab value="drizzle">
+        For Drizzle ORM:
+
+        <Tabs groupId="installation" items={['npm', 'pnpm', 'yarn']} persist>
+          <Tab value="npm">
+            ```bash
+            npm install @btst/adapter-drizzle
+            ```
+          </Tab>
+
+          <Tab value="pnpm">
+            ```bash
+            pnpm add @btst/adapter-drizzle
+            ```
+          </Tab>
+
+          <Tab value="yarn">
+            ```bash
+            yarn add @btst/adapter-drizzle
+            ```
+          </Tab>
+        </Tabs>
+      </Tab>
+
+      <Tab value="kysely">
+        For Kysely query builder:
+
+        <Tabs groupId="installation" items={['npm', 'pnpm', 'yarn']} persist>
+          <Tab value="npm">
+            ```bash
+            npm install @btst/adapter-kysely
+            ```
+          </Tab>
+
+          <Tab value="pnpm">
+            ```bash
+            pnpm add @btst/adapter-kysely
+            ```
+          </Tab>
+
+          <Tab value="yarn">
+            ```bash
+            yarn add @btst/adapter-kysely
+            ```
+          </Tab>
+        </Tabs>
+      </Tab>
+
+      <Tab value="mongodb">
+        For MongoDB:
+
+        <Tabs groupId="installation" items={['npm', 'pnpm', 'yarn']} persist>
+          <Tab value="npm">
+            ```bash
+            npm install @btst/adapter-mongodb
+            ```
+          </Tab>
+
+          <Tab value="pnpm">
+            ```bash
+            pnpm add @btst/adapter-mongodb
+            ```
+          </Tab>
+
+          <Tab value="yarn">
+            ```bash
+            yarn add @btst/adapter-mongodb
+            ```
+          </Tab>
+        </Tabs>
+      </Tab>
+
+      <Tab value="memory">
+        For development and testing, use the in-memory adapter:
+
+        <Tabs groupId="installation" items={['npm', 'pnpm', 'yarn']} persist>
+          <Tab value="npm">
+            ```bash
+            npm install @btst/adapter-memory
+            ```
+          </Tab>
+
+          <Tab value="pnpm">
+            ```bash
+            pnpm add @btst/adapter-memory
+            ```
+          </Tab>
+
+          <Tab value="yarn">
+            ```bash
+            yarn add @btst/adapter-memory
+            ```
+          </Tab>
+        </Tabs>
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step>
+    ### Create Backend Instance
+
+    Create a file named `better-stack.ts` in your `lib/` folder:
+
+    <Tabs groupId="adapter-type" items={["prisma", "drizzle", "kysely", "mongodb", "memory"]} persist>
+      <Tab value="prisma">
+        ```ts title="lib/better-stack.ts"
+        import { betterStack } from "@btst/stack"
+        import { createPrismaAdapter } from "@btst/adapter-prisma"
+        import { PrismaClient } from "@prisma/client"
+
+        const prisma = new PrismaClient()
+
+        const { handler, dbSchema } = betterStack({
+          basePath: "/api/data",
+          plugins: {
+            // Add your backend plugins here
+          },
+          adapter: (db) => createPrismaAdapter(prisma, db, { provider: "postgresql" })
+        })
+
+        export { handler, dbSchema }
+        ```
+      </Tab>
+
+      <Tab value="drizzle">
+        ```ts title="lib/better-stack.ts"
+        import { betterStack } from "@btst/stack"
+        import { createDrizzleAdapter } from "@btst/adapter-drizzle"
+        import { drizzle } from "drizzle-orm/your-database"
+
+        const drizzleDb = drizzle(/* your database connection */)
+
+        const { handler, dbSchema } = betterStack({
+          basePath: "/api/data",
+          plugins: {
+            // Add your backend plugins here
+          },
+          adapter: (db) => createDrizzleAdapter(drizzleDb, db, {})
+        })
+
+        export { handler, dbSchema }
+        ```
+      </Tab>
+
+      <Tab value="kysely">
+        ```ts title="lib/better-stack.ts"
+        import { betterStack } from "@btst/stack"
+        import { createKyselyAdapter } from "@btst/adapter-kysely"
+        import { Kysely } from "kysely"
+
+        const kyselyDb = new Kysely(/* your database connection */)
+
+        const { handler, dbSchema } = betterStack({
+          basePath: "/api/data",
+          plugins: {
+            // Add your backend plugins here
+          },
+          adapter: (db) => createKyselyAdapter(kyselyDb, db, {})
+        })
+
+        export { handler, dbSchema }
+        ```
+      </Tab>
+
+      <Tab value="mongodb">
+        ```ts title="lib/better-stack.ts"
+        import { betterStack } from "@btst/stack"
+        import { createMongodbAdapter } from "@btst/adapter-mongodb"
+        import { MongoClient } from "mongodb"
+
+        const client = new MongoClient(process.env.MONGODB_URI!)
+        const mongoDb = client.db()
+
+        const { handler, dbSchema } = betterStack({
+          basePath: "/api/data",
+          plugins: {
+            // Add your backend plugins here
+            // blog: blogBackendPlugin()
+          },
+          adapter: (db) => createMongodbAdapter(mongoDb, db, {})
+        })
+
+        export { handler, dbSchema }
+        ```
+      </Tab>
+
+      <Tab value="memory">
+        ```ts title="lib/better-stack.ts"
+        import { betterStack } from "@btst/stack"
+        import { createMemoryAdapter } from "@btst/adapter-memory"
+
+        const { handler, dbSchema } = betterStack({
+          basePath: "/api/data",
+          plugins: {
+            // Add your backend plugins here
+          },
+          adapter: (db) => createMemoryAdapter(db, {})
+        })
+
+        export { handler, dbSchema }
+        ```
+      </Tab>
+    </Tabs>
+
+    <Callout type="info">
+      `betterStack()` returns both `handler` and `dbSchema`. The `dbSchema` contains all merged database schemas from your plugins. See the [CLI documentation](/cli) to learn how to generate database schemas and migrations.
+    </Callout>
+  </Step>
+
+  <Step>
+    ### Create API Route
+
+    Create a catch-all API route to handle Better Stack requests. The route should handle requests for the path `/api/data/*` (or your configured `basePath`).
+
+    <Tabs  groupId="frameworks" items={["next-js", "react-router", "tanstack"]} persist>
+      <Tab value="next-js">
+        ```ts title="app/api/data/[[...all]]/route.ts"
+        import { handler } from "@/lib/better-stack"
+
+        export const GET = handler
+        export const POST = handler
+        export const PUT = handler
+        export const DELETE = handler
+        ```
+      </Tab>
+
+      <Tab value="react-router">
+        ```ts title="app/routes/api.data.$.ts"
+        import { handler } from "~/lib/better-stack"
+        import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node"
+
+        export async function loader({ request }: LoaderFunctionArgs) {
+          return handler(request)
+        }
+
+        export async function action({ request }: ActionFunctionArgs) {
+          return handler(request)
+        }
+        ```
+      </Tab>
+
+      <Tab value="tanstack">
+        ```ts title="src/routes/api/data/$.ts"
+        import { createFileRoute } from '@tanstack/react-router'
+        import { handler } from '@/lib/better-stack'
+
+        export const Route = createFileRoute('/api/data/$')({
+          server: {
+            handlers: {
+              GET: async ({ request }) => {
+                return handler(request)
+              },
+              POST: async ({ request }) => {
+                return handler(request)
+              },
+              PUT: async ({ request }) => {
+                return handler(request)
+              },
+              DELETE: async ({ request }) => {
+                return handler(request)
+              },
+            },
+          },
+        })
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+
+  <Step>
+    ### Import Plugin Styles
+
+    Import plugin-specific CSS in your global stylesheet to ensure proper styling:
+
+    ```css title="app/globals.css"
+    @import "tailwindcss";
+
+    /* Import plugin styles (tailwind classes, markdown, etc.) */
+    @import "@btst/stack/plugins/blog/css";
+    /* Add other plugin CSS imports as needed */
+    ```
+
+    <Callout type="info">
+      Each plugin may require its own CSS import. Check the plugin documentation for the specific import path.
+    </Callout>
+  </Step>
+
+  <Step>
+    ### Create Client Instance
+
+    Create a client instance to interact with Better Stack from your React components:
+
+    ```ts title="lib/better-stack-client.tsx"
+    import { createStackClient } from "@btst/stack/client"
+    import { QueryClient } from "@tanstack/react-query"
+
+    export const getStackClient = (queryClient: QueryClient) => {
+      return createStackClient({
+        plugins: {
+          // Add your client plugins here
+        }
+      })
+    }
+    ```
+
+    <Callout type="info">
+      `getStackClient` is exported as a function that takes a `QueryClient` because it needs to be called from both server components (during SSR) and client components. Each context may have its own `QueryClient` instance, so the function pattern allows flexibility in passing the appropriate client for the current context.
+    </Callout>
+  </Step>
+
+  <Step>
+    ### Set Up Query Client Provider
+
+    Wrap your app with React Query's `QueryClientProvider`:
+
+    ```tsx
+    import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
+
+    const queryClient = new QueryClient()
+
+    export default function RootLayout({ children }) {
+      return (
+        <html>
+          <body>
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
+          </body>
+        </html>
+      )
+    }
+    ```
+  </Step>
+
+
+  <Step>
+    ### Set Up Layout Provider
+
+    Wrap your Better Stack pages with the `BetterStackProvider` to enable framework-specific overrides:
+
+    ```tsx
+        import { BetterStackProvider } from "@btst/stack/context"
+
+        type PluginOverrides = {
+            // Add your plugin override types here
+        }
+
+        export default function Layout({ children }) {
+          return (
+            <BetterStackProvider<PluginOverrides>
+                basePath="/pages"
+                overrides={{
+                  // Configure plugin-specific overrides here (see plugin documentation for available overrides)
+                }}
+              >
+                {children}
+            </BetterStackProvider>
+          )
+        }
+        ```
+
+    <Callout type="info">
+      The `overrides` prop lets you use framework-specific components like Next.js `Image` and `Link` instead of generic HTML elements. Each plugin exports its own override type (e.g., `BlogPluginOverrides`) that you combine into a `PluginOverrides` type. This provides type safety and ensures you configure all required overrides for each plugin.
+    </Callout>
+  </Step>
+
+  <Step>
+    ### Set Up Page Handler
+
+    Create a catch-all route to handle Better Stack pages. This enables server-side rendering and automatic route handling.
+
+    <Tabs  groupId="frameworks" items={["next-js", "react-router", "tanstack"]} persist >
+      <Tab value="next-js">
+        ```tsx title="app/pages/[[...all]]/page.tsx"
+        import { dehydrate, HydrationBoundary, type DehydratedState } from "@tanstack/react-query"
+        import { notFound } from "next/navigation"
+        import { getOrCreateQueryClient } from "@/lib/query-client"
+        import { getStackClient } from "@/lib/better-stack-client"
+        import { metaElementsToObject } from "@btst/stack/client"
+        import { Metadata } from "next"
+
+        export default async function Page({ params }: { params: Promise<{ all: string[] }> }) {
+          const pathParams = await params
+          const path = pathParams?.all ? `/${pathParams.all.join("/")}` : "/"
+          
+          const queryClient = getOrCreateQueryClient()
+          const stackClient = getStackClient(queryClient)
+          const route = stackClient.router.getRoute(path)
+          
+          if (route?.loader) await route.loader()
+          
+          // Dehydrate with errors included so client doesn't refetch on error
+          const dehydratedState: DehydratedState = dehydrate(queryClient, {
+            shouldDehydrateQuery: (query) => query.state.status === 'success' || query.state.status === 'error'
+          })
+          
+          return (
+            <HydrationBoundary state={dehydratedState}>
+              {route && route.PageComponent ? <route.PageComponent /> : notFound()}
+            </HydrationBoundary>
+          )
+        }
+
+        export async function generateMetadata({ params }: { params: Promise<{ all: string[] }> }) {
+          const pathParams = await params
+          const path = pathParams?.all ? `/${pathParams.all.join("/")}` : "/"
+          
+          const queryClient = getOrCreateQueryClient()
+          const stackClient = getStackClient(queryClient)
+          const route = stackClient.router.getRoute(path)
+          
+          if (!route) return notFound()
+          if (route?.loader) await route.loader()
+          
+          return route.meta ? metaElementsToObject(route.meta()) satisfies Metadata : { title: "No meta" }
+        }
+        ```
+      </Tab>
+
+      <Tab value="react-router">
+        ```tsx title="app/routes/pages/index.tsx"
+        import type { Route } from "./+types/index"
+        import { useLoaderData } from "react-router"
+        import { dehydrate, HydrationBoundary, QueryClient, useQueryClient, type DehydratedState } from "@tanstack/react-query"
+        import { getStackClient } from "~/lib/better-stack-client"
+
+        export async function loader({ params }: Route.LoaderArgs) {
+          const path = params["*"] ? `/${params["*"].split("/").filter(Boolean).join("/")}` : "/"
+          
+          // Create QueryClient for this request with consistent config
+          const queryClient = new QueryClient({
+            defaultOptions: { queries: { staleTime: 1000 * 60 * 5, refetchOnMount: false, retry: false } }
+          })
+          const stackClient = getStackClient(queryClient)
+          const route = stackClient.router.getRoute(path)
+          
+          if (route?.loader) await route.loader()
+          
+          // Include errors so client doesn't refetch on error
+          const dehydratedState: DehydratedState = dehydrate(queryClient, {
+            shouldDehydrateQuery: (query) => query.state.status === 'success' || query.state.status === 'error'
+          })
+          
+          return { path, dehydratedState, meta: route?.meta?.() }
+        }
+
+        export function meta({ loaderData }: Route.MetaArgs) {
+          return loaderData.meta
+        }
+
+        export default function PagesIndex() {
+          const { path, dehydratedState } = useLoaderData<typeof loader>()
+          const queryClient = useQueryClient()
+          const route = getStackClient(queryClient).router.getRoute(path)
+          const Page = route && route.PageComponent ? <route.PageComponent /> : <div>Route not found</div>
+          
+          return dehydratedState ? (
+            <HydrationBoundary state={dehydratedState}>{Page}</HydrationBoundary>
+          ) : Page
+        }
+        ```
+      </Tab>
+
+      <Tab value="tanstack">
+        ```tsx title="src/routes/pages/$.tsx"
+        import { createFileRoute, notFound } from "@tanstack/react-router"
+        import { getStackClient } from "@/lib/better-stack-client"
+
+        export const Route = createFileRoute("/pages/$")({
+          ssr: true,
+          component: Page,
+          loader: async ({ params, context }) => {
+            const routePath = params._splat ? `/${params._splat.split("/").filter(Boolean).join("/")}` : "/"
+            const stackClient = getStackClient(context.queryClient)
+            const route = stackClient.router.getRoute(routePath)
+            
+            if (!route) throw notFound()
+            if (route?.loader) await route.loader()
+            
+            return { meta: await route?.meta?.() }
+          },
+          head: ({ loaderData }) => {
+            return loaderData?.meta && Array.isArray(loaderData.meta) 
+              ? { meta: loaderData.meta } 
+              : { meta: [{ title: "No Meta" }], title: "No Meta" }
+          },
+          notFoundComponent: () => <p>This page doesn't exist!</p>
+        })
+
+        function Page() {
+          const context = Route.useRouteContext()
+          const { _splat } = Route.useParams()
+          const routePath = _splat ? `/${_splat.split("/").filter(Boolean).join("/")}` : "/"
+          const route = getStackClient(context.queryClient).router.getRoute(routePath)
+          
+          return route && route.PageComponent ? <route.PageComponent /> : <div>Route not found</div>
+        }
+        ```
+      </Tab>
+    </Tabs>
+
+    **Key implementation details:**
+    
+    - **Server-side data loading**: Call `route.loader()` before rendering to prefetch data
+    - **Error handling**: Include failed queries in dehydration to prevent client-side refetching on errors
+    - **Metadata generation**: Use framework-specific meta functions with `route.meta()` for SEO
+    - **404 handling**: Return `notFound()` when routes don't exist
+
+  </Step>
+
+  <Step>
+    ### Set Up Sitemap Generation
+
+    Create a sitemap route to enable automatic sitemap generation for SEO. Better Stack automatically generates sitemap entries from your configured pages.
+
+    <Tabs groupId="frameworks" items={["next-js", "react-router", "tanstack"]} persist>
+      <Tab value="next-js">
+        ```ts title="app/sitemap.ts"
+        import type { MetadataRoute } from "next"
+        import { QueryClient } from "@tanstack/react-query"
+        import { getStackClient } from "@/lib/better-stack-client"
+
+        export const dynamic = "force-dynamic"
+
+        export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+          const queryClient = new QueryClient()
+          const stackClient = getStackClient(queryClient)
+          const entries = await stackClient.generateSitemap()
+
+          return entries.map((e) => ({
+            url: e.url,
+            lastModified: e.lastModified,
+            changeFrequency: e.changeFrequency,
+            priority: e.priority,
+          }))
+        }
+        ```
+      </Tab>
+
+      <Tab value="react-router">
+        ```ts title="app/routes/sitemap.xml.ts"
+        import type { Route } from "./+types/sitemap.xml"
+        import { QueryClient } from "@tanstack/react-query"
+        import { getStackClient } from "~/lib/better-stack-client"
+        import { sitemapEntryToXmlString } from "@btst/stack/client"
+
+        export async function loader({}: Route.LoaderArgs) {
+          const queryClient = new QueryClient()
+          const stackClient = getStackClient(queryClient)
+          const entries = await stackClient.generateSitemap()
+          const xml = sitemapEntryToXmlString(entries)
+
+          return new Response(xml, {
+            headers: {
+              "Content-Type": "application/xml; charset=utf-8",
+              "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+            },
+          })
+        }
+        ```
+      </Tab>
+
+      <Tab value="tanstack">
+        ```ts title="src/routes/sitemap[.]xml.ts"
+        import { createFileRoute } from "@tanstack/react-router"
+        import { QueryClient } from "@tanstack/react-query"
+        import { getStackClient } from "@/lib/better-stack-client"
+        import { sitemapEntryToXmlString } from "@btst/stack/client"
+
+        export const Route = createFileRoute("/sitemap.xml")({
+          server: {
+            handlers: {
+              GET: async () => {
+                const queryClient = new QueryClient()
+                const stackClient = getStackClient(queryClient)
+                const entries = await stackClient.generateSitemap()
+                const xml = sitemapEntryToXmlString(entries)
+
+                return new Response(xml, {
+                  headers: {
+                    "Content-Type": "application/xml; charset=utf-8",
+                    "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+                  },
+                })
+              },
+            },
+          },
+        })
+        ```
+      </Tab>
+    </Tabs>
+
+    <Callout type="info">
+      The `generateSitemap()` method automatically collects URLs from all registered plugins. Each plugin can contribute its own routes to the sitemap with appropriate metadata like priority and change frequency.
+    </Callout>
+  </Step>
+
+  <Step>
+    ### 🎉 That's it!
+
+    That's it! You've completed the installation. Your Better Stack setup is ready. Add plugins to your backend and client configuration to start using them. Each plugin provides routes, API endpoints, React components, and hooks that work seamlessly together.
+  </Step>
+</Steps>
+
