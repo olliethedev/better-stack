@@ -6,6 +6,8 @@ import type {
 } from "../types";
 import { defineDb } from "@btst/db";
 
+export { toNodeHandler } from "better-call/node";
+
 /**
  * Creates the backend library with plugin support
  *

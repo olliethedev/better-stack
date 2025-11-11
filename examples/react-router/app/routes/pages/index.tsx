@@ -4,10 +4,10 @@ import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
-  useQueryClient,
-  type DehydratedState,
+  useQueryClient
 } from "@tanstack/react-query";
 import { getStackClient } from "~/lib/better-stack-client";
+import { normalizePath } from "@btst/stack/client";
 
 export async function loader({ params }: Route.LoaderArgs) {
   // params["*"] will contain the remaining URL after files/
@@ -36,14 +36,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
   
   // Now dehydrate the QueryClient with the loaded data
-  // Include errors so client doesn't refetch on error
-  const dehydratedState: DehydratedState = dehydrate(queryClient, {
-    shouldDehydrateQuery: (query) => {
-      // Include both successful and failed queries
-      // This prevents refetching on the client when there's an error
-      return query.state.status === 'success' || query.state.status === 'error';
-    },
-  });
+  const dehydratedState = dehydrate(queryClient);
   const meta = route?.meta?.();
   
   console.log("[SSR] Dehydrated queries:", Object.keys(dehydratedState.queries || {}).length, "queries");
@@ -91,9 +84,4 @@ export default function PagesIndex() {
       {Page}
     </HydrationBoundary>
   );
-}
-
-function normalizePath(splat?: string): string {
-  const pathSegments = splat?.split("/").filter(Boolean) || [];
-  return pathSegments.length ? `/${pathSegments.join("/")}` : "/";
 }

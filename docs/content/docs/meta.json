@@ -8,7 +8,8 @@
       "index",
       "installation",
       "---[BookOpenCheck]Concepts---",
-      "cli"
+      "cli",
+      "plugin-development"
     ]
   }
   

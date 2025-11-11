@@ -69,7 +69,8 @@
       "!**/.output",
       "!**/.tmp",
       "!**/examples/**",
-      "!**/packages/ui/**"
+      "!**/packages/ui/**",
+      "!**/docs/**"
     ]
   }
 }

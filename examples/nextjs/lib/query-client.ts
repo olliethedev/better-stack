@@ -17,10 +17,9 @@ function makeQueryClient() {
                 retry: false
             },
             dehydrate: {
-                // Include both successful and error states to avoid refetching on the client
-                // This prevents loading states when there's an error in prefetched data
+                // Include error states to avoid refetching on the client
                 shouldDehydrateQuery: (query) => {
-                    return query.state.status === 'success' || query.state.status === 'error';
+                    return true
                 }
             }
         }
