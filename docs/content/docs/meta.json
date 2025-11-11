@@ -7,9 +7,15 @@
       "---[Hammer]Getting Started---",
       "index",
       "installation",
+      "---[Layers]Plugins---",
+      "plugins/index",
+      "plugins/blog",
+      "plugins/development",
+      "---[Database]Databases---",
+      "databases/adapters",
       "---[BookOpenCheck]Concepts---",
       "cli",
-      "plugin-development"
+      "api-reference"
     ]
   }
   

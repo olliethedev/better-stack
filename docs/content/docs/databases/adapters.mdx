@@ -1,0 +1,160 @@
+---
+title: Database Adapters
+description: Learn about database adapters and the Better Stack datalayer
+---
+
+
+Better Stack uses a flexible adapter system that allows you to connect to any database through your preferred ORM. The adapter acts as a bridge between Better Stack's unified datalayer and your database of choice.
+
+## Package Overview
+
+Better Stack consists of separate npm packages under the `@btst` namespace:
+
+- **`@btst/stack`** - Core package (install this first)
+- **`@btst/adapter-*`** - Database adapters (install one based on your ORM)
+- **`@btst/cli`** - CLI tools for schema generation (dev dependency)
+- **`@btst/db`** - Internal database abstraction layer (installed as a dependency of other packages)
+
+See the [Installation guide](/installation) for setup instructions.
+
+## Available Adapters
+
+Better Stack provides official adapters for popular ORMs:
+
+- **Prisma** - `@btst/adapter-prisma` - Supports PostgreSQL, MySQL, SQLite, CockroachDB, and MongoDB
+- **Drizzle** - `@btst/adapter-drizzle` - Supports PostgreSQL, MySQL, SQLite, and more
+- **Kysely** - `@btst/adapter-kysely` - Supports PostgreSQL, MySQL, SQLite, and more
+- **MongoDB** - `@btst/adapter-mongodb` - Native MongoDB driver support
+- **Memory** - `@btst/adapter-memory` - In-memory adapter for development and testing
+
+## Installation
+
+Adapters are separate packages that must be installed alongside `@btst/stack`:
+
+```bash
+# Install core package
+npm install @btst/stack
+
+# Install your chosen adapter
+npm install @btst/adapter-prisma
+```
+
+See the [Installation guide](/installation#install-database-adapter) for detailed adapter setup instructions.
+
+## Usage
+
+When you configure Better Stack, the `betterStack()` function collects all plugin database schemas and merges them into a unified schema. The adapter function receives this merged schema and returns an adapter that translates Better Stack's database operations to your ORM.
+
+```ts title="lib/better-stack.ts"
+import { betterStack } from "@btst/stack"
+import { createPrismaAdapter } from "@btst/adapter-prisma"
+import { PrismaClient } from "@prisma/client"
+
+const prisma = new PrismaClient()
+
+const { handler, dbSchema } = betterStack({
+  basePath: "/api/data",
+  plugins: {
+    // Your plugins here
+  },
+  // The adapter receives the merged db schema from all plugins
+  adapter: (db) => createPrismaAdapter(prisma, db, { 
+    provider: "postgresql" 
+  })
+})
+
+export { handler, dbSchema }
+```
+
+The `adapter` function receives the merged database schema (`db`) containing all tables and relationships from your plugins, and returns an adapter instance that implements the common adapter interface.
+
+### How the Adapter Function Works
+
+The adapter pattern follows this flow:
+
+1. `betterStack()` merges all plugin schemas into a unified `db` object
+2. Your `adapter` function receives this `db` object
+3. `createPrismaAdapter(prisma, db, config)` returns an adapter function
+4. This adapter function implements the common interface (create, update, findOne, etc.)
+
+The nested function signature allows the adapter to be configured with both Better Stack's schema and better-auth's runtime options.
+
+## Database Schema Generation
+
+After configuring your adapter, you'll need to generate database schemas and migrations. Better Stack provides a CLI tool to help with this process.
+
+See the [CLI documentation](/cli) for detailed information on generating schemas for Prisma, Drizzle, and Kysely, as well as running migrations.
+
+## The Datalayer
+
+Better Stack's datalayer is built on [Better DB](https://github.com/olliethedev/better-auth/tree/main/packages/btst), a fork of better-auth's database layer. Better DB is a type-safe database abstraction layer that provides:
+
+- **Unified Schema Definition**: Plugins define their database schemas using Better DB's schema definition API
+- **Schema Composition**: All plugin schemas are automatically merged into a single unified schema
+- **Type-Safe Operations**: Full TypeScript support for all database operations
+- **Adapter Abstraction**: Works with any database through adapters
+
+## How Adapters Work
+
+Adapters implement a common interface that provides methods for:
+- `create` - Insert new records
+- `update` - Update existing records
+- `updateMany` - Bulk update operations
+- `delete` - Delete records
+- `deleteMany` - Bulk delete operations
+- `findOne` - Find a single record
+- `findMany` - Query multiple records
+- `count` - Count records matching criteria
+
+Each adapter translates these operations to the appropriate ORM calls (Prisma, Drizzle, Kysely, MongoDB, etc.).
+
+## Using Better Auth Adapters
+
+Better DB is a fork of better-auth's database layer, which means existing [better-auth adapters](https://www.better-auth.com/docs/concepts/database) can work with Better Stack with a small wrapper modification. The wrapper is necessary because Better Stack's plugin system merges schemas differently than better-auth expects.
+
+This allows you to leverage the wide ecosystem of better-auth adapters. The wrapper function needs to inject the Better DB schema into the better-auth adapter's plugin system so it can find your models. Here's an example of how `@btst/adapter-prisma` wraps better-auth's Prisma adapter:
+
+```ts title="lib/adapters/prisma.ts"
+
+export * from "better-auth/adapters/prisma";
+
+import type { Adapter, DatabaseDefinition } from "@btst/db";
+import { prismaAdapter, type PrismaConfig } from "better-auth/adapters/prisma";
+import type { BetterAuthOptions } from "better-auth/types";
+
+/**
+ * Helper function to create a Prisma adapter with Better DB schema
+ *
+ * This handles passing the Better DB schema to the prismaAdapter
+ * by injecting it as a plugin so Better Auth can find your models.
+ */
+export function createPrismaAdapter(
+	prisma: any,
+	db: DatabaseDefinition,
+	config: PrismaConfig,
+	options: BetterAuthOptions = {},
+): (options: BetterAuthOptions) => Adapter {
+	return (adapterOptions: BetterAuthOptions = {}) => {
+		const mergedOptions = {
+			...options,
+			...adapterOptions,
+			plugins: [
+				...(options.plugins || []),
+				...(adapterOptions.plugins || []),
+				// Add Better DB schema as a plugin so getAuthTables can find it
+				{
+					id: "better-db-schema",
+					schema: db.getSchema(),
+				},
+			],
+		};
+		return prismaAdapter(prisma, config)(mergedOptions);
+	};
+}
+```
+
+You can apply the same pattern to wrap other better-auth adapters that are currently not exported by better-db.
+
+## Better DB Package
+
+Better DB is a fork of [better-auth](https://www.better-auth.com)'s database layer. For more information about the underlying datalayer, see the [Better DB package](https://github.com/olliethedev/better-auth/tree/main/packages/btst) on GitHub. This package provides the core database abstraction that powers Better Stack's adapter system.
