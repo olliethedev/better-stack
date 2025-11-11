@@ -1,0 +1,63 @@
+---
+title: API Reference
+description: Complete API reference for Better Stack
+---
+
+# API Reference
+
+
+## API (`@btst/stack/api`)
+
+### BackendPlugin
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="BackendPlugin" />
+
+### BackendLibConfig
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="BackendLibConfig" />
+
+### BackendLib
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="BackendLib" />
+
+## Client (`@btst/stack/client`)
+
+### ClientPlugin
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="ClientPlugin" />
+
+### ClientLib
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="ClientLib" />
+
+### ClientLibConfig
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="ClientLibConfig" />
+
+### SitemapEntry
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="SitemapEntry" />
+
+### Sitemap
+
+<AutoTypeTable path="../packages/better-stack/src/types.ts" name="Sitemap" />
+
+## Client Components (`@btst/stack/client/components`)
+
+### RouteWithComponents
+
+<AutoTypeTable path="../packages/better-stack/src/client/components/compose.tsx" name="RouteWithComponents" />
+
+### FallbackProps
+
+<AutoTypeTable path="../packages/better-stack/src/client/components/error-boundary.tsx" name="FallbackProps" />
+
+## Context (`@btst/stack/context`)
+
+The context module exports React hooks and components for managing plugin configuration.
+
+**Exported Functions:**
+- `BetterStackProvider` - Context provider component
+- `useBetterStack()` - Hook to access the full context
+- `usePluginOverrides()` - Hook to access plugin-specific overrides  
+- `useBasePath()` - Hook to access the base path

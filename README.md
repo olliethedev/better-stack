@@ -2,12 +2,12 @@
 
 <div align="center">
 
-**Add complete full-stack features to your React app in minutes, not weeks**
+**Composable full-stack plugin system for React frameworks**
 
 [![npm version](https://img.shields.io/npm/v/@btst/stack.svg)](https://www.npmjs.com/package/@btst/stack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[📖 Documentation](https://www.btst.ai) • [🐛 Issues](https://github.com/olliethedev/better-stack/issues)
+[📖 Documentation](https://www.better-stack.ai) • [🐛 Issues](https://github.com/olliethedev/better-stack/issues)
 
 </div>
 
@@ -215,23 +215,23 @@ Now add scheduling, feedback, or newsletters the same way. Each feature is indep
 
 Better Stack transforms how you think about building apps:
 
-• **Internal teams** - Build shared features once, use across multiple apps. Your marketing team's blog plugin works in the main app, the docs site, and the landing page
-• **Open source** - Share complete features, not just code snippets. Someone can add your newsletter feature to their Next.js app in minutes
-• **Agencies** - Create a library of reusable features. Drop scheduling into client A's app, feedback into client B's app, both using React Router
-• **SaaS platforms** - Offer feature plugins your customers can compose. They pick blog + scheduling + AI assistant, mix and match to build their ideal app
-• **Rapid prototyping** - Add 5 features in an afternoon instead of 5 weeks. Validate ideas faster
+- **Open source** - Share complete features, not just code snippets. Someone can add a newsletter plugin to their Next.js app in minutes
+- **Fast development** - Add 5 features in an afternoon instead of 5 weeks. Validate ideas faster
+- **Agencies** - Create a library of reusable features. Drop scheduling into client A's app, feedback into client B's app.
+- **SaaS platforms** - Offer feature plugins your customers can compose. They pick blog + scheduling + AI assistant, mix and match to build their ideal app
 
-Each feature is a complete, self-contained full-stack capability. No configuration files. No code generation. No framework lock-in. Just add it and it works.
+
+Each plugin is a complete, self-contained horizontal full-stack feature. No framework lock-in. Just add it and it works.
 
 ## Learn More
 
-For complete documentation, examples, and plugin development guides, visit **[https://www.btst.ai](https://www.btst.ai)**
+For complete documentation, examples, and plugin development guides, visit **[https://www.better-stack.ai](https://www.better-stack.ai)**
 
 ## Examples
 
-- [Next.js App Router](./examples/nextjs) - Full SSR with App Router
-- [React Router](./examples/react-router) - Client-side routing with React Router
-- [TanStack Router](./examples/tanstack) - Type-safe routing with TanStack Router
+- [Next.js App Router](./examples/nextjs) - Next.js App Router example
+- [React Router](./examples/react-router) - React Router example
+- [TanStack Router](./examples/tanstack) - TanStack Router example
 
 ## License
 

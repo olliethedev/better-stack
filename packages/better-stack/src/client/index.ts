@@ -105,3 +105,5 @@ export type { ClientLib, ClientLibConfig };
 export { sitemapEntryToXmlString } from "./sitemap-utils";
 
 export { metaElementsToObject } from "./meta-utils";
+
+export { normalizePath } from "./path-utils";

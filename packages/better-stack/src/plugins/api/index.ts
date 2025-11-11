@@ -24,7 +24,6 @@ export type { Adapter, DatabaseDefinition, DbPlugin } from "@btst/db";
 export type { Endpoint, Router } from "better-call";
 export { createEndpoint, createRouter } from "better-call";
 export { createDbPlugin } from "@btst/db";
-export { toNodeHandler } from "better-call/node";
 
 /**
  * Helper to define a backend plugin with full type inference

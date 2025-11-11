@@ -1,0 +1,21 @@
+{
+    "title": "Better Stack",
+    "description": "A composable full-stack plugin system for modern React frameworks.",
+    "icon": "Building",
+    "root": true,
+    "pages": [
+      "---[Hammer]Getting Started---",
+      "index",
+      "installation",
+      "---[Layers]Plugins---",
+      "plugins/index",
+      "plugins/blog",
+      "plugins/development",
+      "---[Database]Databases---",
+      "databases/adapters",
+      "---[BookOpenCheck]Concepts---",
+      "cli",
+      "api-reference"
+    ]
+  }
+  

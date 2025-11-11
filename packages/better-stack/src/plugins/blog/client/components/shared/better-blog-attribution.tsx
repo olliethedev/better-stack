@@ -5,13 +5,13 @@ export function BetterBlogAttribution() {
 				Powered by{" "}
 				<a
 					className="flex items-center gap-1 font-semibold underline"
-					href="https://www.btst.ai/"
+					href="https://www.better-stack.ai"
 					target="_blank"
 					rel="noreferrer noopener"
-					aria-label="Better Blog — open-source React blog framework"
-					title="Better Blog — open-source React blog framework"
+					aria-label="Better Stack — Composable full-stack plugin system for React frameworks"
+					title="Better Stack — Composable full-stack plugin system for React frameworks"
 				>
-					<span className="cursor-pointer">BTST</span>
+					<span className="cursor-pointer">Better-Stack</span>
 				</a>
 			</p>
 		</div>
