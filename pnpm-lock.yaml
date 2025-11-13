@@ -479,9 +479,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.90.2
         version: 5.90.5(react@19.2.0)
-      '@workspace/ui':
-        specifier: workspace:*
-        version: link:../ui
       better-call:
         specifier: 1.0.19
         version: 1.0.19
@@ -555,6 +552,9 @@ importers:
       '@types/slug':
         specifier: ^5.0.9
         version: 5.0.9
+      '@workspace/ui':
+        specifier: workspace:*
+        version: link:../ui
       react:
         specifier: ^19.2.0
         version: 19.2.0
