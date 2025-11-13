@@ -1,4 +1,4 @@
 export const SOCIALS = {
   X: "https://x.com/olliethedev",
-  Github: "https://github.com/olliethedev/better-stack",
+  Github: "https://github.com/better-stack-ai/better-stack",
 };

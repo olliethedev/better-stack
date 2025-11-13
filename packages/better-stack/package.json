@@ -4,7 +4,7 @@
   "description": "A composable, plugin-based library for building full-stack applications.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/olliethedev/better-stack.git"
+    "url": "git+https://github.com/better-stack-ai/better-stack.git"
   },
   "keywords": [
     "fullstack",
@@ -14,9 +14,9 @@
   "author": "olliethedev",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/olliethedev/better-stack/issues"
+    "url": "https://github.com/better-stack-ai/better-stack/issues"
   },
-  "homepage": "https://github.com/olliethedev/better-stack#readme",
+  "homepage": "https://github.com/better-stack-ai/better-stack#readme",
   "publishConfig": {
     "access": "public"
   },
