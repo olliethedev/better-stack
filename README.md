@@ -7,7 +7,7 @@
 [![npm version](https://img.shields.io/npm/v/@btst/stack.svg)](https://www.npmjs.com/package/@btst/stack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[📖 Documentation](https://www.better-stack.ai) • [🐛 Issues](https://github.com/olliethedev/better-stack/issues)
+[📖 Documentation](https://www.better-stack.ai/docs) • [🐛 Issues](https://github.com/better-stack-ai/better-stack/issues)
 
 </div>
 
