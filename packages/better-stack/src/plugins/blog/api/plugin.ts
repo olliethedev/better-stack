@@ -36,6 +36,7 @@ export interface BlogApiContext<TBody = any, TParams = any, TQuery = any> {
 	params?: TParams;
 	query?: TQuery;
 	request?: Request;
+	headers?: Headers;
 	[key: string]: any;
 }
 
@@ -282,8 +283,8 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					query: PostListQuerySchema,
 				},
 				async (ctx) => {
-					const { query } = ctx;
-					const context: BlogApiContext = { query };
+					const { query, headers } = ctx;
+					const context: BlogApiContext = { query, headers };
 					const tagCache = createTagCache();
 					const postTagCache = createPostTagCache();
 
@@ -402,7 +403,10 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					body: createPostSchema,
 				},
 				async (ctx) => {
-					const context: BlogApiContext = { body: ctx.body };
+					const context: BlogApiContext = {
+						body: ctx.body,
+						headers: ctx.headers,
+					};
 					const tagCache = createTagCache();
 
 					try {
@@ -475,6 +479,7 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					const context: BlogApiContext = {
 						body: ctx.body,
 						params: ctx.params,
+						headers: ctx.headers,
 					};
 					const tagCache = createTagCache();
 
@@ -583,7 +588,10 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					method: "DELETE",
 				},
 				async (ctx) => {
-					const context: BlogApiContext = { params: ctx.params };
+					const context: BlogApiContext = {
+						params: ctx.params,
+						headers: ctx.headers,
+					};
 
 					try {
 						// Authorization hook
@@ -634,8 +642,8 @@ export const blogBackendPlugin = (hooks?: BlogBackendHooks) =>
 					query: NextPreviousPostsQuerySchema,
 				},
 				async (ctx) => {
-					const { query } = ctx;
-					const context: BlogApiContext = { query };
+					const { query, headers } = ctx;
+					const context: BlogApiContext = { query, headers };
 					const tagCache = createTagCache();
 					const postTagCache = createPostTagCache();
 
