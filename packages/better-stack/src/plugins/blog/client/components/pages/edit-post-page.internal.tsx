@@ -44,6 +44,11 @@ export function EditPostPage({ slug }: { slug: string }) {
 		navigate(`${basePath}/blog/${post.slug}`);
 	};
 
+	const handleDelete = () => {
+		// Navigate to blog list after deletion
+		navigate(`${basePath}/blog`);
+	};
+
 	return (
 		<PageWrapper className="gap-6" testId="edit-post-page">
 			<PageHeader
@@ -54,6 +59,7 @@ export function EditPostPage({ slug }: { slug: string }) {
 				postSlug={slug}
 				onClose={handleClose}
 				onSuccess={handleSuccess}
+				onDelete={handleDelete}
 			/>
 		</PageWrapper>
 	);

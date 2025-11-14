@@ -42,10 +42,14 @@ export { createClient } from "better-call/client";
  * });
  * ```
  *
- * @template TPlugin - The exact plugin definition (auto-inferred)
+ * @template TOverrides - The shape of overridable components/functions this plugin requires
+ * @template TRoutes - The exact shape of routes this plugin provides (preserves keys and route types)
  */
 export function defineClientPlugin<
-	TPlugin extends ClientPlugin<any, Record<string, Route>>,
->(plugin: TPlugin): TPlugin {
+	TOverrides = Record<string, never>,
+	TRoutes extends Record<string, Route> = Record<string, Route>,
+>(
+	plugin: ClientPlugin<TOverrides, TRoutes>,
+): ClientPlugin<TOverrides, TRoutes> {
 	return plugin;
 }

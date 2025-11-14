@@ -23,8 +23,20 @@ import {
 	useCreatePost,
 	useSuspensePost,
 	useUpdatePost,
+	useDeletePost,
 } from "../../hooks/blog-hooks";
 import { slugify } from "../../../utils";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -404,6 +416,7 @@ type EditPostFormProps = {
 	postSlug: string;
 	onClose: () => void;
 	onSuccess: (post: { slug: string; published: boolean }) => void;
+	onDelete?: () => void;
 };
 
 const editPostFormPropsAreEqual = (
@@ -413,6 +426,7 @@ const editPostFormPropsAreEqual = (
 	if (prevProps.postSlug !== nextProps.postSlug) return false;
 	if (prevProps.onClose !== nextProps.onClose) return false;
 	if (prevProps.onSuccess !== nextProps.onSuccess) return false;
+	if (prevProps.onDelete !== nextProps.onDelete) return false;
 	return true;
 };
 
@@ -420,8 +434,10 @@ const EditPostFormComponent = ({
 	postSlug,
 	onClose,
 	onSuccess,
+	onDelete,
 }: EditPostFormProps) => {
 	const [featuredImageUploading, setFeaturedImageUploading] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const { localization } = usePluginOverrides<
 		BlogPluginOverrides,
 		Partial<BlogPluginOverrides>
@@ -457,6 +473,9 @@ const EditPostFormComponent = ({
 		error: updatePostError,
 	} = useUpdatePost();
 
+	const { mutateAsync: deletePost, isPending: isDeletingPost } =
+		useDeletePost();
+
 	type EditPostFormValues = z.input<typeof schema>;
 	const onSubmit = async (data: EditPostFormValues) => {
 		// Wait for mutation to complete, including refresh
@@ -489,6 +508,21 @@ const EditPostFormComponent = ({
 		});
 	};
 
+	const handleDelete = async () => {
+		if (!post?.id) return;
+
+		await deletePost({ id: post.id });
+		toast.success(localization.BLOG_FORMS_TOAST_DELETE_SUCCESS);
+		setDeleteDialogOpen(false);
+
+		// Call onDelete callback if provided, otherwise use onClose
+		if (onDelete) {
+			onDelete();
+		} else {
+			onClose();
+		}
+	};
+
 	const form = useForm<z.input<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
@@ -508,20 +542,64 @@ const EditPostFormComponent = ({
 	}
 
 	return (
-		<PostFormBody
-			form={form}
-			onSubmit={onSubmit}
-			submitLabel={
-				isUpdatingPost
-					? localization.BLOG_FORMS_SUBMIT_UPDATE_PENDING
-					: localization.BLOG_FORMS_SUBMIT_UPDATE_IDLE
-			}
-			onCancel={onClose}
-			disabled={isUpdatingPost || featuredImageUploading}
-			errorMessage={updatePostError?.message}
-			setFeaturedImageUploading={setFeaturedImageUploading}
-			initialSlugTouched={!!post?.slug}
-		/>
+		<>
+			<PostFormBody
+				form={form}
+				onSubmit={onSubmit}
+				submitLabel={
+					isUpdatingPost
+						? localization.BLOG_FORMS_SUBMIT_UPDATE_PENDING
+						: localization.BLOG_FORMS_SUBMIT_UPDATE_IDLE
+				}
+				onCancel={onClose}
+				disabled={isUpdatingPost || featuredImageUploading}
+				errorMessage={updatePostError?.message}
+				setFeaturedImageUploading={setFeaturedImageUploading}
+				initialSlugTouched={!!post?.slug}
+			/>
+			<div className="w-full">
+				<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+					<AlertDialogTrigger asChild>
+						<Button
+							variant="destructive"
+							type="button"
+							disabled={
+								isUpdatingPost || featuredImageUploading || isDeletingPost
+							}
+							className="mt-4"
+						>
+							{localization.BLOG_FORMS_DELETE_BUTTON}
+						</Button>
+					</AlertDialogTrigger>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>
+								{localization.BLOG_FORMS_DELETE_DIALOG_TITLE}
+							</AlertDialogTitle>
+							<AlertDialogDescription>
+								{localization.BLOG_FORMS_DELETE_DIALOG_DESCRIPTION}
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel disabled={isDeletingPost}>
+								{localization.BLOG_FORMS_DELETE_DIALOG_CANCEL}
+							</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={(e) => {
+									e.preventDefault();
+									void handleDelete();
+								}}
+								disabled={isDeletingPost}
+							>
+								{isDeletingPost
+									? localization.BLOG_FORMS_DELETE_PENDING
+									: localization.BLOG_FORMS_DELETE_DIALOG_CONFIRM}
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+			</div>
+		</>
 	);
 };
 

@@ -557,6 +557,71 @@ test("unknown tag page state renders", async ({ page }) => {
 	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
 });
 
+test("delete post from edit page", async ({ page, request }) => {
+	const errors: string[] = [];
+	page.on("console", (msg) => {
+		if (msg.type() === "error") errors.push(msg.text());
+	});
+
+	// Create a post to delete
+	const postToDelete = await createPost(request, {
+		title: "Post To Delete",
+		content: "This post will be deleted",
+		excerpt: "Excerpt for post to delete",
+		slug: "post-to-delete-test",
+		published: true,
+		publishedAt: new Date().toISOString(),
+		image: "",
+	});
+
+	// Navigate to the edit page
+	await page.goto(`/pages/blog/${postToDelete.slug}/edit`, {
+		waitUntil: "networkidle",
+	});
+	await expect(page.locator('[data-testid="edit-post-page"]')).toBeVisible();
+
+	// Click the delete button
+	const deleteButton = page.getByRole("button", {
+		name: /delete post/i,
+	});
+	await expect(deleteButton).toBeVisible();
+	await deleteButton.click();
+
+	// Wait for the alert dialog to appear
+	const alertDialog = page.locator(
+		'div[role="alertdialog"][data-slot="alert-dialog-content"]',
+	);
+	await expect(alertDialog).toBeVisible({ timeout: 5000 });
+
+	// Verify the dialog content
+	await expect(
+		page.getByText("Are you sure you want to delete this post?"),
+	).toBeVisible();
+
+	// Click the confirm delete button in the dialog
+	const confirmButton = page
+		.locator('div[role="alertdialog"][data-slot="alert-dialog-content"]')
+		.getByRole("button", { name: /^delete$/i });
+	await expect(confirmButton).toBeVisible();
+	await confirmButton.click();
+
+	// Wait for navigation to /pages/blog
+	await page.waitForURL("**/pages/blog", { timeout: 10000 });
+	await page.waitForLoadState("networkidle");
+
+	// Verify we're on the blog home page
+	await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
+
+	// Verify the deleted post no longer appears
+	await expect(
+		page
+			.locator('[data-slot="card-title"]')
+			.filter({ hasText: /^Post To Delete$/ }),
+	).not.toBeVisible();
+
+	expect(errors, `Console errors detected: \n${errors.join("\n")}`).toEqual([]);
+});
+
 // Helper function to create a single post with custom data
 
 async function createPost(
