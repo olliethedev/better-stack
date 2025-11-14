@@ -29,10 +29,11 @@ export { createClient } from "better-call/client";
  * Helper type to extract plugin structure without leaking internal type references
  * This ensures types are portable across package boundaries
  */
-type PortableClientPlugin<TPlugin extends ClientPlugin<any, any>> = ClientPlugin<
-	TPlugin extends ClientPlugin<infer TOverrides, any> ? TOverrides : never,
-	TPlugin extends ClientPlugin<any, infer TRoutes> ? TRoutes : never
->;
+type PortableClientPlugin<TPlugin extends ClientPlugin<any, any>> =
+	ClientPlugin<
+		TPlugin extends ClientPlugin<infer TOverrides, any> ? TOverrides : never,
+		TPlugin extends ClientPlugin<any, infer TRoutes> ? TRoutes : never
+	>;
 
 /**
  * Helper to define a client plugin with full type inference
