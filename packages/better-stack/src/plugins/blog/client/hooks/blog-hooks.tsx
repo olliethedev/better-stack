@@ -438,6 +438,44 @@ export function useUpdatePost() {
 	});
 }
 
+/** Delete a post by id */
+export function useDeletePost() {
+	const { refresh, apiBaseURL, apiBasePath } =
+		usePluginOverrides<BlogPluginOverrides>("blog");
+
+	const client = createApiClient<BlogApiRouter>({
+		baseURL: apiBaseURL,
+		basePath: apiBasePath,
+	});
+
+	const queryClient = useQueryClient();
+	const queries = createBlogQueryKeys(client);
+
+	return useMutation<{ success: boolean }, Error, { id: string }>({
+		mutationKey: [...queries.posts._def, "delete"],
+		mutationFn: async ({ id }: { id: string }) => {
+			const response = await client(`@delete/posts/:id`, {
+				method: "DELETE",
+				params: { id },
+			});
+			return response.data as { success: boolean };
+		},
+		onSuccess: async () => {
+			// Invalidate all post lists and detail caches - wait for completion
+			await queryClient.invalidateQueries({
+				queryKey: queries.posts._def,
+			});
+			await queryClient.invalidateQueries({
+				queryKey: queries.drafts.list._def,
+			});
+			// Refresh server-side cache (Next.js router cache)
+			if (refresh) {
+				await refresh();
+			}
+		},
+	});
+}
+
 /**
  * Hook for searching posts by a free-text query. Uses `usePosts` under the hood.
  * Debounces the query and preserves last successful results to avoid flicker.

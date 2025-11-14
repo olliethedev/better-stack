@@ -25,7 +25,17 @@ export const BLOG_FORMS = {
 
 	BLOG_FORMS_TOAST_CREATE_SUCCESS: "Post created successfully",
 	BLOG_FORMS_TOAST_UPDATE_SUCCESS: "Post updated successfully",
+	BLOG_FORMS_TOAST_DELETE_SUCCESS: "Post deleted successfully",
 	BLOG_FORMS_LOADING_POST: "Loading post...",
+
+	// Delete post
+	BLOG_FORMS_DELETE_BUTTON: "Delete Post",
+	BLOG_FORMS_DELETE_DIALOG_TITLE: "Delete Post",
+	BLOG_FORMS_DELETE_DIALOG_DESCRIPTION:
+		"Are you sure you want to delete this post? This action cannot be undone.",
+	BLOG_FORMS_DELETE_DIALOG_CANCEL: "Cancel",
+	BLOG_FORMS_DELETE_DIALOG_CONFIRM: "Delete",
+	BLOG_FORMS_DELETE_PENDING: "Deleting...",
 
 	// Markdown editor
 	BLOG_FORMS_EDITOR_PLACEHOLDER: "Write something...",
