@@ -55,16 +55,18 @@ function toError(error: unknown): Error {
 
 export function createBlogQueryKeys(
 	client: ReturnType<typeof createApiClient<BlogApiRouter>>,
+	headers?: HeadersInit,
 ) {
-	const posts = createPostsQueries(client);
-	const drafts = createDraftsQueries(client);
-	const tags = createTagsQueries(client);
+	const posts = createPostsQueries(client, headers);
+	const drafts = createDraftsQueries(client, headers);
+	const tags = createTagsQueries(client, headers);
 
 	return mergeQueryKeys(posts, drafts, tags);
 }
 
 function createPostsQueries(
 	client: ReturnType<typeof createApiClient<BlogApiRouter>>,
+	headers?: HeadersInit,
 ) {
 	return createQueryKeys("posts", {
 		list: (params?: PostsListParams) => ({
@@ -95,6 +97,7 @@ function createPostsQueries(
 									: undefined,
 							tagSlug: params?.tagSlug,
 						},
+						headers,
 					});
 					// Check for errors (better-call returns Error$1<unknown> | Data<Post[]>)
 					if (isErrorResponse(response)) {
@@ -121,6 +124,7 @@ function createPostsQueries(
 					const response = await client("/posts", {
 						method: "GET",
 						query: { slug, limit: 1 },
+						headers,
 					});
 					// Check for errors (better-call returns Error$1<unknown> | Data<Post[]>)
 					if (isErrorResponse(response)) {
@@ -148,6 +152,7 @@ function createPostsQueries(
 					query: {
 						date: dateValue.toISOString(),
 					},
+					headers,
 				});
 				// Check for errors (better-call returns Error$1<unknown> | Data<...>)
 				if (isErrorResponse(response)) {
@@ -174,6 +179,7 @@ function createPostsQueries(
 							limit: params?.limit ?? 5,
 							published: "true",
 						},
+						headers,
 					});
 					// Check for errors (better-call returns Error$1<unknown> | Data<Post[]>)
 					if (isErrorResponse(response)) {
@@ -201,6 +207,7 @@ function createPostsQueries(
 
 function createDraftsQueries(
 	client: ReturnType<typeof createApiClient<BlogApiRouter>>,
+	headers?: HeadersInit,
 ) {
 	return createQueryKeys("drafts", {
 		list: (params?: PostsListParams) => ({
@@ -219,6 +226,7 @@ function createDraftsQueries(
 							limit: params?.limit ?? 10,
 							published: "false",
 						},
+						headers,
 					});
 					// Check for errors (better-call returns Error$1<unknown> | Data<Post[]>)
 					if (isErrorResponse(response)) {
@@ -239,6 +247,7 @@ function createDraftsQueries(
 
 function createTagsQueries(
 	client: ReturnType<typeof createApiClient<BlogApiRouter>>,
+	headers?: HeadersInit,
 ) {
 	return createQueryKeys("tags", {
 		list: () => ({
@@ -247,6 +256,7 @@ function createTagsQueries(
 				try {
 					const response = await client("/tags", {
 						method: "GET",
+						headers,
 					});
 					// Check for errors (better-call returns Error$1<unknown> | Data<Tag[]>)
 					if (isErrorResponse(response)) {

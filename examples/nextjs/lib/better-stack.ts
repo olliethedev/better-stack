@@ -4,6 +4,8 @@ import { todosBackendPlugin } from "./plugins/todo/api/backend"
 import { blogBackendPlugin, type BlogBackendHooks } from "@btst/stack/plugins/blog/api"
 
 // Define blog hooks with proper types
+// NOTE: This is the main API at /api/data - kept auth-free for regular tests
+// For auth examples, see /api/example-auth in better-stack-auth.ts
 const blogHooks: BlogBackendHooks = {
     onBeforeCreatePost: async (data) => {
         console.log("onBeforeCreatePost hook called", data.title);

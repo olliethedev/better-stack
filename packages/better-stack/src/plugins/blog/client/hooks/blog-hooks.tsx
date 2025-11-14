@@ -86,7 +86,7 @@ export type PostUpdateInput = z.infer<typeof updatePostSchema>;
  * Hook for fetching paginated posts with load more functionality
  */
 export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
@@ -100,7 +100,7 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsResult {
 		query,
 		published,
 	} = options;
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 
 	const queryParams = {
 		tag,
@@ -155,7 +155,7 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
 	isLoadingMore: boolean;
 	refetch: () => Promise<unknown>;
 } {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
@@ -169,7 +169,7 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
 		query,
 		published,
 	} = options;
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 
 	const queryParams = { tag, tagSlug, limit, query, published };
 	const basePosts = queries.posts.list(queryParams);
@@ -214,13 +214,13 @@ export function useSuspensePosts(options: UsePostsOptions = {}): {
  * Hook for fetching a single post by slug
  */
 export function usePost(slug?: string): UsePostResult {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 
 	const basePost = queries.posts.detail(slug ?? "");
 	const { data, isLoading, error, refetch } = useQuery<
@@ -247,13 +247,13 @@ export function useSuspensePost(slug: string): {
 	post: SerializedPost | null;
 	refetch: () => Promise<unknown>;
 } {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 	const basePost = queries.posts.detail(slug);
 	const { data, refetch, error, isFetching } = useSuspenseQuery<
 		SerializedPost | null,
@@ -283,13 +283,13 @@ export function useTags(): {
 	error: Error | null;
 	refetch: () => void;
 } {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 	const baseTags = queries.tags.list();
 	const { data, isLoading, error, refetch } = useQuery<
 		SerializedTag[] | null,
@@ -315,13 +315,13 @@ export function useSuspenseTags(): {
 	tags: SerializedTag[];
 	refetch: () => Promise<unknown>;
 } {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 	const baseTags = queries.tags.list();
 	const { data, refetch, error, isFetching } = useSuspenseQuery<
 		SerializedTag[] | null,
@@ -555,13 +555,13 @@ export function useNextPreviousPosts(
 	ref: (node: Element | null) => void;
 	inView: boolean;
 } {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 
 	const { ref, inView } = useInView({
 		// start a little early so the data is ready as it scrolls in
@@ -619,13 +619,13 @@ export function useRecentPosts(
 	ref: (node: Element | null) => void;
 	inView: boolean;
 } {
-	const { apiBaseURL, apiBasePath } =
+	const { apiBaseURL, apiBasePath, headers } =
 		usePluginOverrides<BlogPluginOverrides>("blog");
 	const client = createApiClient<BlogApiRouter>({
 		baseURL: apiBaseURL,
 		basePath: apiBasePath,
 	});
-	const queries = createBlogQueryKeys(client);
+	const queries = createBlogQueryKeys(client, headers);
 
 	const { ref, inView } = useInView({
 		// start a little early so the data is ready as it scrolls in

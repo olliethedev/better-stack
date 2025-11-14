@@ -58,6 +58,9 @@ export interface BlogClientConfig {
 
 	// Optional hooks
 	hooks?: BlogClientHooks;
+
+	// Optional headers for SSR (e.g., forwarding cookies)
+	headers?: HeadersInit;
 }
 
 /**
@@ -91,7 +94,7 @@ export interface BlogClientHooks {
 function createPostsLoader(published: boolean, config: BlogClientConfig) {
 	return async () => {
 		if (typeof window === "undefined") {
-			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
+			const { queryClient, apiBasePath, apiBaseURL, hooks, headers } = config;
 
 			const context: LoaderContext = {
 				path: published ? "/blog" : "/blog/drafts",
@@ -116,7 +119,7 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 				});
 
 				// note: for a module not to be bundled with client, and to be shared by client and server we need to add it to build.config.ts as an entry
-				const queries = createBlogQueryKeys(client);
+				const queries = createBlogQueryKeys(client, headers);
 				const listQuery = queries.posts.list({
 					query: undefined,
 					limit,
@@ -170,7 +173,7 @@ function createPostsLoader(published: boolean, config: BlogClientConfig) {
 function createPostLoader(slug: string, config: BlogClientConfig) {
 	return async () => {
 		if (typeof window === "undefined") {
-			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
+			const { queryClient, apiBasePath, apiBaseURL, hooks, headers } = config;
 
 			const context: LoaderContext = {
 				path: `/blog/${slug}`,
@@ -193,7 +196,7 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 					baseURL: apiBaseURL,
 					basePath: apiBasePath,
 				});
-				const queries = createBlogQueryKeys(client);
+				const queries = createBlogQueryKeys(client, headers);
 				const postQuery = queries.posts.detail(slug);
 				await queryClient.prefetchQuery(postQuery);
 
@@ -235,7 +238,7 @@ function createPostLoader(slug: string, config: BlogClientConfig) {
 function createTagLoader(tagSlug: string, config: BlogClientConfig) {
 	return async () => {
 		if (typeof window === "undefined") {
-			const { queryClient, apiBasePath, apiBaseURL, hooks } = config;
+			const { queryClient, apiBasePath, apiBaseURL, hooks, headers } = config;
 
 			const context: LoaderContext = {
 				path: `/blog/tag/${tagSlug}`,
@@ -252,7 +255,7 @@ function createTagLoader(tagSlug: string, config: BlogClientConfig) {
 					basePath: apiBasePath,
 				});
 
-				const queries = createBlogQueryKeys(client);
+				const queries = createBlogQueryKeys(client, headers);
 				const listQuery = queries.posts.list({
 					query: undefined,
 					limit,
