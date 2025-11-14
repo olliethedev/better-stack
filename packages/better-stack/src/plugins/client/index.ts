@@ -26,9 +26,20 @@ export { createRoute, createRouter } from "@btst/yar";
 export { createClient } from "better-call/client";
 
 /**
+ * Helper type to extract plugin structure without leaking internal type references
+ * This ensures types are portable across package boundaries
+ */
+type PortableClientPlugin<TPlugin extends ClientPlugin<any, any>> =
+	ClientPlugin<
+		TPlugin extends ClientPlugin<infer TOverrides, any> ? TOverrides : never,
+		TPlugin extends ClientPlugin<any, infer TRoutes> ? TRoutes : never
+	>;
+
+/**
  * Helper to define a client plugin with full type inference
  *
  * Automatically infers route keys, hook names, and their types without needing casts.
+ * Returns a portable type that doesn't leak internal pnpm path references.
  *
  * @example
  * ```ts
@@ -37,17 +48,14 @@ export { createClient } from "better-call/client";
  *   routes: () => ({
  *     messagesList: createRoute("/messages", () => ({ ... }))
  *   }),
- *   hooks: () => ({
- *     useMessages: () => { ... }
- *   })
+ *   sitemap: () => [{ url: "/messages", lastModified: new Date(), priority: 0.8 }]
  * });
- * // No casts needed - route keys, hook names, and types are all preserved!
  * ```
  *
  * @template TPlugin - The exact plugin definition (auto-inferred)
  */
 export function defineClientPlugin<TPlugin extends ClientPlugin<any, any>>(
 	plugin: TPlugin,
-): TPlugin {
-	return plugin;
+): PortableClientPlugin<TPlugin> {
+	return plugin as PortableClientPlugin<TPlugin>;
 }
