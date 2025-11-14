@@ -47,11 +47,8 @@ type PortableClientPlugin<TPlugin extends ClientPlugin<any, any>> = ClientPlugin
  *   routes: () => ({
  *     messagesList: createRoute("/messages", () => ({ ... }))
  *   }),
- *   hooks: () => ({
- *     useMessages: () => { ... }
- *   })
+ *   sitemap: () => [{ url: "/messages", lastModified: new Date(), priority: 0.8 }]
  * });
- * // No casts needed - route keys, hook names, and types are all preserved!
  * ```
  *
  * @template TPlugin - The exact plugin definition (auto-inferred)
