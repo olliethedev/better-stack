@@ -74,7 +74,7 @@ export default defineConfig({
 			use: { baseURL: "http://localhost:3003" },
 			testMatch: [
 				"**/*.todos.spec.ts",
-				"**/*.auth.blog.spec.ts",
+				"**/*.auth-blog.spec.ts",
 				"**/*.blog.spec.ts",
 			],
 		},
