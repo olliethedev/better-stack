@@ -57,6 +57,10 @@ export interface BlogPluginOverrides {
 	 * Whether to show the attribution
 	 */
 	showAttribution?: boolean;
+	/**
+	 * Optional headers to pass with API requests (e.g., for SSR auth)
+	 */
+	headers?: HeadersInit;
 
 	// Lifecycle Hooks (optional)
 	/**

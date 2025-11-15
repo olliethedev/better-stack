@@ -1,5 +1,6 @@
 
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
+import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { getOrCreateQueryClient } from "@/lib/query-client"
 import { getStackClient } from "@/lib/better-stack-client"
@@ -21,7 +22,14 @@ export default async function ExamplePage({
     // Create a queryClient for this request
     const queryClient = getOrCreateQueryClient()
 
-    const stackClient = getStackClient(queryClient)
+    // Get headers from the incoming request (includes cookies for auth)
+    const headersList = await headers()
+    const headersObject = Object.fromEntries(headersList.entries())
+
+    // Pass headers to stack client - this enables authentication in SSR
+    const stackClient = getStackClient(queryClient, {
+        headers: headersObject
+    })
 
     const route = stackClient.router.getRoute(path)
 
@@ -49,12 +57,19 @@ export default async function ExamplePage({
 }
 
 //meta
-export async function generateMetadata({ params }: { params: Promise<{ all: string[] }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ all: string[] }> }): Promise<Metadata> {
     const pathParams = await params
     const path = normalizePath(pathParams?.all)
     // Create a queryClient for this request
     const queryClient = getOrCreateQueryClient()
-    const stackClient = getStackClient(queryClient)
+    
+    // Get headers for metadata generation as well
+    const headersList = await headers()
+    const headersObject = Object.fromEntries(headersList.entries())
+    
+    const stackClient = getStackClient(queryClient, {
+        headers: headersObject
+    })
     const route = stackClient.router.getRoute(path)
     if (!route) {
         return notFound()

@@ -69,8 +69,14 @@ export default defineConfig({
 	projects: [
 		{
 			name: "nextjs:memory",
+			fullyParallel: false,
+			workers: 1,
 			use: { baseURL: "http://localhost:3003" },
-			testMatch: ["**/*.todos.spec.ts", "**/*.blog.spec.ts"],
+			testMatch: [
+				"**/*.todos.spec.ts",
+				"**/*.auth-blog.spec.ts",
+				"**/*.blog.spec.ts",
+			],
 		},
 		{
 			name: "tanstack:memory",
